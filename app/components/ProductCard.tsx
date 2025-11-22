@@ -30,7 +30,7 @@ export default function ProductCard({
         />
         {!inStock && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="text-white font-bold text-lg">Out of Stock</span>
+            <span className="text-white font-bold text-lg">Stok Habis</span>
           </div>
         )}
         <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
@@ -54,7 +54,7 @@ export default function ProductCard({
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
-          {inStock ? 'View Details' : 'Unavailable'}
+          {inStock ? 'Lihat Detail' : 'Tidak Tersedia'}
         </Link>
       </div>
     </div>

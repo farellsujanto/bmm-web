@@ -37,31 +37,31 @@ export default function Navbar() {
               href="/"
               className="text-white hover:text-red-500 transition-colors duration-300 font-medium"
             >
-              Home
+              Beranda
             </Link>
             <Link
               href="/shop"
               className="text-white hover:text-red-500 transition-colors duration-300 font-medium"
             >
-              Shop
+              Belanja
             </Link>
             <Link
               href="/about"
               className="text-white hover:text-red-500 transition-colors duration-300 font-medium"
             >
-              About
+              Tentang
             </Link>
             <Link
               href="/contact"
               className="text-white hover:text-red-500 transition-colors duration-300 font-medium"
             >
-              Contact
+              Kontak
             </Link>
             <Link
               href="/login"
               className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full transition-colors duration-300 font-medium"
             >
-              Login
+              Masuk
             </Link>
           </div>
 
@@ -103,35 +103,35 @@ export default function Navbar() {
               className="block text-white hover:text-red-500 transition-colors duration-300 font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Home
+              Beranda
             </Link>
             <Link
               href="/shop"
               className="block text-white hover:text-red-500 transition-colors duration-300 font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Shop
+              Belanja
             </Link>
             <Link
               href="/about"
               className="block text-white hover:text-red-500 transition-colors duration-300 font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
-              About
+              Tentang
             </Link>
             <Link
               href="/contact"
               className="block text-white hover:text-red-500 transition-colors duration-300 font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Contact
+              Kontak
             </Link>
             <Link
               href="/login"
               className="block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full transition-colors duration-300 font-medium text-center"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Login
+              Masuk
             </Link>
           </div>
         )}

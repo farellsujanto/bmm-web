@@ -7,9 +7,9 @@ export default function AboutPage() {
       <section className="relative h-[60vh] bg-gradient-to-r from-black to-gray-900 flex items-center justify-center text-white">
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">About Us</h1>
+          <h1 className="text-5xl md:text-6xl font-bold mb-6">Tentang Kami</h1>
           <p className="text-xl md:text-2xl text-gray-200">
-            Leading the industry in engineering spareparts since 2008
+            Memimpin industri suku cadang teknik sejak 2008
           </p>
         </div>
       </section>
@@ -17,12 +17,12 @@ export default function AboutPage() {
       {/* Mission Statement */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Mission</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-6">Misi Kami</h2>
           <p className="text-xl text-gray-600 leading-relaxed">
-            At CV. Bocah Mantul Mabur, we are committed to providing the highest quality 
-            engineering spareparts and exceptional service to our customers. Our mission is 
-            to be your trusted one-stop solution for all engineering needs, delivering 
-            reliability, innovation, and excellence in every product we offer.
+            Di CV. Bocah Mantul Mabur, kami berkomitmen untuk menyediakan suku cadang teknik 
+            berkualitas tinggi dan layanan luar biasa kepada pelanggan kami. Misi kami adalah 
+            menjadi solusi lengkap terpercaya Anda untuk semua kebutuhan teknik, menghadirkan 
+            keandalan, inovasi, dan keunggulan dalam setiap produk yang kami tawarkan.
           </p>
         </div>
       </section>
@@ -30,9 +30,9 @@ export default function AboutPage() {
       {/* Company Values */}
       <section className="py-20 px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center text-gray-900 mb-4">Our Values</h2>
+          <h2 className="text-4xl font-bold text-center text-gray-900 mb-4">Nilai-Nilai Kami</h2>
           <p className="text-center text-gray-600 mb-16 max-w-2xl mx-auto">
-            The principles that guide everything we do
+            Prinsip yang memandu semua yang kami lakukan
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
@@ -41,9 +41,9 @@ export default function AboutPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Quality</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Kualitas</h3>
               <p className="text-gray-600">
-                We never compromise on the quality of our products and services
+                Kami tidak pernah berkompromi pada kualitas produk dan layanan kami
               </p>
             </div>
             <div className="text-center">
@@ -52,9 +52,9 @@ export default function AboutPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Reliability</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Keandalan</h3>
               <p className="text-gray-600">
-                Count on us for consistent, dependable service every time
+                Andalkan kami untuk layanan yang konsisten dan terpercaya setiap saat
               </p>
             </div>
             <div className="text-center">
@@ -63,9 +63,9 @@ export default function AboutPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Innovation</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Inovasi</h3>
               <p className="text-gray-600">
-                Always seeking better solutions for our customers' needs
+                Selalu mencari solusi yang lebih baik untuk kebutuhan pelanggan kami
               </p>
             </div>
             <div className="text-center">
@@ -74,9 +74,9 @@ export default function AboutPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Partnership</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Kemitraan</h3>
               <p className="text-gray-600">
-                Building long-term relationships with our clients
+                Membangun hubungan jangka panjang dengan klien kami
               </p>
             </div>
           </div>
@@ -88,24 +88,24 @@ export default function AboutPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Story</h2>
+              <h2 className="text-4xl font-bold text-gray-900 mb-6">Kisah Kami</h2>
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>
-                  Founded in 2008, CV. Bocah Mantul Mabur has grown from a small local supplier 
-                  to a trusted name in the engineering spareparts industry. Our journey began with 
-                  a simple vision: to provide high-quality, reliable components to manufacturers 
-                  and engineers across Indonesia.
+                  Didirikan pada tahun 2008, CV. Bocah Mantul Mabur telah berkembang dari pemasok lokal kecil 
+                  menjadi nama terpercaya di industri suku cadang teknik. Perjalanan kami dimulai dengan 
+                  visi sederhana: menyediakan komponen berkualitas tinggi dan andal kepada produsen 
+                  dan insinyur di seluruh Indonesia.
                 </p>
                 <p>
-                  Over the years, we've built strong partnerships with leading manufacturers worldwide, 
-                  ensuring that our customers have access to the best products available. Our commitment 
-                  to excellence has earned us the trust of over 1,000 satisfied clients.
+                  Selama bertahun-tahun, kami telah membangun kemitraan yang kuat dengan produsen terkemuka di seluruh dunia, 
+                  memastikan bahwa pelanggan kami memiliki akses ke produk terbaik yang tersedia. Komitmen kami 
+                  terhadap keunggulan telah memberi kami kepercayaan dari lebih dari 1.000 klien yang puas.
                 </p>
                 <p>
-                  Today, we continue to expand our product range and services, always staying ahead 
-                  of industry trends and technological advancements. Our team of experienced professionals 
-                  is dedicated to providing expert guidance and support to help you find the perfect 
-                  solutions for your engineering challenges.
+                  Saat ini, kami terus memperluas rangkaian produk dan layanan kami, selalu mengikuti 
+                  tren industri dan kemajuan teknologi. Tim profesional berpengalaman kami 
+                  berdedikasi untuk memberikan panduan ahli dan dukungan untuk membantu Anda menemukan 
+                  solusi sempurna untuk tantangan teknik Anda.
                 </p>
               </div>
             </div>
@@ -124,26 +124,26 @@ export default function AboutPage() {
       {/* Team/Certifications */}
       <section className="py-20 px-6 bg-black text-white">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-4">Certified Excellence</h2>
+          <h2 className="text-4xl font-bold text-center mb-4">Keunggulan Bersertifikat</h2>
           <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">
-            Our commitment to quality is backed by industry-recognized certifications
+            Komitmen kami terhadap kualitas didukung oleh sertifikasi yang diakui industri
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-6xl font-bold text-red-600 mb-2">ISO 9001</div>
-              <div className="text-gray-400">Quality Management</div>
+              <div className="text-gray-400">Manajemen Kualitas</div>
             </div>
             <div>
               <div className="text-6xl font-bold text-red-600 mb-2">ISO 14001</div>
-              <div className="text-gray-400">Environmental</div>
+              <div className="text-gray-400">Lingkungan</div>
             </div>
             <div>
               <div className="text-6xl font-bold text-red-600 mb-2">OHSAS</div>
-              <div className="text-gray-400">Health & Safety</div>
+              <div className="text-gray-400">Kesehatan & Keselamatan</div>
             </div>
             <div>
               <div className="text-6xl font-bold text-red-600 mb-2">CE</div>
-              <div className="text-gray-400">European Standards</div>
+              <div className="text-gray-400">Standar Eropa</div>
             </div>
           </div>
         </div>
