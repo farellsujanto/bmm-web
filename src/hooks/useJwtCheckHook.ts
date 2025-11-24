@@ -1,4 +1,4 @@
-import { decodeJwt } from '@src/utils/security/security.util';
+import { decodeJwt } from '@/src/utils/security/security.util';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
