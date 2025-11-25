@@ -21,7 +21,6 @@ export function createJwt(data: JwtData) {
     return jwt.sign({
         id: data.id,
         role: data.role,
-        xsx: data.xsx,
         did: data.did
     },
         privateKey,
@@ -89,22 +88,17 @@ export function verifyActiveDeviceId(deviceId: string, extraPrivateSalt: string,
     return createActiveDeviceId(deviceId, extraPrivateSalt) === hashedActiveDeviceId;
 }
 
-export function createDidForJwt(hashedDeviceId: string, xsx: number): string {
-    return SHA256(hashedDeviceId + xsx + process.env.EXTRA_SALT).toString();
+export function createDidForJwt(hashedDeviceId: string): string {
+    return SHA256(hashedDeviceId + process.env.EXTRA_SALT).toString();
 }
 
 export function createFullJwt(userData: { id: number, role: string }, deviceId: string, extraPrivateSalt: string, otpCleared: boolean = false, pinCleared: boolean = false): string {
     const hashedDeviceId = deviceId === '' ? '' : createActiveDeviceId(deviceId, extraPrivateSalt);
-
-    let xsx = 0; // not yet OTP cleared
-    if (pinCleared) xsx = 2; // PIN cleared
-    else if (otpCleared) xsx = 1; // OTP cleared
     
     const jwtData: JwtData = {
         id: userData.id,
         role: userData.role,
-        xsx: xsx,
-        did: createDidForJwt(hashedDeviceId, xsx),
+        did: createDidForJwt(hashedDeviceId),
     };
     
     return createJwt(jwtData);
