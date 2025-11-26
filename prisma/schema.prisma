@@ -24,9 +24,19 @@ model User {
   name          String?
   phoneNumber   String @unique
   role          UserRole @default(CUSTOMER)
+  
+  // Referral System
+  referralCode  String @unique
+  
+  // Rewards & Discounts
+  maxReferralPercentage Decimal @default(2.5) @db.Decimal(5, 2) // Max commission they can earn
+  globalDiscountPercentage Decimal @default(0) @db.Decimal(5, 2) // Personal discount on purchases
 
   company     Company? @relation("CompanyUsers", fields: [companyId], references: [id])
   companyId   Int?
+  
+  statistics  UserStatistics?
+  missions    UserMission[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -34,6 +44,7 @@ model User {
 
   @@index([companyId])
   @@index([role])
+  @@index([referralCode])
 }
 
 model Company {
@@ -62,6 +73,23 @@ model PhoneOtp {
 
   @@index([phoneNumber])
   @@index([expiresAt])
+}
+
+model UserStatistics {
+  id                    Int      @id @default(autoincrement())
+  userId                Int      @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  totalOrders           Int      @default(0)
+  totalSpent            Decimal  @default(0) @db.Decimal(13, 2)
+  totalReferrals        Int      @default(0)
+  totalReferralEarnings Decimal  @default(0) @db.Decimal(13, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enabled Boolean @default(true)
+
+  @@index([userId])
 }
 
 model Brand {
@@ -141,4 +169,65 @@ model ProductImage {
 
   @@index([productId])
   @@index([productId, sortOrder])
+}
+
+enum MissionType {
+  ORDER_COUNT
+  ORDER_VALUE
+  REFERRAL_COUNT
+  REFERRAL_EARNINGS
+}
+
+enum RewardType {
+  REFERRAL_PERCENTAGE
+  GLOBAL_DISCOUNT
+  BOTH
+}
+
+model Mission {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String
+  icon          String   // Emoji or icon identifier
+  
+  type          MissionType
+  targetValue   Decimal  @db.Decimal(13, 2) // Target to reach (count or amount)
+  
+  rewardType    RewardType
+  rewardValue   Decimal  @db.Decimal(5, 2) // Percentage increase (e.g., 2.5 for 2.5%)
+  
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  
+  userMissions  UserMission[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enabled Boolean @default(true)
+  
+  @@index([type])
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model UserMission {
+  id              Int      @id @default(autoincrement())
+  
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  missionId       Int
+  mission         Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  
+  achieved        Boolean  @default(false)
+  achievedAt      DateTime?
+  currentProgress Decimal  @default(0) @db.Decimal(13, 2)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, missionId])
+  @@index([userId])
+  @@index([missionId])
+  @@index([achieved])
 }

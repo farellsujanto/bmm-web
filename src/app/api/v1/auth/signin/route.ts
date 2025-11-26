@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateRequiredHeaders, isOtpExpired, createFullJwt } from '@/src/utils/security/security.util';
 import prisma from '@/src/utils/database/prismaOrm.util';
 import { formatPhoneNumber } from '@/src/utils/formatter/stringFormatter.util';
+import { generateReferralCode } from '@/src/utils/referral/referralUtil';
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,14 +74,60 @@ export async function POST(request: NextRequest) {
       where: { phoneNumber: validatedPhoneNumber }
     });
 
+    let isNewUser = false;
     if (!user) {
-      // Create new user
+      // Generate unique referral code
+      let referralCode = generateReferralCode();
+      let isUnique = false;
+      
+      // Ensure referral code is unique
+      while (!isUnique) {
+        const existing = await prisma.user.findUnique({
+          where: { referralCode }
+        });
+        if (!existing) {
+          isUnique = true;
+        } else {
+          referralCode = generateReferralCode();
+        }
+      }
+
+      // Create new user with referral code and default values
       user = await prisma.user.create({
         data: {
           phoneNumber: validatedPhoneNumber,
-          role: 'CUSTOMER'
+          role: 'CUSTOMER',
+          referralCode: referralCode,
+          maxReferralPercentage: 2.5,
+          globalDiscountPercentage: 0,
+          statistics: {
+            create: {
+              totalOrders: 0,
+              totalSpent: 0,
+              totalReferrals: 0,
+              totalReferralEarnings: 0
+            }
+          }
         }
       });
+      
+      isNewUser = true;
+
+      // Initialize missions for new user
+      const missions = await prisma.mission.findMany({
+        where: { isActive: true }
+      });
+      
+      if (missions.length > 0) {
+        await prisma.userMission.createMany({
+          data: missions.map(mission => ({
+            userId: user!.id,
+            missionId: mission.id,
+            achieved: false,
+            currentProgress: 0
+          }))
+        });
+      }
     }
 
     // Delete used OTP
@@ -100,7 +147,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: user.name ? 'Berhasil masuk' : 'Akun baru berhasil dibuat',
+        message: isNewUser ? 'Akun baru berhasil dibuat' : 'Berhasil masuk',
         data: {
           token,
           user: {
@@ -108,7 +155,10 @@ export async function POST(request: NextRequest) {
             name: user.name,
             phoneNumber: user.phoneNumber,
             role: user.role,
-            isNewUser: !user.name
+            referralCode: user.referralCode,
+            maxReferralPercentage: user.maxReferralPercentage.toString(),
+            globalDiscountPercentage: user.globalDiscountPercentage.toString(),
+            isNewUser: isNewUser
           }
         }
       },
