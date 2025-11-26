@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateRequiredHeaders, generateOtp, createOtpExpiry } from '../../../../../utils/security/security.util';
 import { sendWhatsAppOtp } from '../../../../../utils/messaging/whatsapputil';
 import prisma from '@/src/utils/database/prismaOrm.util';
-import { formatPhoneNumber } from '@/src/utils/formatter/stringFormatter.util';
+import { formatPhoneNumber, maskPhoneNumber } from '@/src/utils/formatter/stringFormatter.util';
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,7 +75,8 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Kode OTP telah dikirim ke nomor WhatsApp Anda',
         data: {
-          expiresAt: expiresAt.toISOString()
+          expiresAt: expiresAt.toISOString(),
+          maskedPhone: maskPhoneNumber(validatedPhoneNumber)
         }
       },
       { status: 200 }

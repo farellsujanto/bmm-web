@@ -3,23 +3,19 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ensureDeviceId, getAuthHeaders } from '@/src/utils/auth';
+import { maskPhoneNumber } from '@/src/utils/formatter/stringFormatter.util';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [isLogin, setIsLogin] = useState(true);
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
-  const [contactInfo, setContactInfo] = useState({ email: '', phone: '' });
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [maskedPhone, setMaskedPhone] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [formData, setFormData] = useState({
-    emailOrPhone: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    name: '',
-  });
 
   useEffect(() => {
     // Timer countdown for OTP
@@ -40,31 +36,47 @@ export default function LoginPage() {
     }
   }, [showOTP]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLogin) {
-      // For registration, show OTP verification
-      setContactInfo({ email: formData.email, phone: formData.phone });
-      setShowOTP(true);
-      setTimer(60);
-      console.log('Registration submitted, showing OTP verification');
-    } else {
-      // For login, show OTP verification
-      setContactInfo({ 
-        email: formData.emailOrPhone.includes('@') ? formData.emailOrPhone : '',
-        phone: !formData.emailOrPhone.includes('@') ? formData.emailOrPhone : ''
-      });
-      setShowOTP(true);
-      setTimer(60);
-      console.log('Login submitted, showing OTP verification');
-    }
-  };
+    setError('');
+    setLoading(true);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    try {
+      await ensureDeviceId();
+      const headers = await getAuthHeaders();
+
+      const response = await fetch('/api/v1/auth/request-otp', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ phoneNumber }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to send OTP');
+      }
+
+      // Store masked phone for display
+      if (data.data?.maskedPhone) {
+        setMaskedPhone(data.data.maskedPhone);
+      } else {
+        // Fallback to local masking
+        try {
+          setMaskedPhone(maskPhoneNumber(phoneNumber));
+        } catch {
+          setMaskedPhone(phoneNumber);
+        }
+      }
+
+      // Show OTP screen and start timer
+      setShowOTP(true);
+      setTimer(60);
+    } catch (err: any) {
+      setError(err.message || 'Terjadi kesalahan. Silakan coba lagi.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOTPChange = (index: number, value: string) => {
@@ -97,40 +109,84 @@ export default function LoginPage() {
     }
   };
 
-  const handleOTPSubmit = (e: React.FormEvent) => {
+  const handleOTPSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otpCode = otp.join('');
     
-    if (otpCode.length === 6) {
-      console.log('OTP submitted:', otpCode);
-      console.log('User data:', {
-        isLogin,
-        ...(isLogin ? { emailOrPhone: formData.emailOrPhone } : {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone
-        })
+    if (otpCode.length !== 6) {
+      setError('Masukkan kode OTP lengkap');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    try {
+      await ensureDeviceId();
+      const headers = await getAuthHeaders();
+
+      const response = await fetch('/api/v1/auth/signin', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ 
+          phoneNumber,
+          otp: otpCode 
+        }),
       });
-      
-      // TODO: Send to backend API for verification
-      // After successful verification, redirect to home or dashboard
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Verifikasi OTP gagal');
+      }
+
+      // Store auth token
+      if (data.data?.token) {
+        localStorage.setItem('authToken', data.data.token);
+      }
+
+      // Redirect to home or dashboard
       router.push('/');
+    } catch (err: any) {
+      setError(err.message || 'Verifikasi gagal. Silakan coba lagi.');
+      setOtp(['', '', '', '', '', '']);
+      inputRefs.current[0]?.focus();
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleResendOTP = () => {
+  const handleResendOTP = async () => {
     setTimer(60);
     setOtp(['', '', '', '', '', '']);
+    setError('');
     inputRefs.current[0]?.focus();
     
-    console.log('Resend OTP to:', contactInfo);
-    // TODO: Send to backend API to resend OTP
+    try {
+      await ensureDeviceId();
+      const headers = await getAuthHeaders();
+
+      const response = await fetch('/api/v1/auth/request-otp', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ phoneNumber }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to resend OTP');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Gagal mengirim ulang OTP');
+    }
   };
 
   const handleBackToForm = () => {
     setShowOTP(false);
     setOtp(['', '', '', '', '', '']);
     setTimer(60);
+    setError('');
   };
 
   return (
@@ -142,13 +198,13 @@ export default function LoginPage() {
             CV. BOCAH MANTUL MABUR
           </h1>
           <p className="text-gray-400">
-            {showOTP ? 'Verifikasi OTP' : 'Portal Keunggulan Teknik'}
+            {showOTP ? 'Verifikasi OTP' : 'Masuk atau Daftar'}
           </p>
         </div>
 
         {/* Form Card with Animation */}
         <div className="bg-white rounded-2xl shadow-2xl p-8 relative overflow-hidden">
-          {/* Login/Register Form */}
+          {/* Phone Number Form */}
           <div
             className={`transition-all duration-500 ease-in-out ${
               showOTP
@@ -156,149 +212,48 @@ export default function LoginPage() {
                 : 'opacity-100 translate-x-0'
             }`}
           >
-            {/* Toggle Buttons */}
-            <div className="flex mb-8 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setIsLogin(true)}
-                className={`flex-1 py-2 rounded-md font-semibold transition-all ${
-                  isLogin ? 'bg-red-600 text-white' : 'text-gray-600'
-                }`}
-              >
-                Masuk
-              </button>
-              <button
-                onClick={() => setIsLogin(false)}
-                className={`flex-1 py-2 rounded-md font-semibold transition-all ${
-                  !isLogin ? 'bg-red-600 text-white' : 'text-gray-600'
-                }`}
-              >
-                Daftar
-              </button>
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Selamat Datang</h2>
+              <p className="text-gray-600">
+                Masukkan nomor telepon Anda untuk melanjutkan
+              </p>
             </div>
+
+            {/* Error Message */}
+            {error && !showOTP && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              {!isLogin && (
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Nama Lengkap
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600 focus:outline-none transition"
-                    placeholder="Nama Lengkap Anda"
-                    required={!isLogin}
-                  />
-                </div>
-              )}
-
-              {isLogin ? (
-                <div>
-                  <label htmlFor="emailOrPhone" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email atau Nomor Telepon
-                  </label>
-                  <input
-                    type="text"
-                    id="emailOrPhone"
-                    name="emailOrPhone"
-                    value={formData.emailOrPhone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600 focus:outline-none transition"
-                    placeholder="email@example.com atau 08123456789"
-                    required
-                  />
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                      Alamat Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600 focus:outline-none transition"
-                      placeholder="email@example.com"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                      Nomor Telepon
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600 focus:outline-none transition"
-                      placeholder="08123456789"
-                      required
-                    />
-                  </div>
-                </>
-              )}
-
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Kata Sandi
+                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nomor Telepon
                 </label>
                 <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
+                  type="tel"
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600 focus:outline-none transition"
-                  placeholder="••••••••"
+                  placeholder="08123456789 atau +628123456789"
                   required
+                  disabled={loading}
                 />
+                <p className="mt-2 text-xs text-gray-500">
+                  Kami akan mengirimkan kode verifikasi via WhatsApp
+                </p>
               </div>
-
-              {!isLogin && (
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                    Konfirmasi Kata Sandi
-                  </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-red-600 focus:ring-2 focus:ring-red-600 focus:outline-none transition"
-                    placeholder="••••••••"
-                    required={!isLogin}
-                  />
-                </div>
-              )}
-
-              {isLogin && (
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center">
-                    <input type="checkbox" className="mr-2" />
-                    <span className="text-sm text-gray-600">Ingat saya</span>
-                  </label>
-                  <a href="#" className="text-sm text-red-600 hover:text-red-700">
-                    Lupa kata sandi?
-                  </a>
-                </div>
-              )}
 
               <button
                 type="submit"
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition-colors duration-300 transform hover:scale-105"
+                disabled={loading || !phoneNumber}
+                className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-colors duration-300 transform hover:scale-105 disabled:transform-none"
               >
-                {isLogin ? 'Masuk' : 'Buat Akun'}
+                {loading ? 'Mengirim...' : 'Lanjutkan'}
               </button>
             </form>
           </div>
@@ -314,28 +269,26 @@ export default function LoginPage() {
             <div className="text-center mb-8">
               <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifikasi Akun Anda</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifikasi Nomor Anda</h2>
               <p className="text-gray-600">
                 Kami telah mengirimkan kode verifikasi 6 digit ke:
               </p>
-              {(contactInfo.email || contactInfo.phone) && (
-                <div className="mt-3 space-y-1">
-                  {contactInfo.email && (
-                    <p className="text-sm text-gray-700 font-medium">
-                      Email: {contactInfo.email.replace(/(.{2})(.*)(@.*)/, '$1***$3')}
-                    </p>
-                  )}
-                  {contactInfo.phone && (
-                    <p className="text-sm text-gray-700 font-medium">
-                      Telepon: {contactInfo.phone.replace(/(\d{4})(\d+)(\d{4})/, '$1****$3')}
-                    </p>
-                  )}
-                </div>
+              {maskedPhone && (
+                <p className="mt-2 text-sm text-gray-700 font-medium">
+                  {maskedPhone}
+                </p>
               )}
             </div>
+
+            {/* Error Message */}
+            {error && showOTP && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
 
             <form onSubmit={handleOTPSubmit} className="space-y-6">
               {/* OTP Input */}
@@ -356,7 +309,8 @@ export default function LoginPage() {
                       value={digit}
                       onChange={(e) => handleOTPChange(index, e.target.value)}
                       onKeyDown={(e) => handleOTPKeyDown(index, e)}
-                      className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-600 focus:outline-none transition"
+                      disabled={loading}
+                      className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-red-600 focus:ring-2 focus:ring-red-600 focus:outline-none transition disabled:bg-gray-100"
                     />
                   ))}
                 </div>
@@ -372,7 +326,8 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={handleResendOTP}
-                    className="text-red-600 hover:text-red-700 font-semibold"
+                    disabled={loading}
+                    className="text-red-600 hover:text-red-700 font-semibold disabled:text-gray-400"
                   >
                     Kirim Ulang Kode OTP
                   </button>
@@ -382,19 +337,20 @@ export default function LoginPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={otp.some((digit) => !digit)}
+                disabled={otp.some((digit) => !digit) || loading}
                 className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-colors duration-300 transform hover:scale-105 disabled:transform-none"
               >
-                Verifikasi
+                {loading ? 'Memverifikasi...' : 'Verifikasi'}
               </button>
 
               {/* Back Button */}
               <button
                 type="button"
                 onClick={handleBackToForm}
-                className="w-full text-gray-600 hover:text-gray-900 py-2 font-medium transition-colors"
+                disabled={loading}
+                className="w-full text-gray-600 hover:text-gray-900 py-2 font-medium transition-colors disabled:text-gray-400"
               >
-                ← Kembali ke Form
+                ← Kembali
               </button>
             </form>
 
