@@ -3,19 +3,24 @@
 import { useState } from 'react';
 
 interface ProfileSectionProps {
-  userName?: string;
-  userEmail?: string;
-  userPhone?: string;
-  memberSince?: string;
+  userData?: any;
 }
 
 export default function ProfileSection({ 
-  userName = 'Pengguna',
-  userEmail = 'user@example.com',
-  userPhone = '+62 812-3456-7890',
-  memberSince = 'November 2025'
+  userData
 }: ProfileSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
+  
+  const userName = userData?.name || 'Pengguna';
+  const userPhone = userData?.phoneNumber || '-';
+  const memberSince = userData?.createdAt 
+    ? new Date(userData.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'long' })
+    : 'November 2025';
+  const totalOrders = userData?.statistics?.totalOrders || 0;
+  const totalSpent = userData?.statistics?.totalSpent 
+    ? `Rp ${(parseFloat(userData.statistics.totalSpent) / 1000).toFixed(1)}K`
+    : 'Rp 0';
+  const totalReferrals = userData?.statistics?.totalReferrals || 0;
 
   return (
     <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 rounded-3xl p-8 shadow-2xl border border-gray-800 hover:border-red-600 transition-all duration-500">
@@ -42,13 +47,6 @@ export default function ProfileSection({
       <div className="space-y-4">
         <div className="flex items-center space-x-3 text-gray-300">
           <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-          <span>{userEmail}</span>
-        </div>
-        
-        <div className="flex items-center space-x-3 text-gray-300">
-          <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
           </svg>
           <span>{userPhone}</span>
@@ -65,16 +63,16 @@ export default function ProfileSection({
       <div className="mt-6 pt-6 border-t border-gray-800">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-2xl font-bold text-white">24</p>
+            <p className="text-2xl font-bold text-white">{totalOrders}</p>
             <p className="text-xs text-gray-400 mt-1">Pesanan</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-white">8</p>
-            <p className="text-xs text-gray-400 mt-1">Review</p>
+            <p className="text-2xl font-bold text-white">{totalReferrals}</p>
+            <p className="text-xs text-gray-400 mt-1">Referral</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-white">2.4k</p>
-            <p className="text-xs text-gray-400 mt-1">Poin</p>
+            <p className="text-2xl font-bold text-white">{totalSpent}</p>
+            <p className="text-xs text-gray-400 mt-1">Total</p>
           </div>
         </div>
       </div>

@@ -17,6 +17,9 @@ async function getProfileHandler(request: NextRequest, user: JwtData) {
         name: true,
         phoneNumber: true,
         role: true,
+        referralCode: true,
+        maxReferralPercentage: true,
+        globalDiscountPercentage: true,
         createdAt: true,
         company: {
           select: {
@@ -24,6 +27,14 @@ async function getProfileHandler(request: NextRequest, user: JwtData) {
             name: true,
             address: true,
             phoneNumber: true
+          }
+        },
+        statistics: {
+          select: {
+            totalOrders: true,
+            totalSpent: true,
+            totalReferrals: true,
+            totalReferralEarnings: true
           }
         }
       }
@@ -40,7 +51,16 @@ async function getProfileHandler(request: NextRequest, user: JwtData) {
       {
         success: true,
         message: 'Profile retrieved successfully',
-        data: userData
+        data: {
+          ...userData,
+          maxReferralPercentage: userData.maxReferralPercentage.toString(),
+          globalDiscountPercentage: userData.globalDiscountPercentage.toString(),
+          statistics: userData.statistics ? {
+            ...userData.statistics,
+            totalSpent: userData.statistics.totalSpent.toString(),
+            totalReferralEarnings: userData.statistics.totalReferralEarnings.toString()
+          } : null
+        }
       },
       { status: 200 }
     );

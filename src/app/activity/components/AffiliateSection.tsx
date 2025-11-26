@@ -1,8 +1,17 @@
 'use client';
 
-export default function AffiliateSection() {
-  const referralCode = 'BMM2025XYZ';
-  const referralLink = `https://bmmtbd.com/ref/${referralCode}`;
+interface AffiliateSectionProps {
+  affiliateData?: any;
+  userData?: any;
+}
+
+export default function AffiliateSection({ affiliateData, userData }: AffiliateSectionProps) {
+  const referralCode = affiliateData?.referralCode || userData?.referralCode || 'BMM2025XYZ';
+  const referralLink = affiliateData?.referralLink || `https://bmmtbd.com/ref/${referralCode}`;
+  const commissionRate = affiliateData?.commissionRate || userData?.maxReferralPercentage || '2.5';
+  const totalReferrals = affiliateData?.totalReferrals || 0;
+  const totalEarnings = affiliateData?.totalEarnings ? parseFloat(affiliateData.totalEarnings) : 0;
+  const affiliatedOrders = affiliateData?.affiliatedOrders || [];
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink);
@@ -27,15 +36,15 @@ export default function AffiliateSection() {
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-black/40 rounded-2xl p-4 backdrop-blur-sm">
             <p className="text-red-300 text-sm mb-1">Total Referral</p>
-            <p className="text-3xl font-bold text-white">12</p>
+            <p className="text-3xl font-bold text-white">{totalReferrals}</p>
           </div>
           <div className="bg-black/40 rounded-2xl p-4 backdrop-blur-sm">
             <p className="text-red-300 text-sm mb-1">Komisi Bulan Ini</p>
-            <p className="text-3xl font-bold text-white">Rp 1.2M</p>
+            <p className="text-3xl font-bold text-white">Rp {(totalEarnings / 1000).toFixed(1)}K</p>
           </div>
           <div className="bg-black/40 rounded-2xl p-4 backdrop-blur-sm">
             <p className="text-red-300 text-sm mb-1">Total Earnings</p>
-            <p className="text-3xl font-bold text-white">Rp 8.5M</p>
+            <p className="text-3xl font-bold text-white">Rp {(totalEarnings / 1000).toFixed(1)}K</p>
           </div>
         </div>
 
@@ -64,9 +73,37 @@ export default function AffiliateSection() {
           <p className="text-red-300 text-sm mb-3">Kode Referral</p>
           <div className="flex items-center justify-between">
             <span className="text-3xl font-mono font-bold text-white tracking-wider">{referralCode}</span>
-            <span className="text-red-300 text-sm">Komisi 10% per transaksi</span>
+            <span className="text-red-300 text-sm">Komisi {commissionRate}% per transaksi</span>
           </div>
         </div>
+
+        {/* Affiliated Orders Section */}
+        {affiliatedOrders.length > 0 ? (
+          <div className="bg-black/40 rounded-2xl p-6 backdrop-blur-sm">
+            <p className="text-red-300 text-sm mb-4">Pesanan dari Referral Anda</p>
+            <div className="space-y-3">
+              {affiliatedOrders.map((order: any, index: number) => (
+                <div key={index} className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-white font-semibold">{order.userName || 'Customer'}</p>
+                      <p className="text-gray-400 text-xs">Order #{order.id}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white font-semibold">Rp {parseFloat(order.total).toLocaleString('id-ID')}</p>
+                      <p className="text-green-400 text-xs">Komisi: Rp {parseFloat(order.commission).toLocaleString('id-ID')}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-black/40 rounded-2xl p-6 backdrop-blur-sm text-center">
+            <p className="text-gray-400 text-sm">Belum ada pesanan dari referral Anda</p>
+            <p className="text-red-300 text-xs mt-2">Bagikan link referral Anda untuk mulai mendapatkan komisi!</p>
+          </div>
+        )}
       </div>
     </div>
   );

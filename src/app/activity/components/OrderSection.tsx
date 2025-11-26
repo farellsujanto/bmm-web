@@ -1,40 +1,12 @@
 'use client';
 
-export default function OrderSection() {
-  const orders = [
-    { 
-      id: 'ORD-2025-001', 
-      date: '25 Nov 2025', 
-      items: 'Bearing Bola Industrial, Kit Seal HP',
-      total: 'Rp 2.140.000',
-      status: 'delivered',
-      trackingNumber: 'JNE123456789'
-    },
-    { 
-      id: 'ORD-2025-002', 
-      date: '23 Nov 2025', 
-      items: 'Sistem Pompa Hidrolik',
-      total: 'Rp 8.500.000',
-      status: 'shipping',
-      trackingNumber: 'JNE987654321'
-    },
-    { 
-      id: 'ORD-2025-003', 
-      date: '20 Nov 2025', 
-      items: 'Pelumas Sintetis 5L (x3)',
-      total: 'Rp 435.000',
-      status: 'processing',
-      trackingNumber: '-'
-    },
-    { 
-      id: 'ORD-2025-004', 
-      date: '18 Nov 2025', 
-      items: 'Kunci Torsi Profesional',
-      total: 'Rp 4.200.000',
-      status: 'delivered',
-      trackingNumber: 'JNE555666777'
-    },
-  ];
+interface OrderSectionProps {
+  orders?: any[];
+  isSnippet?: boolean;
+}
+
+export default function OrderSection({ orders = [], isSnippet = false }: OrderSectionProps) {
+  const displayOrders = orders;
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -60,19 +32,27 @@ export default function OrderSection() {
           <svg className="w-8 h-8 mr-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
-          Riwayat Pesanan
+          {isSnippet ? 'Pesanan Terbaru' : 'Riwayat Pesanan'}
         </h2>
-        <button className="text-red-400 hover:text-red-300 font-semibold text-sm transition-colors">
-          Lihat Semua →
-        </button>
+        {isSnippet && displayOrders.length > 0 && (
+          <button className="text-red-400 hover:text-red-300 font-semibold text-sm transition-colors">
+            Lihat Semua →
+          </button>
+        )}
       </div>
 
-      <div className="space-y-4">
-        {orders.map((order) => (
-          <div
-            key={order.id}
-            className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 hover:border-red-900 transition-all duration-300 group"
-          >
+      {displayOrders.length === 0 ? (
+        <div className="text-center py-8 text-gray-400">
+          <p>Belum ada pesanan</p>
+          <p className="text-sm mt-2">Mulai belanja sekarang!</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {displayOrders.map((order) => (
+            <div
+              key={order.id}
+              className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 hover:border-red-900 transition-all duration-300 group"
+            >
             <div className="flex items-start justify-between mb-4">
               <div>
                 <div className="flex items-center space-x-3 mb-2">
@@ -117,15 +97,18 @@ export default function OrderSection() {
                 Detail
               </button>
             </div>
-          </div>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-      <div className="mt-6 text-center">
-        <button className="text-gray-400 hover:text-white transition-colors text-sm font-semibold">
-          Muat Lebih Banyak
-        </button>
-      </div>
+      {!isSnippet && displayOrders.length > 0 && (
+        <div className="mt-6 text-center">
+          <button className="text-gray-400 hover:text-white transition-colors text-sm font-semibold">
+            Muat Lebih Banyak
+          </button>
+        </div>
+      )}
     </div>
   );
 }

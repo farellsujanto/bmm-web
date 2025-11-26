@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       
       // Ensure referral code is unique
       while (!isUnique) {
-        const existing = await prisma.user.findUnique({
+        const existing = await prisma.user.findFirst({
           where: { referralCode }
         });
         if (!existing) {
