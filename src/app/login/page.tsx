@@ -88,36 +88,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleOTPChange = (index: number, value: string) => {
-    if (value.length > 1) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOTPKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleOTPPaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').slice(0, 6);
-    const newOtp = pastedData.split('');
-    
-    if (newOtp.length === 6) {
-      setOtp(newOtp);
-      inputRefs.current[5]?.focus();
-    }
-  };
-
   const handleOTPSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otpCode = otp.join('');
@@ -131,8 +101,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await ensureDeviceId();
-      const headers = await getAuthHeaders();
+      ensureDeviceId();
+      const headers = getAuthHeaders();
 
       const response = await fetch('/api/v1/auth/signin', {
         method: 'POST',

@@ -81,16 +81,16 @@ export function validateAuthToken(request: NextRequest): ApiGuardResult {
     }
 
     // Validate device ID matches token
-    const deviceId = request.headers.get('x-device-id');
-    const extraPrivateSalt = process.env.EXTRA_SALT || '';
+    // const deviceId = request.headers.get('x-device-id');
+    // const extraPrivateSalt = process.env.EXTRA_SALT || '';
     
-    if (deviceId && !validateJwtDeviceId(token, deviceId, extraPrivateSalt)) {
-      return {
-        success: false,
-        error: 'Device ID mismatch',
-        status: 401
-      };
-    }
+    // if (deviceId && !validateJwtDeviceId(token, deviceId, extraPrivateSalt)) {
+    //   return {
+    //     success: false,
+    //     error: 'Device ID mismatch',
+    //     status: 401
+    //   };
+    // }
 
     return {
       success: true,

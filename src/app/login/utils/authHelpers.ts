@@ -29,7 +29,7 @@ export function ensureDeviceId(): string {
   return deviceId;
 }
 
-export async function getAuthHeaders(): Promise<HeadersInit> {
+export function getAuthHeaders(): HeadersInit {
   const deviceId = ensureDeviceId();
   const authToken = localStorage.getItem('authToken');
   

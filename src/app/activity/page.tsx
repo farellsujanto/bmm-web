@@ -28,7 +28,7 @@ export default function ActivityPage() {
 
   const fetchOrders = async () => {
     try {
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
       const ordersRes = await fetch('/api/v1/user/orders', { headers });
       
       if (ordersRes.ok) {
@@ -43,7 +43,7 @@ export default function ActivityPage() {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
 
       // Fetch all data in parallel except orders (loaded on demand)
       const [profileRes, missionsRes, affiliateRes] = await Promise.all([
