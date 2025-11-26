@@ -1,5 +1,4 @@
 export async function sendWhatsAppOtp(otp: string, phoneNumber: string) {
-    console.log(phoneNumber);
     const result = await fetch('https://graph.facebook.com/v20.0/391122604089692/messages', {
         method: 'POST',
         headers: {
@@ -20,7 +19,7 @@ export async function sendWhatsAppOtp(otp: string, phoneNumber: string) {
                         type: 'body',
                         parameters: [{
                             type: 'text',
-                            text: `${otp}`
+                            text: otp
                         }]
                     },
                     {
@@ -29,7 +28,7 @@ export async function sendWhatsAppOtp(otp: string, phoneNumber: string) {
                         index: 0,
                         parameters: [{
                             type: 'text',
-                            text: `${otp}`
+                            text: otp
                         }]
                     },
                 ],
