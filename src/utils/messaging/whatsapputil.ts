@@ -1,5 +1,6 @@
 export async function sendWhatsAppOtp(otp: string, phoneNumber: string) {
-    await fetch('https://graph.facebook.com/v20.0/391122604089692/messages', {
+    console.log(phoneNumber);
+    const result = await fetch('https://graph.facebook.com/v20.0/391122604089692/messages', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -36,4 +37,5 @@ export async function sendWhatsAppOtp(otp: string, phoneNumber: string) {
 
         }),
     });
+    console.log('WhatsApp API response status:', result.status);
 }
