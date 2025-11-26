@@ -140,8 +140,6 @@ export async function POST(request: NextRequest) {
       { id: user.id, role: user.role },
       deviceId!,
       process.env.EXTRA_SALT || '',
-      true, // OTP cleared
-      false // PIN not used
     );
 
     return NextResponse.json(

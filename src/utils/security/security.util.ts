@@ -92,7 +92,7 @@ export function createDidForJwt(hashedDeviceId: string): string {
     return SHA256(hashedDeviceId + process.env.EXTRA_SALT).toString();
 }
 
-export function createFullJwt(userData: { id: number, role: string }, deviceId: string, extraPrivateSalt: string, otpCleared: boolean = false, pinCleared: boolean = false): string {
+export function createFullJwt(userData: { id: number, role: string }, deviceId: string, extraPrivateSalt: string): string {
     const hashedDeviceId = deviceId === '' ? '' : createActiveDeviceId(deviceId, extraPrivateSalt);
     
     const jwtData: JwtData = {

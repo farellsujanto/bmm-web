@@ -81,9 +81,9 @@ model UserStatistics {
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   totalOrders           Int      @default(0)
-  totalSpent            Decimal  @default(0) @db.Decimal(13, 2)
+  totalSpent            Decimal  @default(0) @db.Decimal(12, 2)
   totalReferrals        Int      @default(0)
-  totalReferralEarnings Decimal  @default(0) @db.Decimal(13, 2)
+  totalReferralEarnings Decimal  @default(0) @db.Decimal(12, 2)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -191,7 +191,7 @@ model Mission {
   icon          String   // Emoji or icon identifier
   
   type          MissionType
-  targetValue   Decimal  @db.Decimal(13, 2) // Target to reach (count or amount)
+  targetValue   Decimal  @db.Decimal(12, 2) // Target to reach (count or amount)
   
   rewardType    RewardType
   rewardValue   Decimal  @db.Decimal(5, 2) // Percentage increase (e.g., 2.5 for 2.5%)
@@ -221,7 +221,7 @@ model UserMission {
   
   achieved        Boolean  @default(false)
   achievedAt      DateTime?
-  currentProgress Decimal  @default(0) @db.Decimal(13, 2)
+  currentProgress Decimal  @default(0) @db.Decimal(12, 2)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
