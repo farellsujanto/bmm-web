@@ -31,8 +31,12 @@ export default function ShopPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-16">
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="min-h-screen bg-gray-50">
+      {/* Black overlay for navbar */}
+      <div className="fixed top-0 left-0 right-0 h-20 bg-black z-40"></div>
+      
+      <div className="relative pt-24 pb-16">
+        <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">Produk Kami</h1>
@@ -83,6 +87,7 @@ export default function ShopPage() {
             <p className="text-gray-500 mt-2">Coba sesuaikan filter Anda</p>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,6 +15,28 @@ export default function Navbar() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const checkAuth = () => {
+      const token = localStorage.getItem('authToken');
+      setIsLoggedIn(!!token);
+    };
+    
+    checkAuth();
+    
+    // Listen for storage changes (e.g., login/logout in another tab or after login)
+    window.addEventListener('storage', checkAuth);
+    
+    // Also listen for custom login event
+    const handleLogin = () => checkAuth();
+    window.addEventListener('login', handleLogin);
+    
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('login', handleLogin);
+    };
   }, []);
 
   return (
@@ -57,12 +80,21 @@ export default function Navbar() {
             >
               Kontak
             </Link>
-            <Link
-              href="/login"
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full transition-colors duration-300 font-medium"
-            >
-              Masuk
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/activity"
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full transition-colors duration-300 font-medium"
+              >
+                Pusat Aktifitas
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full transition-colors duration-300 font-medium"
+              >
+                Masuk
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -126,13 +158,23 @@ export default function Navbar() {
             >
               Kontak
             </Link>
-            <Link
-              href="/login"
-              className="block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full transition-colors duration-300 font-medium text-center"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Masuk
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/activity"
+                className="block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full transition-colors duration-300 font-medium text-center"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Pusat Aktifitas
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="block bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full transition-colors duration-300 font-medium text-center"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Masuk
+              </Link>
+            )}
           </div>
         )}
       </div>
