@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 if (!supabaseUrl || !supabaseKey) {
@@ -83,6 +83,7 @@ export async function uploadImageToSupabase(
     });
 
   if (error) {
+    console.error('Supabase upload error:', error);
     throw new Error(`Failed to upload image: ${error.message}`);
   }
 
@@ -162,6 +163,55 @@ export async function listFilesInSupabase(
 export function getPublicUrl(bucket: string, path: string): string {
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
+}
+
+/**
+ * Generate a temporary signed URL for a file in Supabase Storage
+ * @param bucket Storage bucket name
+ * @param path Path to the file
+ * @param expiresIn Time in seconds until the URL expires (default: 3600 = 1 hour)
+ * @returns Signed URL that expires after the specified time
+ */
+export async function createSignedUrl(
+  bucket: string,
+  path: string,
+  expiresIn: number = 3600
+): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(path, expiresIn);
+
+  if (error) {
+    throw new Error(`Failed to create signed URL: ${error.message}`);
+  }
+
+  return data.signedUrl;
+}
+
+/**
+ * Generate multiple temporary signed URLs for files in Supabase Storage
+ * @param bucket Storage bucket name
+ * @param paths Array of paths to the files
+ * @param expiresIn Time in seconds until the URLs expire (default: 3600 = 1 hour)
+ * @returns Array of signed URLs
+ */
+export async function createSignedUrls(
+  bucket: string,
+  paths: string[],
+  expiresIn: number = 3600
+): Promise<{ path: string; signedUrl: string }[]> {
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrls(paths, expiresIn);
+
+  if (error) {
+    throw new Error(`Failed to create signed URLs: ${error.message}`);
+  }
+
+  return data.map((item) => ({
+    path: item.path!,
+    signedUrl: item.signedUrl!,
+  }));
 }
 
 export default supabase;

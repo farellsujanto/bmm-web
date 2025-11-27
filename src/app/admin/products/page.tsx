@@ -26,6 +26,7 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<ProductWithRelations | null>(null);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const [images, setImages] = useState<ProductImage[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]); // Store actual files for new products
   const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -75,16 +76,29 @@ export default function ProductsPage() {
     e.preventDefault();
 
     try {
-      const payload = {
-        ...formData,
-        images: images.map((img, idx) => ({ ...img, sortOrder: idx }))
-      };
-
       if (editingProduct) {
+        // For updates, use JSON payload with existing image URLs
+        const payload = {
+          ...formData,
+          images: images.map((img, idx) => ({ ...img, sortOrder: idx }))
+        };
         await apiRequest.put(`/v1/admin/products/${editingProduct.id}`, payload);
         alert('Product updated successfully');
       } else {
-        await apiRequest.post('/v1/admin/products', payload);
+        // For creation, use FormData to upload images
+        const formDataToSend = new FormData();
+        
+        // Append all form fields
+        Object.entries(formData).forEach(([key, value]) => {
+          formDataToSend.append(key, value.toString());
+        });
+        
+        // Append image files
+        imageFiles.forEach((file) => {
+          formDataToSend.append('images', file);
+        });
+
+        await apiRequest.post('/v1/admin/products', formDataToSend);
         alert('Product created successfully');
       }
 
@@ -135,6 +149,7 @@ export default function ProductsPage() {
   const resetForm = () => {
     setEditingProduct(null);
     setImages([]);
+    setImageFiles([]);
     setFormData({
       name: '',
       slug: '',
@@ -198,21 +213,33 @@ export default function ProductsPage() {
 
     setUploadingImage(true);
     try {
-      const formData = new FormData();
-      formData.append('image', file);
+      if (editingProduct) {
+        // For editing existing product, upload immediately to get URL
+        const formData = new FormData();
+        formData.append('image', file);
 
-      const response = await apiRequest.post<{ url: string }>(
-        '/v1/admin/products/upload-image',
-        formData
-      );
+        const response = await apiRequest.post<{ url: string }>(
+          '/v1/admin/products/upload-image',
+          formData
+        );
 
-      setImages([...images, {
-        url: response.data.url,
-        alt: '',
-        sortOrder: images.length
-      }]);
+        setImages([...images, {
+          url: response.data.url,
+          alt: '',
+          sortOrder: images.length
+        }]);
+      } else {
+        // For new product, store File object and blob URL for preview
+        const blobUrl = URL.createObjectURL(file);
+        setImages([...images, {
+          url: blobUrl,
+          alt: '',
+          sortOrder: images.length
+        }]);
+        setImageFiles([...imageFiles, file]);
+      }
     } catch (error: any) {
-      alert(error.message || 'Failed to upload image');
+      alert(error.message || 'Failed to handle image');
     } finally {
       setUploadingImage(false);
     }
@@ -241,6 +268,9 @@ export default function ProductsPage() {
 
   const removeImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
+    if (!editingProduct) {
+      setImageFiles(imageFiles.filter((_, i) => i !== index));
+    }
   };
 
   if (loading) {

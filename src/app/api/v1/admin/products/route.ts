@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/src/utils/security/apiGuard.util';
 import { JwtData } from '@/src/utils/security/models/jwt.model';
 import prisma from '@/src/utils/database/prismaOrm.util';
+import { uploadImageToSupabase } from '@/src/utils/storage/supabaseStorage.util';
 
 async function getProductsHandler(request: NextRequest, user: JwtData) {
   if (user.role !== 'ADMIN') {
@@ -45,26 +46,25 @@ async function createProductHandler(request: NextRequest, user: JwtData) {
   }
 
   try {
-    const body = await request.json();
-    const {
-      name,
-      slug,
-      sku,
-      description,
-      shortDescription,
-      dataSheetUrl,
-      price,
-      discount,
-      stock,
-      isActive,
-      affiliatePercent,
-      isPreOrder,
-      preOrderReadyEarliest,
-      preOrderReadyLatest,
-      brandId,
-      categoryId,
-      images
-    } = body;
+    const formData = await request.formData();
+    
+    // Extract form fields
+    const name = formData.get('name') as string;
+    const slug = formData.get('slug') as string;
+    const sku = formData.get('sku') as string;
+    const description = formData.get('description') as string;
+    const shortDescription = formData.get('shortDescription') as string;
+    const dataSheetUrl = formData.get('dataSheetUrl') as string;
+    const price = formData.get('price') as string;
+    const discount = formData.get('discount') as string;
+    const stock = formData.get('stock') as string;
+    const isActive = formData.get('isActive') === 'true';
+    const affiliatePercent = formData.get('affiliatePercent') as string;
+    const isPreOrder = formData.get('isPreOrder') === 'true';
+    const preOrderReadyEarliest = formData.get('preOrderReadyEarliest') as string;
+    const preOrderReadyLatest = formData.get('preOrderReadyLatest') as string;
+    const brandId = formData.get('brandId') as string;
+    const categoryId = formData.get('categoryId') as string;
 
     // Validate required fields
     if (!name || !slug || !sku || !brandId || !categoryId) {
@@ -82,6 +82,30 @@ async function createProductHandler(request: NextRequest, user: JwtData) {
     });
     const nextSortOrder = (maxSortOrder?.sortOrder ?? -1) + 1;
 
+    // Upload images to Supabase
+    const uploadedImages: { url: string; alt: string; sortOrder: number }[] = [];
+    const imageFiles = formData.getAll('images') as File[];
+    
+    for (let i = 0; i < imageFiles.length; i++) {
+      const file = imageFiles[i];
+      if (file && file.size > 0) {
+        const result = await uploadImageToSupabase({
+          bucket: 'product_images',
+          folder: slug,
+          file: file,
+          maxWidth: 1200,
+          maxHeight: 1200,
+          quality: 85
+        });
+        
+        uploadedImages.push({
+          url: result.publicUrl,
+          alt: name,
+          sortOrder: i
+        });
+      }
+    }
+
     // Create product with images
     const product = await prisma.product.create({
       data: {
@@ -94,20 +118,16 @@ async function createProductHandler(request: NextRequest, user: JwtData) {
         price: price ? parseInt(price) : null,
         discount: discount ? parseFloat(discount) : null,
         stock: stock ? parseInt(stock) : 0,
-        isActive: isActive !== false,
+        isActive,
         sortOrder: nextSortOrder,
         affiliatePercent: affiliatePercent ? parseFloat(affiliatePercent) : null,
-        isPreOrder: isPreOrder || false,
+        isPreOrder,
         preOrderReadyEarliest: preOrderReadyEarliest ? parseInt(preOrderReadyEarliest) : null,
         preOrderReadyLatest: preOrderReadyLatest ? parseInt(preOrderReadyLatest) : null,
         brandId: parseInt(brandId),
         categoryId: parseInt(categoryId),
-        images: images ? {
-          create: images.map((img: any, index: number) => ({
-            url: img.url,
-            alt: img.alt || name,
-            sortOrder: img.sortOrder || index
-          }))
+        images: uploadedImages.length > 0 ? {
+          create: uploadedImages
         } : undefined
       },
       include: {

@@ -79,8 +79,9 @@ async function processApiRequest<T>(endpoint: string, options: RequestOptions = 
   }
 
   // Prepare headers
+  const isFormData = data instanceof FormData;
   const defaultHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
+    ...(!isFormData && { 'Content-Type': 'application/json' }), // Don't set Content-Type for FormData
     'Api-Key': process.env.NEXT_PUBLIC_API_KEY ?? '',
     // Add in-memory access token if exists
     ...(inMemoryAccessToken && {
@@ -98,7 +99,7 @@ async function processApiRequest<T>(endpoint: string, options: RequestOptions = 
 
   // Add body for non-GET requests
   if (data) {
-    config.body = JSON.stringify(data);
+    config.body = isFormData ? data : JSON.stringify(data);
   }
 
   try {
