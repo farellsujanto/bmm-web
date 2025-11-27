@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PhoneNumberForm from './components/PhoneNumberForm';
 import OTPVerificationForm from './components/OTPVerificationForm';
-import { ensureDeviceId, getAuthHeaders, isAuthenticated } from './utils/authHelpers';
+import { getAuthHeaders, isAuthenticated } from './utils/authHelpers';
 import { maskPhoneNumber } from '@/src/utils/formatter/stringFormatter.util';
 
 export default function LoginPage() {
@@ -51,8 +51,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await ensureDeviceId();
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
 
       const response = await fetch('/api/v1/auth/request-otp', {
         method: 'POST',
@@ -101,7 +100,6 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      ensureDeviceId();
       const headers = getAuthHeaders();
 
       const response = await fetch('/api/v1/auth/signin', {
@@ -144,8 +142,7 @@ export default function LoginPage() {
     inputRefs.current[0]?.focus();
     
     try {
-      await ensureDeviceId();
-      const headers = await getAuthHeaders();
+      const headers = getAuthHeaders();
 
       const response = await fetch('/api/v1/auth/request-otp', {
         method: 'POST',

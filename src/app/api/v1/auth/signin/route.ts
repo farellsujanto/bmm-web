@@ -8,10 +8,9 @@ export async function POST(request: NextRequest) {
   try {
     // Extract headers
     const apiKey = request.headers.get('api-key');
-    const deviceId = request.headers.get('x-device-id');
 
     // Validate required headers
-    const validation = validateRequiredHeaders(apiKey, deviceId);
+    const validation = validateRequiredHeaders(apiKey);
     if (!validation.isValid) {
       return NextResponse.json(
         { success: false, message: validation.error },
@@ -137,9 +136,7 @@ export async function POST(request: NextRequest) {
 
     // Generate JWT token
     const token = createFullJwt(
-      { id: user.id, role: user.role },
-      deviceId!,
-      process.env.EXTRA_SALT || '',
+      { id: user.id, role: user.role }
     );
 
     return NextResponse.json(

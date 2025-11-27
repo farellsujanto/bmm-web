@@ -20,8 +20,7 @@ export function createJwt(data: JwtData) {
     const privateKey = decodeBase64(process.env.JWT_KEY);
     return jwt.sign({
         id: data.id,
-        role: data.role,
-        did: data.did
+        role: data.role
     },
         privateKey,
         { expiresIn: '7d' } // Extended to 7 days for better UX
@@ -62,58 +61,17 @@ export function verifyPassword(password: string, hashedPassword: string, salt: s
     return saltPassword(password, salt) === hashedPassword;
 }
 
-export function createOtpHash(deviceId: string, otp: string): string {
-    if (!process.env.EXTRA_SALT || !deviceId || !otp) {
-        throw new Error('Missing data for OTP hashing');
-    }
-    return SHA256(deviceId + otp + process.env.EXTRA_SALT).toString();
-}
-
-export function verifyOtp(deviceId: string, otp: string, hashedOtp: string): boolean {
-    return createOtpHash(deviceId, otp) === hashedOtp;
-}
-
 export function generateOtp(): string {
     return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
 }
 
-export function createActiveDeviceId(deviceId: string, extraPrivateSalt: string): string {
-    if (!process.env.EXTRA_SALT || !deviceId || !extraPrivateSalt) {
-        throw new Error('Missing data for active device ID hashing');
-    }
-    return SHA256(deviceId + extraPrivateSalt + process.env.EXTRA_SALT).toString();
-}
-
-export function verifyActiveDeviceId(deviceId: string, extraPrivateSalt: string, hashedActiveDeviceId: string): boolean {
-    return createActiveDeviceId(deviceId, extraPrivateSalt) === hashedActiveDeviceId;
-}
-
-export function createDidForJwt(hashedDeviceId: string): string {
-    return SHA256(hashedDeviceId + process.env.EXTRA_SALT).toString();
-}
-
-export function createFullJwt(userData: { id: number, role: string }, deviceId: string, extraPrivateSalt: string): string {
-    const hashedDeviceId = deviceId === '' ? '' : createActiveDeviceId(deviceId, extraPrivateSalt);
-    
+export function createFullJwt(userData: { id: number, role: string }): string {
     const jwtData: JwtData = {
         id: userData.id,
-        role: userData.role,
-        did: createDidForJwt(hashedDeviceId),
+        role: userData.role
     };
     
     return createJwt(jwtData);
-}
-
-export function validateJwtDeviceId(token: string, deviceId: string, extraPrivateSalt: string): boolean {
-    try {
-        const decoded = verifyJwt(token);
-        if (!decoded) return false;
-        
-        const expectedDeviceId = createActiveDeviceId(deviceId, extraPrivateSalt);
-        return expectedDeviceId === decoded.did;
-    } catch {
-        return false;
-    }
 }
 
 export function isOtpExpired(validUntil: Date): boolean {
@@ -130,17 +88,13 @@ export function validateApiKey(apiKey: string): boolean {
     return apiKey === process.env.API_KEY;
 }
 
-export function validateRequiredHeaders(apiKey: string | null, deviceId: string | null): { isValid: boolean, error?: string } {
+export function validateRequiredHeaders(apiKey: string | null): { isValid: boolean, error?: string } {
     if (!apiKey) {
         return { isValid: false, error: 'API key is required' };
     }
     
     if (!validateApiKey(apiKey)) {
         return { isValid: false, error: 'Invalid API key' };
-    }
-    
-    if (!deviceId) {
-        return { isValid: false, error: 'Device ID is required' };
     }
     
     return { isValid: true };

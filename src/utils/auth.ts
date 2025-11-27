@@ -7,41 +7,6 @@ export const AUTH_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || '',
 };
 
-// SHA256 hash function for browser
-const sha256 = async (message: string): Promise<string> => {
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
-};
-
-export const generateDeviceId = async (): Promise<string> => {
-  const timestamp = Date.now().toString();
-  const randomStr = Math.random().toString();
-  const userAgent = navigator.userAgent;
-  const screenInfo = `${screen.width}x${screen.height}`;
-
-  // Combine multiple factors for uniqueness
-  const rawId = `web_${timestamp}_${randomStr}_${userAgent}_${screenInfo}`;
-
-  // Hash the combined string for consistent length and privacy
-  const hashedId = await sha256(rawId);
-  return hashedId;
-};
-
-// Enhanced device ID management - ensures device ID exists and is saved
-export const ensureDeviceId = async (): Promise<string> => {
-  let deviceId = localStorage.getItem('deviceId');
-  
-  if (!deviceId) {
-    deviceId = await generateDeviceId();
-    localStorage.setItem('deviceId', deviceId);
-  }
-  
-  return deviceId;
-};
-
 // Mock RSA encryption (replace with actual implementation)
 export interface RSAEncryptedData {
   encryptedData: string;
@@ -108,13 +73,10 @@ export const encryptPinWithRSA = async (pin: string): Promise<RSAEncryptedData> 
 };
 
 export const getAuthHeaders = async () => {
-  await ensureDeviceId(); // Ensure device ID exists
-  const deviceId = localStorage.getItem('deviceId');
   const authToken = localStorage.getItem('authToken');
 
   return {
     'Content-Type': 'application/json',
-    'X-Device-Id': deviceId || '',
     'Api-Key': AUTH_CONFIG.API_KEY,
     'Access-Device-Type': 'web',
     ...(authToken && { 'Authorization': `Bearer ${authToken}` })
@@ -124,8 +86,6 @@ export const getAuthHeaders = async () => {
 // Auth API wrapper functions using apiRequest
 export const authApi = {
   checkPhone: async (phoneNumber: string) => {
-    await ensureDeviceId(); // Ensure device ID exists and is saved
-
     return apiRequest.post('/v1/auth/check', { phoneNumber }, {
       headers: await getAuthHeaders()
     });
@@ -137,32 +97,24 @@ export const authApi = {
     organizationName: string;
     organizationFields?: string;
   }) => {
-    await ensureDeviceId(); // Ensure device ID exists and is saved
-    
     return apiRequest.post<any>('/v1/user/register', data, {
       headers: await getAuthHeaders()
     });
   },
 
   sendOtp: async (phoneNumber: string) => {
-    await ensureDeviceId(); // Ensure device ID exists and is saved
-    
     return apiRequest.post('/v1/user/otp', { phoneNumber }, {
       headers: await getAuthHeaders()
     });
   },
 
   verifyOtp: async (phoneNumber: string, otp: string) => {
-    await ensureDeviceId(); // Ensure device ID exists and is saved
-    
     return apiRequest.put('/v1/user/otp', { phoneNumber, otp }, {
       headers: await getAuthHeaders()
     });
   },
 
   login: async (encryptedPin: RSAEncryptedData) => {
-    await ensureDeviceId(); // Ensure device ID exists and is saved
-    
     return apiRequest.post('/v1/user/login', { encryptedPin }, {
       headers: await getAuthHeaders()
     });

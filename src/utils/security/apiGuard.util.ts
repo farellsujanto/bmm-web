@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyJwt, validateApiKey, validateJwtDeviceId } from './security.util';
+import { verifyJwt, validateApiKey } from './security.util';
 import { JwtData } from './models/jwt.model';
 
 export interface AuthenticatedRequest extends NextRequest {
@@ -14,11 +14,10 @@ export interface ApiGuardResult {
 }
 
 /**
- * Validates API key and device ID from request headers
+ * Validates API key from request headers
  */
 export function validateBasicHeaders(request: NextRequest): ApiGuardResult {
   const apiKey = request.headers.get('api-key');
-  const deviceId = request.headers.get('x-device-id');
 
   if (!apiKey) {
     return {
@@ -32,14 +31,6 @@ export function validateBasicHeaders(request: NextRequest): ApiGuardResult {
     return {
       success: false,
       error: 'Invalid API key',
-      status: 401
-    };
-  }
-
-  if (!deviceId) {
-    return {
-      success: false,
-      error: 'Device ID is required',
       status: 401
     };
   }
@@ -79,18 +70,6 @@ export function validateAuthToken(request: NextRequest): ApiGuardResult {
         status: 401
       };
     }
-
-    // Validate device ID matches token
-    // const deviceId = request.headers.get('x-device-id');
-    // const extraPrivateSalt = process.env.EXTRA_SALT || '';
-    
-    // if (deviceId && !validateJwtDeviceId(token, deviceId, extraPrivateSalt)) {
-    //   return {
-    //     success: false,
-    //     error: 'Device ID mismatch',
-    //     status: 401
-    //   };
-    // }
 
     return {
       success: true,
