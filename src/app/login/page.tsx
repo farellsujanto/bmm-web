@@ -111,13 +111,17 @@ export default function LoginPage() {
     try {
       const headers = getAuthHeaders();
 
+      // Get referral code from localStorage
+      const referralCode = localStorage.getItem('referralCode');
+
       const response = await fetch('/api/v1/auth/signin', {
         method: 'POST',
         headers,
         credentials: 'include',
         body: JSON.stringify({ 
           phoneNumber,
-          otp: otpCode 
+          otp: otpCode,
+          referralCode: referralCode || undefined
         }),
       });
 
@@ -125,6 +129,11 @@ export default function LoginPage() {
 
       if (!response.ok) {
         throw new Error(data.message || 'Verifikasi OTP gagal');
+      }
+
+      // Remove referral code from localStorage after successful registration
+      if (referralCode) {
+        localStorage.removeItem('referralCode');
       }
 
       // Store access token in memory and context

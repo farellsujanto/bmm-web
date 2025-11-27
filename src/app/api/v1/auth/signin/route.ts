@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { phoneNumber, otp } = body;
+    const { phoneNumber, otp, referralCode } = body;
 
     if (!phoneNumber || !otp) {
       return NextResponse.json(
@@ -78,18 +78,32 @@ export async function POST(request: NextRequest) {
     let isNewUser = false;
     if (!user) {
       // Generate unique referral code
-      let referralCode = generateReferralCode();
+      let newReferralCode = generateReferralCode();
       let isUnique = false;
       
       // Ensure referral code is unique
       while (!isUnique) {
         const existing = await prisma.user.findFirst({
-          where: { referralCode }
+          where: { referralCode: newReferralCode }
         });
         if (!existing) {
           isUnique = true;
         } else {
-          referralCode = generateReferralCode();
+          newReferralCode = generateReferralCode();
+        }
+      }
+
+      // Find referrer if referral code provided
+      let referrerId: number | undefined = undefined;
+      if (referralCode) {
+        const referrer = await prisma.user.findFirst({
+          where: { referralCode: referralCode }
+        });
+        if (referrer) {
+          referrerId = referrer.id;
+          console.log('Referrer found:', referrer.id);
+        } else {
+          console.log('Referral code provided but no matching user found:', referralCode);
         }
       }
 
@@ -98,8 +112,9 @@ export async function POST(request: NextRequest) {
         data: {
           phoneNumber: validatedPhoneNumber,
           role: 'CUSTOMER',
-          referralCode: referralCode,
-          maxReferralPercentage: 2.5,
+          referralCode: newReferralCode,
+          referrerId: referrerId,
+          maxReferralPercentage: 5,
           globalDiscountPercentage: 0,
           statistics: {
             create: {
@@ -113,6 +128,19 @@ export async function POST(request: NextRequest) {
       });
       
       isNewUser = true;
+
+      // Update referrer's statistics if applicable
+      if (referrerId) {
+        await prisma.userStatistics.update({
+          where: { userId: referrerId },
+          data: {
+            totalReferrals: {
+              increment: 1
+            }
+          }
+        });
+        console.log('Updated referrer statistics for user:', referrerId);
+      }
 
       // Initialize missions for new user
       const missions = await prisma.mission.findMany({
