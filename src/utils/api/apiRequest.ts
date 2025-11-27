@@ -4,6 +4,7 @@ interface RequestOptions extends RequestInit {
   method?: RequestMethod;
   data?: any;
   params?: Record<string, string>;
+  skipAuthRefresh?: boolean; // Flag to prevent infinite loops
 }
 
 interface ApiError extends Error {
@@ -19,12 +20,53 @@ interface ApiResponse<T> {
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
+// Store for in-memory access token (will be synced with AuthContext)
+let inMemoryAccessToken: string | null = null;
+
+export function setInMemoryToken(token: string | null) {
+  inMemoryAccessToken = token;
+}
+
+export function getInMemoryToken(): string | null {
+  return inMemoryAccessToken;
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  try {
+    const response = await fetch('/api/v1/auth/refresh', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': process.env.NEXT_PUBLIC_API_KEY ?? '',
+      },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    
+    if (data.success && data.data?.accessToken) {
+      setInMemoryToken(data.data.accessToken);
+      return data.data.accessToken;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    return null;
+  }
+}
+
 async function processApiRequest<T>(endpoint: string, options: RequestOptions = {}): Promise<ApiResponse<T>> {
   const {
     method = 'GET',
     data,
     params,
     headers = {},
+    skipAuthRefresh = false,
     ...customConfig
   } = options;
 
@@ -40,9 +82,9 @@ async function processApiRequest<T>(endpoint: string, options: RequestOptions = 
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
     'Api-Key': process.env.NEXT_PUBLIC_API_KEY ?? '',
-    // Add auth token if exists (check both token storage keys)
-    ...(localStorage.getItem('authToken') && {
-      Authorization: `Bearer ${localStorage.getItem('authToken')}`
+    // Add in-memory access token if exists
+    ...(inMemoryAccessToken && {
+      Authorization: `Bearer ${inMemoryAccessToken}`
     }),
     ...headers,
   };
@@ -50,6 +92,7 @@ async function processApiRequest<T>(endpoint: string, options: RequestOptions = 
   const config: RequestInit = {
     method,
     headers: defaultHeaders,
+    credentials: 'include', // Important: include cookies for refresh token
     ...customConfig,
   };
 
@@ -73,20 +116,29 @@ async function processApiRequest<T>(endpoint: string, options: RequestOptions = 
       };
     }
 
+    // Handle 401 - try to refresh token and retry
+    if (response.status === 401 && !skipAuthRefresh) {
+      const newToken = await refreshAccessToken();
+      
+      if (newToken) {
+        // Retry the original request with new token
+        return processApiRequest<T>(endpoint, { 
+          ...options, 
+          skipAuthRefresh: true // Prevent infinite loop
+        });
+      } else {
+        // Refresh failed, redirect to login
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+
     if (!response.ok) {
       const error: ApiError = new Error(responseData?.message || 'Something went wrong');
       error.status = response.status;
       error.data = responseData;
-      
-      // Redirect to access page on 401
-      if (response.status === 401) {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userData');
-        localStorage.removeItem('phoneNumber');
-        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 1 second
-        window.location.href = '/auth';
-      }
-      // 082123123777
       throw error;
     }
 
@@ -103,14 +155,32 @@ async function postFormData<T>(url: string, formData: FormData): Promise<ApiResp
   const response = await fetch(`/api${url}`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      ...(inMemoryAccessToken && {
+        Authorization: `Bearer ${inMemoryAccessToken}`
+      }),
       'Api-Key': process.env.NEXT_PUBLIC_API_KEY ?? ''
     },
+    credentials: 'include',
     body: formData
   });
 
   if (response.status === 401) {
-    window.location.href = '/auth';
+    // Try to refresh and retry
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      const retryResponse = await fetch(`/api${url}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${newToken}`,
+          'Api-Key': process.env.NEXT_PUBLIC_API_KEY ?? ''
+        },
+        credentials: 'include',
+        body: formData
+      });
+      return await retryResponse.json();
+    } else {
+      window.location.href = '/login';
+    }
   }
 
   return await response.json();
@@ -134,5 +204,9 @@ export const apiRequest = {
     return processApiRequest<T>(endpoint, { method: 'PATCH', data: { enabled: false } });
   },
   
-  postFormData
+  postFormData,
+  
+  // Export token management functions
+  setToken: setInMemoryToken,
+  getToken: getInMemoryToken,
 };

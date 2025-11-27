@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateRequiredHeaders, isOtpExpired, createFullJwt } from '@/src/utils/security/security.util';
+import { validateRequiredHeaders, isOtpExpired, createAccessToken, createRefreshToken } from '@/src/utils/security/security.util';
 import prisma from '@/src/utils/database/prismaOrm.util';
 import { formatPhoneNumber } from '@/src/utils/formatter/stringFormatter.util';
 import { generateReferralCode } from '@/src/utils/referral/referralUtil';
@@ -134,17 +134,24 @@ export async function POST(request: NextRequest) {
       where: { phoneNumber: validatedPhoneNumber }
     });
 
-    // Generate JWT token
-    const token = createFullJwt(
-      { id: user.id, role: user.role }
-    );
+    // Generate access token (15 minutes) and refresh token (7 days)
+    const accessToken = createAccessToken({
+      id: user.id,
+      role: user.role
+    });
+    
+    const refreshToken = createRefreshToken({
+      id: user.id,
+      role: user.role
+    });
 
-    return NextResponse.json(
+    // Create response with access token
+    const response = NextResponse.json(
       {
         success: true,
         message: isNewUser ? 'Akun baru berhasil dibuat' : 'Berhasil masuk',
         data: {
-          token,
+          accessToken,
           user: {
             id: user.id,
             name: user.name,
@@ -159,6 +166,17 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
+
+    // Set refresh token as HttpOnly cookie
+    response.cookies.set('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 7, // 7 days in seconds
+      path: '/'
+    });
+
+    return response;
   } catch (error: any) {
     console.error('Sign in error:', error);
     return NextResponse.json(

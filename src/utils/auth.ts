@@ -73,13 +73,12 @@ export const encryptPinWithRSA = async (pin: string): Promise<RSAEncryptedData> 
 };
 
 export const getAuthHeaders = async () => {
-  const authToken = localStorage.getItem('authToken');
-
+  // Note: Authorization header is now handled automatically by apiRequest
+  // This is kept for backward compatibility
   return {
     'Content-Type': 'application/json',
     'Api-Key': AUTH_CONFIG.API_KEY,
     'Access-Device-Type': 'web',
-    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
   };
 };
 

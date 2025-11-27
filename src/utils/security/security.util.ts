@@ -13,18 +13,16 @@ export function decodeBase64(text: string) {
     return decoded;
 }
 
-export function createJwt(data: JwtData) {
+export function createJwt(data: JwtData, expiresIn: string = '7d'): string {
     if (!process.env.JWT_KEY) {
         throw new Error('JWT_KEY is not set in environment variables');
     }
     const privateKey = decodeBase64(process.env.JWT_KEY);
-    return jwt.sign({
+    const payload = {
         id: data.id,
         role: data.role
-    },
-        privateKey,
-        { expiresIn: '7d' } // Extended to 7 days for better UX
-    );
+    };
+    return jwt.sign(payload, privateKey, { expiresIn } as jwt.SignOptions);
 }
 
 export function verifyJwt(token: string): JwtData | null {
@@ -72,6 +70,26 @@ export function createFullJwt(userData: { id: number, role: string }): string {
     };
     
     return createJwt(jwtData);
+}
+
+// Create short-lived access token (15 minutes)
+export function createAccessToken(userData: { id: number, role: string }): string {
+    const jwtData: JwtData = {
+        id: userData.id,
+        role: userData.role
+    };
+    
+    return createJwt(jwtData, '15m');
+}
+
+// Create long-lived refresh token (7 days)
+export function createRefreshToken(userData: { id: number, role: string }): string {
+    const jwtData: JwtData = {
+        id: userData.id,
+        role: userData.role
+    };
+    
+    return createJwt(jwtData, '7d');
 }
 
 export function isOtpExpired(validUntil: Date): boolean {

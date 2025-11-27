@@ -5,11 +5,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import PhoneNumberForm from './components/PhoneNumberForm';
 import OTPVerificationForm from './components/OTPVerificationForm';
-import { getAuthHeaders, isAuthenticated } from './utils/authHelpers';
+import { getAuthHeaders } from './utils/authHelpers';
 import { maskPhoneNumber } from '@/src/utils/formatter/stringFormatter.util';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { apiRequest } from '@/src/utils/api/apiRequest';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
@@ -21,10 +24,10 @@ export default function LoginPage() {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (!authLoading && isAuthenticated) {
       router.push('/activity');
     }
-  }, [router]);
+  }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
     // Timer countdown for OTP
@@ -56,6 +59,7 @@ export default function LoginPage() {
       const response = await fetch('/api/v1/auth/request-otp', {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify({ phoneNumber }),
       });
 
@@ -105,6 +109,7 @@ export default function LoginPage() {
       const response = await fetch('/api/v1/auth/signin', {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify({ 
           phoneNumber,
           otp: otpCode 
@@ -117,15 +122,17 @@ export default function LoginPage() {
         throw new Error(data.message || 'Verifikasi OTP gagal');
       }
 
-      // Store auth token
-      if (data.data?.token) {
-        localStorage.setItem('authToken', data.data.token);
-        // Trigger storage event for navbar to update
-        window.dispatchEvent(new Event('storage'));
+      // Store access token in memory and context
+      if (data.data?.accessToken && data.data?.user) {
+        // Set token in apiRequest utility
+        apiRequest.setToken(data.data.accessToken);
+        // Update auth context
+        login(data.data.accessToken, data.data.user);
+        // Redirect to activity
+        router.push('/activity');
+      } else {
+        throw new Error('Invalid response from server');
       }
-
-      // Redirect to activity
-      router.push('/activity');
     } catch (err: any) {
       setError(err.message || 'Verifikasi gagal. Silakan coba lagi.');
       setOtp(['', '', '', '', '', '']);
@@ -147,6 +154,7 @@ export default function LoginPage() {
       const response = await fetch('/api/v1/auth/request-otp', {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify({ phoneNumber }),
       });
 

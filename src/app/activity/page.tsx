@@ -7,10 +7,12 @@ import ProfileSection from './components/ProfileSection';
 import AffiliateSection from './components/AffiliateSection';
 import MissionSection from './components/MissionSection';
 import OrderSection from './components/OrderSection';
-import { isAuthenticated, logout, getAuthHeaders } from '../login/utils/authHelpers';
+import { useAuth } from '@/src/contexts/AuthContext';
+import { apiRequest } from '@/src/utils/api/apiRequest';
 
 export default function ActivityPage() {
   const router = useRouter();
+  const { isAuthenticated, logout, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [userData, setUserData] = useState<any>(null);
   const [missions, setMissions] = useState<any[]>([]);
@@ -19,20 +21,19 @@ export default function ActivityPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push('/login');
-    } else {
-      fetchUserData();
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        router.push('/login');
+      } else {
+        fetchUserData();
+      }
     }
-  }, [router]);
+  }, [isAuthenticated, authLoading, router]);
 
   const fetchOrders = async () => {
     try {
-      const headers = getAuthHeaders();
-      const ordersRes = await fetch('/api/v1/user/orders', { headers });
-      
-      if (ordersRes.ok) {
-        const ordersData = await ordersRes.json();
+      const ordersData = await apiRequest.get('/v1/user/orders');
+      if (ordersData.success) {
         setOrders(ordersData.data);
       }
     } catch (error) {
@@ -43,27 +44,23 @@ export default function ActivityPage() {
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      const headers = getAuthHeaders();
 
-      // Fetch all data in parallel except orders (loaded on demand)
-      const [profileRes, missionsRes, affiliateRes] = await Promise.all([
-        fetch('/api/v1/user/profile', { headers }),
-        fetch('/api/v1/user/missions', { headers }),
-        fetch('/api/v1/user/affiliate', { headers })
+      // Fetch all data in parallel
+      const [profileData, missionsData, affiliateResData] = await Promise.all([
+        apiRequest.get('/v1/user/profile'),
+        apiRequest.get('/v1/user/missions'),
+        apiRequest.get('/v1/user/affiliate')
       ]);
 
-      if (profileRes.ok) {
-        const profileData = await profileRes.json();
+      if (profileData.success) {
         setUserData(profileData.data);
       }
 
-      if (missionsRes.ok) {
-        const missionsData = await missionsRes.json();
+      if (missionsData.success) {
         setMissions(missionsData.data);
       }
 
-      if (affiliateRes.ok) {
-        const affiliateResData = await affiliateRes.json();
+      if (affiliateResData.success) {
         setAffiliateData(affiliateResData.data);
       }
     } catch (error) {
@@ -73,10 +70,8 @@ export default function ActivityPage() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    window.dispatchEvent(new Event('storage'));
-    router.push('/');
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
