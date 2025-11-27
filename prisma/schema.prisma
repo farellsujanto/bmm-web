@@ -140,8 +140,8 @@ model Product {
   affiliatePercent Decimal? @db.Decimal(5, 2)    // ← 99.99% max, 2 decimal places
   isPreOrder       Boolean  @default(false)
 
-  preOrderReadyEarliest    DateTime?
-  preOrderReadyLatest      DateTime?
+  preOrderReadyEarliest    Int? // Weeks
+  preOrderReadyLatest      Int? // Weeks
 
   brandId          Int
   brand            Brand    @relation(fields: [brandId], references: [id])
