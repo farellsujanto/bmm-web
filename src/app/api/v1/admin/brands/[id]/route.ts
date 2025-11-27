@@ -16,7 +16,7 @@ async function updateBrandHandler(
   }
 
   try {
-    const params = await context?.params;
+    const params = context?.params;
     if (!params?.id) {
       return NextResponse.json(
         { success: false, message: 'Brand ID required' },
@@ -56,7 +56,7 @@ async function deleteBrandHandler(
   }
 
   try {
-    const params = await context?.params;
+    const params = context?.params;
     if (!params?.id) {
       return NextResponse.json(
         { success: false, message: 'Brand ID required' },

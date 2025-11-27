@@ -16,7 +16,7 @@ async function updateCategoryHandler(
   }
 
   try {
-    const params = await context?.params;
+    const params = context?.params;
     if (!params?.id) {
       return NextResponse.json(
         { success: false, message: 'Category ID required' },
@@ -56,7 +56,7 @@ async function deleteCategoryHandler(
   }
 
   try {
-    const params = await context?.params;
+    const params = context?.params;
     if (!params?.id) {
       return NextResponse.json(
         { success: false, message: 'Category ID required' },

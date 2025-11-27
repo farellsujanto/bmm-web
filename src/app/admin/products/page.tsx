@@ -76,24 +76,31 @@ export default function ProductsPage() {
     e.preventDefault();
 
     try {
+      const formDataToSend = new FormData();
+      
+      // Append all form fields
+      Object.entries(formData).forEach(([key, value]) => {
+        formDataToSend.append(key, value.toString());
+      });
+      
       if (editingProduct) {
-        // For updates, use JSON payload with existing image URLs
-        const payload = {
-          ...formData,
-          images: images.map((img, idx) => ({ ...img, sortOrder: idx }))
-        };
-        await apiRequest.put(`/v1/admin/products/${editingProduct.id}`, payload);
-        alert('Product updated successfully');
-      } else {
-        // For creation, use FormData to upload images
-        const formDataToSend = new FormData();
-        
-        // Append all form fields
-        Object.entries(formData).forEach(([key, value]) => {
-          formDataToSend.append(key, value.toString());
+        // For updates, send existing image URLs and new files
+        images.forEach((img) => {
+          // Only add existing Supabase URLs (not blob URLs)
+          if (img.url.startsWith('http')) {
+            formDataToSend.append('existingImageUrls', img.url);
+          }
         });
         
-        // Append image files
+        // Append new image files
+        imageFiles.forEach((file) => {
+          formDataToSend.append('images', file);
+        });
+
+        await apiRequest.put(`/v1/admin/products/${editingProduct.id}`, formDataToSend);
+        alert('Product updated successfully');
+      } else {
+        // For creation, just append image files
         imageFiles.forEach((file) => {
           formDataToSend.append('images', file);
         });
@@ -219,31 +226,14 @@ export default function ProductsPage() {
 
     setUploadingImage(true);
     try {
-      if (editingProduct) {
-        // For editing existing product, upload immediately to get URL
-        const formData = new FormData();
-        formData.append('image', file);
-
-        const response = await apiRequest.post<{ url: string }>(
-          '/v1/admin/products/upload-image',
-          formData
-        );
-
-        setImages([...images, {
-          url: response.data.url,
-          alt: '',
-          sortOrder: images.length
-        }]);
-      } else {
-        // For new product, store File object and blob URL for preview
-        const blobUrl = URL.createObjectURL(file);
-        setImages([...images, {
-          url: blobUrl,
-          alt: '',
-          sortOrder: images.length
-        }]);
-        setImageFiles([...imageFiles, file]);
-      }
+      // For both create and edit, store File object and blob URL for preview
+      const blobUrl = URL.createObjectURL(file);
+      setImages([...images, {
+        url: blobUrl,
+        alt: '',
+        sortOrder: images.length
+      }]);
+      setImageFiles([...imageFiles, file]);
     } catch (error: any) {
       alert(error.message || 'Failed to handle image');
     } finally {
@@ -273,9 +263,20 @@ export default function ProductsPage() {
   };
 
   const removeImage = (index: number) => {
+    const imageToRemove = images[index];
     setImages(images.filter((_, i) => i !== index));
-    if (!editingProduct) {
-      setImageFiles(imageFiles.filter((_, i) => i !== index));
+    
+    // If it's a blob URL (new upload), also remove from imageFiles
+    if (imageToRemove.url.startsWith('blob:')) {
+      const fileIndex = imageFiles.findIndex((_, i) => {
+        // Find corresponding file index (accounting for existing images)
+        const blobImages = images.filter(img => img.url.startsWith('blob:'));
+        const blobIndex = blobImages.findIndex(img => img.url === imageToRemove.url);
+        return i === blobIndex;
+      });
+      if (fileIndex !== -1) {
+        setImageFiles(imageFiles.filter((_, i) => i !== fileIndex));
+      }
     }
   };
 

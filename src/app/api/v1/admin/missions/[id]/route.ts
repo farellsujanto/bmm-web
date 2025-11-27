@@ -16,7 +16,7 @@ async function updateMissionHandler(
   }
 
   try {
-    const params = await context?.params;
+    const params = context?.params;
     if (!params?.id) {
       return NextResponse.json(
         { success: false, message: 'Mission ID required' },
@@ -56,7 +56,7 @@ async function deleteMissionHandler(
   }
 
   try {
-    const params = await context?.params;
+    const params = context?.params;
     if (!params?.id) {
       return NextResponse.json(
         { success: false, message: 'Mission ID required' },

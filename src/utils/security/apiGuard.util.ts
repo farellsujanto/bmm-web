@@ -104,10 +104,10 @@ export function validateRole(user: JwtData, allowedRoles: string[]): ApiGuardRes
  * Validates auth token and optionally checks user role
  */
 export function requireAuth(
-  handler: (request: NextRequest, user: JwtData) => Promise<NextResponse>,
+  handler: (request: NextRequest, user: JwtData, context?: any) => Promise<NextResponse>,
   allowedRoles?: string[]
 ) {
-  return async (request: NextRequest): Promise<NextResponse> => {
+  return async (request: NextRequest, context?: any): Promise<NextResponse> => {
     // Validate auth token
     const authResult = validateAuthToken(request);
     
@@ -130,8 +130,8 @@ export function requireAuth(
       }
     }
 
-    // Call the handler with authenticated user
-    return handler(request, authResult.user);
+    // Call the handler with authenticated user and context
+    return handler(request, authResult.user, context);
   };
 }
 
