@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Retrieve OTP from database
+    console.log('Verifying OTP for phone number:', validatedPhoneNumber);
     const phoneOtpRecord = await prisma.phoneOtp.findUnique({
       where: { phoneNumber: validatedPhoneNumber }
     });
@@ -69,10 +70,11 @@ export async function POST(request: NextRequest) {
     }
 
     // OTP is valid - find or create user
+    console.log('OTP verified for phone number:', validatedPhoneNumber);
     let user = await prisma.user.findUnique({
       where: { phoneNumber: validatedPhoneNumber }
     });
-
+    console.log('User found:', user);
     let isNewUser = false;
     if (!user) {
       // Generate unique referral code
