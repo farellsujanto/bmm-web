@@ -123,17 +123,21 @@ model Product {
   slug             String   @unique
   sku              String   @unique
 
-  description      String?
-  shortDescription String?
+  description       String?
+  shortDescription  String?
+  dataSheetUrl      String?
 
-  price            Int?
+  price             Int?
+  discount          Decimal? @db.Decimal(5, 2)
+
   stock            Int      @default(0)
   isActive         Boolean  @default(true)
 
   affiliatePercent Decimal? @db.Decimal(5, 2)    // ← 99.99% max, 2 decimal places
   isPreOrder       Boolean  @default(false)
-  preOrderStart    DateTime?
-  preOrderEnd      DateTime?
+
+  preOrderReadyEarliest    DateTime?
+  preOrderReadyLatest      DateTime?
 
   brandId          Int
   brand            Brand    @relation(fields: [brandId], references: [id])
