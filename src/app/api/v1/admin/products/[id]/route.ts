@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/src/utils/security/apiGuard.util';
 import { JwtData } from '@/src/utils/security/models/jwt.model';
 import prisma from '@/src/utils/database/prismaOrm.util';
+import { createSignedUrls } from '@/src/utils/storage/supabaseStorage.util';
 
 async function getProductHandler(
   request: NextRequest, 
@@ -40,6 +41,25 @@ async function getProductHandler(
         { success: false, message: 'Product not found' },
         { status: 404 }
       );
+    }
+
+    // Generate signed URLs for product images
+    if (product.images && product.images.length > 0) {
+      const paths = product.images.map(img => {
+        const url = new URL(img.url);
+        const pathParts = url.pathname.split('/product_images/');
+        return pathParts[1] || img.url;
+      });
+
+      try {
+        const signedUrls = await createSignedUrls('product_images', paths, 86400);
+        product.images = product.images.map((img, idx) => ({
+          ...img,
+          url: signedUrls[idx]?.signedUrl || img.url
+        }));
+      } catch (error) {
+        console.error('Failed to generate signed URLs:', error);
+      }
     }
 
     return NextResponse.json(

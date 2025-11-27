@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/src/utils/security/apiGuard.util';
 import { JwtData } from '@/src/utils/security/models/jwt.model';
 import prisma from '@/src/utils/database/prismaOrm.util';
-import { uploadImageToSupabase } from '@/src/utils/storage/supabaseStorage.util';
+import { uploadImageToSupabase, createSignedUrls } from '@/src/utils/storage/supabaseStorage.util';
 
 async function getProductsHandler(request: NextRequest, user: JwtData) {
   if (user.role !== 'ADMIN') {
@@ -25,8 +25,43 @@ async function getProductsHandler(request: NextRequest, user: JwtData) {
       orderBy: { sortOrder: 'asc' }
     });
 
+    // Generate signed URLs for all product images
+    const productsWithSignedUrls = await Promise.all(
+      products.map(async (product) => {
+        if (product.images && product.images.length > 0) {
+          // Extract storage paths from URLs
+          const paths = product.images.map(img => {
+            // Extract path after bucket name from the URL
+            const url = new URL(img.url);
+            const pathParts = url.pathname.split('/product_images/');
+            return pathParts[1] || img.url;
+          });
+
+          try {
+            // Generate signed URLs (valid for 24 hours)
+            const signedUrls = await createSignedUrls('product_images', paths, 86400);
+            
+            // Map signed URLs back to images
+            const imagesWithSignedUrls = product.images.map((img, idx) => ({
+              ...img,
+              url: signedUrls[idx]?.signedUrl || img.url
+            }));
+
+            return {
+              ...product,
+              images: imagesWithSignedUrls
+            };
+          } catch (error) {
+            console.error('Failed to generate signed URLs for product:', product.id, error);
+            return product; // Return original if signed URL generation fails
+          }
+        }
+        return product;
+      })
+    );
+
     return NextResponse.json(
-      { success: true, message: 'Products retrieved', data: products },
+      { success: true, message: 'Products retrieved', data: productsWithSignedUrls },
       { status: 200 }
     );
   } catch (error: any) {

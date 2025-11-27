@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/src/utils/security/apiGuard.util';
 import { JwtData } from '@/src/utils/security/models/jwt.model';
-import sharp from 'sharp';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { uploadImageToSupabase } from '@/src/utils/storage/supabaseStorage.util';
 
 async function uploadImageHandler(request: NextRequest, user: JwtData) {
   if (user.role !== 'ADMIN') {
@@ -33,41 +30,21 @@ async function uploadImageHandler(request: NextRequest, user: JwtData) {
       );
     }
 
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 15);
-    const filename = `${timestamp}-${randomString}.webp`;
-
-    // Define upload directory
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'products');
-    
-    // Create directory if it doesn't exist
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
-
-    // Convert to WebP and save
-    const filepath = join(uploadDir, filename);
-    await sharp(buffer)
-      .webp({ quality: 85 })
-      .resize(1200, 1200, { 
-        fit: 'inside',
-        withoutEnlargement: true 
-      })
-      .toFile(filepath);
-
-    // Return the public URL
-    const publicUrl = `/uploads/products/${filename}`;
+    // Upload to Supabase
+    const result = await uploadImageToSupabase({
+      bucket: 'product_images',
+      folder: 'temp', // Temporary folder for ad-hoc uploads during editing
+      file: file,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      quality: 85
+    });
 
     return NextResponse.json(
       { 
         success: true, 
         message: 'Image uploaded successfully',
-        data: { url: publicUrl }
+        data: { url: result.publicUrl }
       },
       { status: 200 }
     );

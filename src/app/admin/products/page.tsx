@@ -2,19 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { apiRequest } from '@/src/utils/api/apiRequest';
-import type { ProductModel, BrandModel, CategoryModel } from '@/generated/prisma/models';
+import type { ProductModel, BrandModel, CategoryModel, ProductImageModel } from '@/generated/prisma/models';
 import { PrimaryButton, SecondaryButton, TertiaryButton, DangerButton, PrimaryInput, PrimarySelect, PrimaryTextArea } from '@/src/components/ui';
 
 type ProductImage = {
   url: string;
-  alt: string;
+  alt: string | null;
   sortOrder: number;
 };
 
 type ProductWithRelations = ProductModel & {
   brand: { name: string };
   category: { name: string };
-  images?: ProductImage[];
+  images?: ProductImageModel[];
 };
 
 export default function ProductsPage() {
@@ -142,7 +142,13 @@ export default function ProductsPage() {
       brandId: product.brandId.toString(),
       categoryId: product.categoryId.toString(),
     });
-    setImages(product.images || []);
+    // Convert ProductImageModel[] to ProductImage[]
+    const mappedImages: ProductImage[] = (product.images || []).map(img => ({
+      url: img.url,
+      alt: img.alt || '',
+      sortOrder: img.sortOrder
+    }));
+    setImages(mappedImages);
     setShowModal(true);
   };
 
@@ -563,7 +569,7 @@ export default function ProductsPage() {
                         />
                         <input
                           type="text"
-                          value={image.alt}
+                          value={image.alt || ''}
                           onChange={(e) => {
                             const newImages = [...images];
                             newImages[index].alt = e.target.value;
