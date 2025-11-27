@@ -5,9 +5,16 @@ import { apiRequest } from '@/src/utils/api/apiRequest';
 import type { ProductModel, BrandModel, CategoryModel } from '@/generated/prisma/models';
 import { PrimaryButton, SecondaryButton, TertiaryButton, DangerButton, PrimaryInput, PrimarySelect, PrimaryTextArea } from '@/src/components/ui';
 
+type ProductImage = {
+  url: string;
+  alt: string;
+  sortOrder: number;
+};
+
 type ProductWithRelations = ProductModel & {
   brand: { name: string };
   category: { name: string };
+  images?: ProductImage[];
 };
 
 export default function ProductsPage() {
@@ -18,6 +25,9 @@ export default function ProductsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductWithRelations | null>(null);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
+  const [images, setImages] = useState<ProductImage[]>([]);
+  const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -31,7 +41,7 @@ export default function ProductsPage() {
     stock: '0',
     isActive: true,
     affiliatePercent: '',
-    isPreOrder: false,
+    isPreOrder: true,
     preOrderReadyEarliest: '',
     preOrderReadyLatest: '',
     brandId: '',
@@ -65,11 +75,16 @@ export default function ProductsPage() {
     e.preventDefault();
 
     try {
+      const payload = {
+        ...formData,
+        images: images.map((img, idx) => ({ ...img, sortOrder: idx }))
+      };
+
       if (editingProduct) {
-        await apiRequest.put(`/v1/admin/products/${editingProduct.id}`, formData);
+        await apiRequest.put(`/v1/admin/products/${editingProduct.id}`, payload);
         alert('Product updated successfully');
       } else {
-        await apiRequest.post('/v1/admin/products', formData);
+        await apiRequest.post('/v1/admin/products', payload);
         alert('Product created successfully');
       }
 
@@ -108,16 +123,18 @@ export default function ProductsPage() {
       isActive: product.isActive,
       affiliatePercent: product.affiliatePercent?.toString() || '',
       isPreOrder: product.isPreOrder,
-      preOrderReadyEarliest: product.preOrderReadyEarliest ? new Date(product.preOrderReadyEarliest).toISOString().slice(0, 16) : '',
-      preOrderReadyLatest: product.preOrderReadyLatest ? new Date(product.preOrderReadyLatest).toISOString().slice(0, 16) : '',
+      preOrderReadyEarliest: product.preOrderReadyEarliest?.toString() || '',
+      preOrderReadyLatest: product.preOrderReadyLatest?.toString() || '',
       brandId: product.brandId.toString(),
       categoryId: product.categoryId.toString(),
     });
+    setImages(product.images || []);
     setShowModal(true);
   };
 
   const resetForm = () => {
     setEditingProduct(null);
+    setImages([]);
     setFormData({
       name: '',
       slug: '',
@@ -130,7 +147,7 @@ export default function ProductsPage() {
       stock: '0',
       isActive: true,
       affiliatePercent: '',
-      isPreOrder: false,
+      isPreOrder: true,
       preOrderReadyEarliest: '',
       preOrderReadyLatest: '',
       brandId: '',
@@ -173,6 +190,57 @@ export default function ProductsPage() {
     } finally {
       setDraggedItem(null);
     }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await apiRequest.post<{ url: string }>(
+        '/v1/admin/products/upload-image',
+        formData
+      );
+
+      setImages([...images, {
+        url: response.data.url,
+        alt: '',
+        sortOrder: images.length
+      }]);
+    } catch (error: any) {
+      alert(error.message || 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleImageDragStart = (index: number) => {
+    setDraggedImageIndex(index);
+  };
+
+  const handleImageDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedImageIndex === null || draggedImageIndex === index) return;
+
+    const newImages = [...images];
+    const draggedImage = newImages[draggedImageIndex];
+    newImages.splice(draggedImageIndex, 1);
+    newImages.splice(index, 0, draggedImage);
+
+    setImages(newImages);
+    setDraggedImageIndex(index);
+  };
+
+  const handleImageDragEnd = () => {
+    setDraggedImageIndex(null);
+  };
+
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
   };
 
   if (loading) {
@@ -404,20 +472,88 @@ export default function ProductsPage() {
               {formData.isPreOrder && (
                 <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                   <PrimaryInput
-                    label="Ready Earliest"
-                    type="datetime-local"
+                    label="Ready Earliest (weeks)"
+                    type="number"
+                    min="0"
                     value={formData.preOrderReadyEarliest}
                     onChange={(e) => setFormData({ ...formData, preOrderReadyEarliest: e.target.value })}
+                    placeholder="e.g., 2"
                   />
 
                   <PrimaryInput
-                    label="Ready Latest"
-                    type="datetime-local"
+                    label="Ready Latest (weeks)"
+                    type="number"
+                    min="0"
                     value={formData.preOrderReadyLatest}
                     onChange={(e) => setFormData({ ...formData, preOrderReadyLatest: e.target.value })}
+                    placeholder="e.g., 4"
                   />
                 </div>
               )}
+
+              <div className="space-y-4">
+                <label className="block text-sm font-medium text-gray-900">Product Images</label>
+                
+                {/* Image Upload */}
+                <div className="flex items-center space-x-4">
+                  <label className="px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700">
+                    {uploadingImage ? 'Uploading...' : 'Upload Image'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploadingImage}
+                      className="hidden"
+                    />
+                  </label>
+                  <span className="text-sm text-gray-600">
+                    Images will be converted to WebP format
+                  </span>
+                </div>
+
+                {/* Image List with Drag & Drop */}
+                {images.length > 0 && (
+                  <div className="space-y-2">
+                    {images.map((image, index) => (
+                      <div
+                        key={index}
+                        draggable
+                        onDragStart={() => handleImageDragStart(index)}
+                        onDragOver={(e) => handleImageDragOver(e, index)}
+                        onDragEnd={handleImageDragEnd}
+                        className={`flex items-center space-x-4 p-4 bg-gray-50 rounded-lg border-2 cursor-move ${
+                          draggedImageIndex === index ? 'border-blue-500 opacity-50' : 'border-gray-200'
+                        }`}
+                      >
+                        <span className="text-gray-500 font-mono text-sm">☰</span>
+                        <img
+                          src={image.url}
+                          alt={image.alt || `Product image ${index + 1}`}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                        <input
+                          type="text"
+                          value={image.alt}
+                          onChange={(e) => {
+                            const newImages = [...images];
+                            newImages[index].alt = e.target.value;
+                            setImages(newImages);
+                          }}
+                          placeholder="Alt text (optional)"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div className="flex justify-end space-x-4 pt-4">
                 <TertiaryButton

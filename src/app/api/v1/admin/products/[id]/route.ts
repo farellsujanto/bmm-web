@@ -100,12 +100,29 @@ async function updateProductHandler(
     if (updateData.brandId) updateData.brandId = parseInt(updateData.brandId);
     if (updateData.categoryId) updateData.categoryId = parseInt(updateData.categoryId);
 
-    // Handle date fields
+    // Handle date fields - now they are integers (weeks)
     if (updateData.preOrderReadyEarliest) {
-      updateData.preOrderReadyEarliest = new Date(updateData.preOrderReadyEarliest);
+      updateData.preOrderReadyEarliest = parseInt(updateData.preOrderReadyEarliest);
     }
     if (updateData.preOrderReadyLatest) {
-      updateData.preOrderReadyLatest = new Date(updateData.preOrderReadyLatest);
+      updateData.preOrderReadyLatest = parseInt(updateData.preOrderReadyLatest);
+    }
+
+    // Handle images if provided
+    if (images) {
+      // Delete existing images
+      await prisma.productImage.deleteMany({
+        where: { productId: parseInt(params.id) }
+      });
+
+      // Add new images
+      updateData.images = {
+        create: images.map((img: any, index: number) => ({
+          url: img.url,
+          alt: img.alt || '',
+          sortOrder: img.sortOrder || index
+        }))
+      };
     }
 
     const product = await prisma.product.update({

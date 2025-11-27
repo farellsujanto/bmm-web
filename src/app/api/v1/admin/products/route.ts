@@ -98,8 +98,8 @@ async function createProductHandler(request: NextRequest, user: JwtData) {
         sortOrder: nextSortOrder,
         affiliatePercent: affiliatePercent ? parseFloat(affiliatePercent) : null,
         isPreOrder: isPreOrder || false,
-        preOrderReadyEarliest: preOrderReadyEarliest ? new Date(preOrderReadyEarliest) : null,
-        preOrderReadyLatest: preOrderReadyLatest ? new Date(preOrderReadyLatest) : null,
+        preOrderReadyEarliest: preOrderReadyEarliest ? parseInt(preOrderReadyEarliest) : null,
+        preOrderReadyLatest: preOrderReadyLatest ? parseInt(preOrderReadyLatest) : null,
         brandId: parseInt(brandId),
         categoryId: parseInt(categoryId),
         images: images ? {
