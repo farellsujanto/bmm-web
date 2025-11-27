@@ -17,6 +17,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductWithRelations | null>(null);
+  const [draggedItem, setDraggedItem] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -24,12 +25,15 @@ export default function ProductsPage() {
     sku: '',
     description: '',
     shortDescription: '',
+    dataSheetUrl: '',
     price: '',
     discount: '',
     stock: '0',
     isActive: true,
     affiliatePercent: '',
     isPreOrder: false,
+    preOrderReadyEarliest: '',
+    preOrderReadyLatest: '',
     brandId: '',
     categoryId: '',
   });
@@ -93,18 +97,21 @@ export default function ProductsPage() {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      slug: '',
+      slug: product.slug,
       sku: product.sku,
-      description: '',
-      shortDescription: '',
+      description: product.description || '',
+      shortDescription: product.shortDescription || '',
+      dataSheetUrl: product.dataSheetUrl || '',
       price: product.price?.toString() || '',
-      discount: '',
+      discount: product.discount?.toString() || '',
       stock: product.stock.toString(),
       isActive: product.isActive,
-      affiliatePercent: '',
-      isPreOrder: false,
-      brandId: '',
-      categoryId: '',
+      affiliatePercent: product.affiliatePercent?.toString() || '',
+      isPreOrder: product.isPreOrder,
+      preOrderReadyEarliest: product.preOrderReadyEarliest ? new Date(product.preOrderReadyEarliest).toISOString().slice(0, 16) : '',
+      preOrderReadyLatest: product.preOrderReadyLatest ? new Date(product.preOrderReadyLatest).toISOString().slice(0, 16) : '',
+      brandId: product.brandId.toString(),
+      categoryId: product.categoryId.toString(),
     });
     setShowModal(true);
   };
@@ -117,15 +124,55 @@ export default function ProductsPage() {
       sku: '',
       description: '',
       shortDescription: '',
+      dataSheetUrl: '',
       price: '',
       discount: '',
       stock: '0',
       isActive: true,
       affiliatePercent: '',
       isPreOrder: false,
+      preOrderReadyEarliest: '',
+      preOrderReadyLatest: '',
       brandId: '',
       categoryId: '',
     });
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedItem(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedItem === null || draggedItem === index) return;
+
+    const newProducts = [...products];
+    const draggedProduct = newProducts[draggedItem];
+    newProducts.splice(draggedItem, 1);
+    newProducts.splice(index, 0, draggedProduct);
+
+    setProducts(newProducts);
+    setDraggedItem(index);
+  };
+
+  const handleDragEnd = async () => {
+    if (draggedItem === null) return;
+
+    try {
+      // Update sort order for all products
+      const items = products.map((prod, index) => ({
+        id: prod.id,
+        sortOrder: index
+      }));
+
+      await apiRequest.post('/v1/admin/products/reorder', { items });
+    } catch (error) {
+      console.error('Failed to reorder products:', error);
+      alert('Failed to save new order');
+      loadData(); // Reload on error
+    } finally {
+      setDraggedItem(null);
+    }
   };
 
   if (loading) {
@@ -151,6 +198,7 @@ export default function ProductsPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-12">Order</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Brand</th>
@@ -162,8 +210,20 @@ export default function ProductsPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((product) => (
-              <tr key={product.id}>
+            {products.map((product, index) => (
+              <tr
+                key={product.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`cursor-move hover:bg-gray-50 ${draggedItem === index ? 'opacity-50' : ''}`}
+              >
+                <td className="px-6 py-4 whitespace-nowrap text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                  </svg>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">{product.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{product.sku}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{product.brand.name}</td>
@@ -232,6 +292,28 @@ export default function ProductsPage() {
                 required
               />
 
+              <PrimaryTextArea
+                label="Short Description"
+                value={formData.shortDescription}
+                onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                rows={2}
+              />
+
+              <PrimaryTextArea
+                label="Description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={4}
+              />
+
+              <PrimaryInput
+                label="Data Sheet URL"
+                type="url"
+                value={formData.dataSheetUrl}
+                onChange={(e) => setFormData({ ...formData, dataSheetUrl: e.target.value })}
+                placeholder="https://example.com/datasheet.pdf"
+              />
+
               <div className="grid grid-cols-2 gap-4">
                 <PrimarySelect
                   label="Brand"
@@ -256,12 +338,24 @@ export default function ProductsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <PrimaryInput
                   label="Price"
                   type="number"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="0"
+                />
+
+                <PrimaryInput
+                  label="Discount (%)"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="99.99"
+                  value={formData.discount}
+                  onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+                  placeholder="0.00"
                 />
 
                 <PrimaryInput
@@ -273,22 +367,57 @@ export default function ProductsPage() {
                 />
               </div>
 
-              <PrimaryTextArea
-                label="Description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={3}
+              <PrimaryInput
+                label="Affiliate Percentage"
+                type="number"
+                step="0.01"
+                min="0"
+                max="99.99"
+                value={formData.affiliatePercent}
+                onChange={(e) => setFormData({ ...formData, affiliatePercent: e.target.value })}
+                placeholder="0.00"
+                helperText="Commission percentage for affiliates"
               />
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="mr-2"
-                />
-                <label className="text-sm font-medium text-gray-900">Active</label>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                    className="mr-2"
+                  />
+                  <label className="text-sm font-medium text-gray-900">Active</label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.isPreOrder}
+                    onChange={(e) => setFormData({ ...formData, isPreOrder: e.target.checked })}
+                    className="mr-2"
+                  />
+                  <label className="text-sm font-medium text-gray-900">Pre-Order</label>
+                </div>
               </div>
+
+              {formData.isPreOrder && (
+                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                  <PrimaryInput
+                    label="Ready Earliest"
+                    type="datetime-local"
+                    value={formData.preOrderReadyEarliest}
+                    onChange={(e) => setFormData({ ...formData, preOrderReadyEarliest: e.target.value })}
+                  />
+
+                  <PrimaryInput
+                    label="Ready Latest"
+                    type="datetime-local"
+                    value={formData.preOrderReadyLatest}
+                    onChange={(e) => setFormData({ ...formData, preOrderReadyLatest: e.target.value })}
+                  />
+                </div>
+              )}
 
               <div className="flex justify-end space-x-4 pt-4">
                 <TertiaryButton

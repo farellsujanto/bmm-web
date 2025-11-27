@@ -21,7 +21,7 @@ async function getProductsHandler(request: NextRequest, user: JwtData) {
           orderBy: { sortOrder: 'asc' }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { sortOrder: 'asc' }
     });
 
     return NextResponse.json(
@@ -74,6 +74,14 @@ async function createProductHandler(request: NextRequest, user: JwtData) {
       );
     }
 
+    // Get the highest sort order to append new product at the end
+    const maxSortOrder = await prisma.product.findFirst({
+      where: { enabled: true },
+      orderBy: { sortOrder: 'desc' },
+      select: { sortOrder: true }
+    });
+    const nextSortOrder = (maxSortOrder?.sortOrder ?? -1) + 1;
+
     // Create product with images
     const product = await prisma.product.create({
       data: {
@@ -84,10 +92,11 @@ async function createProductHandler(request: NextRequest, user: JwtData) {
         shortDescription,
         dataSheetUrl,
         price: price ? parseInt(price) : null,
-        discount,
-        stock: stock || 0,
+        discount: discount ? parseFloat(discount) : null,
+        stock: stock ? parseInt(stock) : 0,
         isActive: isActive !== false,
-        affiliatePercent,
+        sortOrder: nextSortOrder,
+        affiliatePercent: affiliatePercent ? parseFloat(affiliatePercent) : null,
         isPreOrder: isPreOrder || false,
         preOrderReadyEarliest: preOrderReadyEarliest ? new Date(preOrderReadyEarliest) : null,
         preOrderReadyLatest: preOrderReadyLatest ? new Date(preOrderReadyLatest) : null,

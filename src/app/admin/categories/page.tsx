@@ -10,6 +10,7 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryModel | null>(null);
+  const [draggedItem, setDraggedItem] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -88,6 +89,43 @@ export default function CategoriesPage() {
       .replace(/(^-|-$)/g, '');
   };
 
+  const handleDragStart = (index: number) => {
+    setDraggedItem(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedItem === null || draggedItem === index) return;
+
+    const newCategories = [...categories];
+    const draggedCategory = newCategories[draggedItem];
+    newCategories.splice(draggedItem, 1);
+    newCategories.splice(index, 0, draggedCategory);
+
+    setCategories(newCategories);
+    setDraggedItem(index);
+  };
+
+  const handleDragEnd = async () => {
+    if (draggedItem === null) return;
+
+    try {
+      // Update sort order for all categories
+      const items = categories.map((cat, index) => ({
+        id: cat.id,
+        sortOrder: index
+      }));
+
+      await apiRequest.post('/v1/admin/categories/reorder', { items });
+    } catch (error) {
+      console.error('Failed to reorder categories:', error);
+      alert('Failed to save new order');
+      loadCategories(); // Reload on error
+    } finally {
+      setDraggedItem(null);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-12">Loading...</div>;
   }
@@ -111,6 +149,7 @@ export default function CategoriesPage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-12">Order</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
@@ -118,8 +157,20 @@ export default function CategoriesPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {categories.map((category) => (
-              <tr key={category.id}>
+            {categories.map((category, index) => (
+              <tr
+                key={category.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnd={handleDragEnd}
+                className={`cursor-move hover:bg-gray-50 ${draggedItem === index ? 'opacity-50' : ''}`}
+              >
+                <td className="px-6 py-4 whitespace-nowrap text-gray-400">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                  </svg>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">{category.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap font-medium">{category.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-gray-500">{category.slug}</td>

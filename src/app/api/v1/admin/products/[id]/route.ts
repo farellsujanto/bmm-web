@@ -83,6 +83,19 @@ async function updateProductHandler(
       updateData.price = parseInt(updateData.price);
     }
 
+    // Convert stock to integer if provided
+    if (updateData.stock) {
+      updateData.stock = parseInt(updateData.stock);
+    }
+
+    // Convert decimal fields
+    if (updateData.discount) {
+      updateData.discount = parseFloat(updateData.discount);
+    }
+    if (updateData.affiliatePercent) {
+      updateData.affiliatePercent = parseFloat(updateData.affiliatePercent);
+    }
+
     // Convert IDs to integers
     if (updateData.brandId) updateData.brandId = parseInt(updateData.brandId);
     if (updateData.categoryId) updateData.categoryId = parseInt(updateData.categoryId);

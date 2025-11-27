@@ -14,7 +14,7 @@ async function getCategoriesHandler(request: NextRequest, user: JwtData) {
   try {
     const categories = await prisma.category.findMany({
       where: { enabled: true },
-      orderBy: { name: 'asc' }
+      orderBy: { sortOrder: 'asc' }
     });
 
     return NextResponse.json(

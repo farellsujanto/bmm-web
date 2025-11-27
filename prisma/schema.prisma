@@ -109,12 +109,15 @@ model Category {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   slug      String   @unique
+  sortOrder Int      @default(0)
 
   products  Product[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   enabled Boolean @default(true)
+  
+  @@index([sortOrder])
 }
 
 model Product {
@@ -132,6 +135,7 @@ model Product {
 
   stock            Int      @default(0)
   isActive         Boolean  @default(true)
+  sortOrder        Int      @default(0)
 
   affiliatePercent Decimal? @db.Decimal(5, 2)    // ← 99.99% max, 2 decimal places
   isPreOrder       Boolean  @default(false)
@@ -156,6 +160,7 @@ model Product {
   @@index([isActive])
   @@index([sku])
   @@index([price])
+  @@index([sortOrder])
 }
 
 model ProductImage {
