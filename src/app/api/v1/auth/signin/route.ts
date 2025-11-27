@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
       const missions = await prisma.mission.findMany({
         where: { isActive: true }
       });
+      console.log('Initializing missions:', missions);
       
       if (missions.length > 0) {
         await prisma.userMission.createMany({
@@ -132,20 +133,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Delete used OTP
+    console.log('Deleting used OTP for phone number:', validatedPhoneNumber);
     await prisma.phoneOtp.delete({
       where: { phoneNumber: validatedPhoneNumber }
     });
+    console.log('Deleted used OTP for phone number:', validatedPhoneNumber);
 
     // Generate access token (15 minutes) and refresh token (7 days)
     const accessToken = createAccessToken({
       id: user.id,
       role: user.role
     });
+    console.log('Access token created for user:', user.id);
     
     const refreshToken = createRefreshToken({
       id: user.id,
       role: user.role
     });
+    console.log('Refresh token created for user:', user.id);
 
     // Create response with access token
     const response = NextResponse.json(
@@ -168,6 +173,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 200 }
     );
+    console.log('Response created for user:', user.id);
 
     // Set refresh token as HttpOnly cookie
     response.cookies.set('refresh_token', refreshToken, {
@@ -177,6 +183,7 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7, // 7 days in seconds
       path: '/'
     });
+    console.log('Refresh token set as HttpOnly cookie for user:', user.id);
 
     return response;
   } catch (error: any) {
