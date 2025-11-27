@@ -229,7 +229,7 @@ async function updateProductHandler(
 async function deleteProductHandler(
   request: NextRequest, 
   user: JwtData,
-  context?: { params: { id: string } }
+  context?: { params: Promise<{ id: string }> }
 ) {
   if (user.role !== 'ADMIN') {
     return NextResponse.json(
@@ -239,7 +239,7 @@ async function deleteProductHandler(
   }
 
   try {
-    const params = context?.params;
+    const params = await context?.params;
     if (!params?.id) {
       return NextResponse.json(
         { success: false, message: 'Product ID required' },

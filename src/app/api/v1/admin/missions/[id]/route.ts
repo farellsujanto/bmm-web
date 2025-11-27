@@ -6,7 +6,7 @@ import prisma from '@/src/utils/database/prismaOrm.util';
 async function updateMissionHandler(
   request: NextRequest,
   user: JwtData,
-  context?: { params: { id: string } }
+  context?: { params: Promise<{ id: string }> }
 ) {
   if (user.role !== 'ADMIN') {
     return NextResponse.json(
@@ -16,7 +16,7 @@ async function updateMissionHandler(
   }
 
   try {
-    const params = context?.params;
+    const params = await context?.params;
     if (!params?.id) {
       return NextResponse.json(
         { success: false, message: 'Mission ID required' },
@@ -46,7 +46,7 @@ async function updateMissionHandler(
 async function deleteMissionHandler(
   request: NextRequest,
   user: JwtData,
-  context?: { params: { id: string } }
+  context?: { params: Promise<{ id: string }> }
 ) {
   if (user.role !== 'ADMIN') {
     return NextResponse.json(
@@ -56,7 +56,7 @@ async function deleteMissionHandler(
   }
 
   try {
-    const params = context?.params;
+    const params = await context?.params;
     if (!params?.id) {
       return NextResponse.json(
         { success: false, message: 'Mission ID required' },
