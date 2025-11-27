@@ -158,8 +158,8 @@ export async function POST(request: NextRequest) {
             phoneNumber: user.phoneNumber,
             role: user.role,
             referralCode: user.referralCode,
-            maxReferralPercentage: user.maxReferralPercentage.toString(),
-            globalDiscountPercentage: user.globalDiscountPercentage.toString(),
+            maxReferralPercentage: user.maxReferralPercentage.toNumber(),
+            globalDiscountPercentage: user.globalDiscountPercentage.toNumber(),
             isNewUser: isNewUser
           }
         }
