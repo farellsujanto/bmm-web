@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/src/utils/security/apiGuard.util';
 import { JwtData } from '@/src/utils/security/models/jwt.model';
 import prisma from '@/src/utils/database/prismaOrm.util';
-import { createSignedUrls, uploadImageToSupabase } from '@/src/utils/storage/supabaseStorage.util';
+import { createSignedUrls, uploadImageToSupabase, deleteImagesFromSupabase } from '@/src/utils/storage/supabaseStorage.util';
 
 async function getProductHandler(
   request: NextRequest, 
@@ -88,7 +88,6 @@ async function updateProductHandler(
 
   try {
     const params = await context?.params;
-    console.log('Update product params:', params);
     if (!params?.id) {
       return NextResponse.json(
         { success: false, message: 'Product ID required' },
@@ -130,14 +129,14 @@ async function updateProductHandler(
     }
 
     // Get existing image URLs (for images that weren't changed)
-    const existingImageUrls = formData.getAll('existingImageUrls') as string[];
+    const keptImageUrls = formData.getAll('existingImageUrls') as string[];
     
     // Upload new images to Supabase
     const uploadedImages: { url: string; alt: string; sortOrder: number }[] = [];
     const imageFiles = formData.getAll('images') as File[];
     
     // Add existing images first
-    existingImageUrls.forEach((url, index) => {
+    keptImageUrls.forEach((url, index) => {
       if (url) {
         uploadedImages.push({
           url: url,
@@ -163,19 +162,52 @@ async function updateProductHandler(
         uploadedImages.push({
           url: result.publicUrl,
           alt: name,
-          sortOrder: existingImageUrls.length + i
+          sortOrder: keptImageUrls.length + i
         });
       }
     }
 
-    // Check if images have changed
-    const existingImagesSorted = existingProduct.images.map(img => img.url).sort();
-    const newImagesSorted = uploadedImages.map(img => img.url).sort();
-    const imagesChanged = JSON.stringify(existingImagesSorted) !== JSON.stringify(newImagesSorted);
+    // Check if images have changed (URLs added/removed, not just reordered)
+    const existingImageUrls = new Set(existingProduct.images.map(img => img.url));
+    const newImageUrls = new Set(uploadedImages.map(img => img.url));
+    
+    // Find images that were deleted (exist in old but not in new)
+    const imagesToDelete = existingProduct.images.filter(
+      img => !newImageUrls.has(img.url)
+    );
+    
+    // Find images that were added (exist in new but not in old)
+    const imagesAdded = uploadedImages.filter(
+      img => !existingImageUrls.has(img.url)
+    );
+    
+    // Images have structurally changed if any were added or deleted
+    const imagesChanged = imagesToDelete.length > 0 || imagesAdded.length > 0;
+    
+    // Check if order changed (even if no adds/deletes)
+    const existingOrder = existingProduct.images.map(img => img.url).join(',');
+    const newOrder = uploadedImages.map(img => img.url).join(',');
+    const orderChanged = existingOrder !== newOrder;
 
-    // Only update images if they changed
-    if (imagesChanged) {
-      // Delete existing images from database
+    // Delete removed images from Supabase Storage
+    if (imagesToDelete.length > 0) {
+      try {
+        const pathsToDelete = imagesToDelete.map(img => {
+          const url = new URL(img.url);
+          const pathParts = url.pathname.split('/product_images/');
+          return pathParts[1] || img.url;
+        });
+        
+        await deleteImagesFromSupabase('product_images', pathsToDelete);
+      } catch (error) {
+        console.error('Failed to delete images from storage:', error);
+        // Continue even if storage deletion fails
+      }
+    }
+
+    // Update images in database if they changed or were reordered
+    if (imagesChanged || orderChanged) {
+      // Delete all existing images from database
       await prisma.productImage.deleteMany({
         where: { productId: parseInt(params.id) }
       });
@@ -201,10 +233,10 @@ async function updateProductHandler(
         preOrderReadyLatest: preOrderReadyLatest ? parseInt(preOrderReadyLatest) : null,
         brandId: parseInt(brandId),
         categoryId: parseInt(categoryId),
-        // Only update images if they changed
-        images: imagesChanged && uploadedImages.length > 0 ? {
+        // Create new images if there are any (including when all images were deleted)
+        images: imagesChanged ? (uploadedImages.length > 0 ? {
           create: uploadedImages
-        } : undefined
+        } : undefined) : undefined
       },
       include: {
         brand: true,
