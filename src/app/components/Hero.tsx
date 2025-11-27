@@ -30,15 +30,19 @@ export default function Hero({
 
   return (
     <div className={`relative ${height} flex items-center justify-center overflow-hidden`}>
-      {/* Background Video/Image */}
+      {/* Background Video */}
       <div className="absolute inset-0 z-0">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080"%3E%3Cdefs%3E%3ClinearGradient id="grad" x1="0%25" y1="0%25" x2="100%25" y2="100%25"%3E%3Cstop offset="0%25" style="stop-color:%23000000;stop-opacity:1" /%3E%3Cstop offset="100%25" style="stop-color:%231a1a1a;stop-opacity:1" /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width="1920" height="1080" fill="url(%23grad)"/%3E%3C/svg%3E')`
-          }}
-        />
-        <div className="absolute inset-0 bg-black/40" />
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/videos/hero_video.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-black/60" />
       </div>
 
       {/* Content */}
