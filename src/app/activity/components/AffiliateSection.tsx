@@ -87,7 +87,7 @@ export default function AffiliateSection({ affiliateData, userData }: AffiliateS
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-white font-semibold">{order.userName || 'Customer'}</p>
-                      <p className="text-gray-400 text-xs">Order #{order.id}</p>
+                      <p className="text-gray-300 text-xs">Order #{order.id}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-white font-semibold">Rp {parseFloat(order.total).toLocaleString('id-ID')}</p>
@@ -100,7 +100,7 @@ export default function AffiliateSection({ affiliateData, userData }: AffiliateS
           </div>
         ) : (
           <div className="bg-black/40 rounded-2xl p-6 backdrop-blur-sm text-center">
-            <p className="text-gray-400 text-sm">Belum ada pesanan dari referral Anda</p>
+            <p className="text-gray-300 text-sm">Belum ada pesanan dari referral Anda</p>
             <p className="text-red-300 text-xs mt-2">Bagikan link referral Anda untuk mulai mendapatkan komisi!</p>
           </div>
         )}

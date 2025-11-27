@@ -12,7 +12,7 @@ import { apiRequest } from '@/src/utils/api/apiRequest';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { login, isAuthenticated, user, isLoading: authLoading } = useAuth();
   const [showOTP, setShowOTP] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
@@ -24,10 +24,15 @@ export default function LoginPage() {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      router.push('/activity');
+    if (!authLoading && isAuthenticated && user) {
+      // Redirect based on user role
+      if (user.role === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/activity');
+      }
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, user, router]);
 
   useEffect(() => {
     // Timer countdown for OTP
@@ -128,8 +133,12 @@ export default function LoginPage() {
         apiRequest.setToken(data.data.accessToken);
         // Update auth context
         login(data.data.accessToken, data.data.user);
-        // Redirect to activity
-        router.push('/activity');
+        // Redirect based on user role
+        if (data.data.user.role === 'ADMIN') {
+          router.push('/admin');
+        } else {
+          router.push('/activity');
+        }
       } else {
         throw new Error('Invalid response from server');
       }

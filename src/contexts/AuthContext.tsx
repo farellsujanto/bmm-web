@@ -105,6 +105,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (data.success && data.data?.accessToken) {
         setAccessToken(data.data.accessToken);
+        // Set user data if available
+        if (data.data.user) {
+          setUser(data.data.user);
+        }
         setIsLoading(false);
         return data.data.accessToken;
       }

@@ -44,7 +44,7 @@ export default function MissionSection({ missions = [], isSnippet = false }: Mis
       </div>
 
       {displayMissions.length === 0 ? (
-        <div className="text-center py-8 text-gray-400">
+        <div className="text-center py-8 text-gray-300">
           <p>Belum ada misi tersedia</p>
         </div>
       ) : (
@@ -71,7 +71,7 @@ export default function MissionSection({ missions = [], isSnippet = false }: Mis
                       </svg>
                     )}
                   </div>
-                  <p className="text-sm text-gray-400 mb-2">
+                  <p className="text-sm text-gray-300 mb-2">
                     {mission.description} ({mission.currentProgress}/{mission.targetValue})
                   </p>
                   {mission.isCompleted ? (
@@ -81,8 +81,8 @@ export default function MissionSection({ missions = [], isSnippet = false }: Mis
                   ) : (
                     <div className="mt-3">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-gray-500">Progress</span>
-                        <span className="text-xs text-gray-400 font-semibold">{mission.progressPercentage}%</span>
+                        <span className="text-xs text-gray-400">Progress</span>
+                        <span className="text-xs text-gray-300 font-semibold">{mission.progressPercentage}%</span>
                       </div>
                       <div className="w-full bg-gray-800 rounded-full h-2">
                         <div 

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { PrimaryButton, TertiaryButton } from '@/src/components/ui';
 
 interface OTPVerificationFormProps {
   otp: string[];
@@ -66,7 +67,7 @@ export default function OTPVerificationForm({
           </svg>
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifikasi Nomor Anda</h2>
-        <p className="text-gray-600">
+        <p className="text-gray-800">
           Kami telah mengirimkan kode verifikasi 6 digit ke:
         </p>
         {maskedPhone && (
@@ -83,7 +84,7 @@ export default function OTPVerificationForm({
       <form onSubmit={onSubmit} className="space-y-6">
         {/* OTP Input */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
+          <label className="block text-sm font-medium text-gray-900 mb-3 text-center">
             Masukkan Kode OTP
           </label>
           <div className="flex justify-center gap-2">
@@ -109,7 +110,7 @@ export default function OTPVerificationForm({
 
         {/* Timer and Resend */}
         <div className="text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-800">
             {timer > 0 ? (
               <>Kirim ulang kode dalam <span className="font-semibold text-red-600">{timer} detik</span></>
             ) : (
@@ -125,20 +126,20 @@ export default function OTPVerificationForm({
         </div>
 
         {/* Submit Button */}
-        <button
+        <PrimaryButton
           type="submit"
           disabled={loading || otp.join('').length !== 6}
-          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-colors duration-300 transform hover:scale-105 disabled:transform-none"
+          className="w-full"
         >
           {loading ? 'Memverifikasi...' : 'Verifikasi'}
-        </button>
+        </PrimaryButton>
       </form>
 
       {/* Back Button */}
       <div className="mt-6 text-center">
         <button
           onClick={onBackToForm}
-          className="text-gray-600 hover:text-gray-900 transition font-medium"
+          className="text-gray-700 hover:text-gray-900 transition font-medium"
         >
           ← Ubah Nomor Telepon
         </button>

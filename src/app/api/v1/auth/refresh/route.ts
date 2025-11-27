@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyJwt, createAccessToken } from '../../../../../utils/security/security.util';
 import { validateRequiredHeaders } from '../../../../../utils/security/security.util';
+import prisma from '../../../../../utils/database/prismaOrm.util';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,12 +47,38 @@ export async function POST(request: NextRequest) {
       role: userData.role
     });
 
+    // Fetch full user data from database
+    const user = await prisma.user.findUnique({
+      where: { id: userData.id },
+      select: {
+        id: true,
+        name: true,
+        phoneNumber: true,
+        role: true,
+        referralCode: true,
+        maxReferralPercentage: true,
+        globalDiscountPercentage: true,
+      }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: 'User not found' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: true,
         message: 'Access token berhasil diperbaharui',
         data: {
-          accessToken
+          accessToken,
+          user: {
+            ...user,
+            maxReferralPercentage: user.maxReferralPercentage.toString(),
+            globalDiscountPercentage: user.globalDiscountPercentage.toString(),
+          }
         }
       },
       { status: 200 }

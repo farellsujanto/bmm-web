@@ -9,10 +9,11 @@ import MissionSection from './components/MissionSection';
 import OrderSection from './components/OrderSection';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { apiRequest } from '@/src/utils/api/apiRequest';
+import { SecondaryButton } from '@/src/components/ui';
 
 export default function ActivityPage() {
   const router = useRouter();
-  const { isAuthenticated, logout, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, user, logout, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [userData, setUserData] = useState<any>(null);
   const [missions, setMissions] = useState<any[]>([]);
@@ -24,17 +25,20 @@ export default function ActivityPage() {
     if (!authLoading) {
       if (!isAuthenticated) {
         router.push('/login');
+      } else if (user?.role === 'ADMIN') {
+        // Redirect admins to admin dashboard
+        router.push('/admin');
       } else {
         fetchUserData();
       }
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, user, router]);
 
   const fetchOrders = async () => {
     try {
       const ordersData = await apiRequest.get('/v1/user/orders');
       if (ordersData.success) {
-        setOrders(ordersData.data);
+        setOrders(ordersData.data as any);
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -57,7 +61,7 @@ export default function ActivityPage() {
       }
 
       if (missionsData.success) {
-        setMissions(missionsData.data);
+        setMissions(missionsData.data as any[]);
       }
 
       if (affiliateResData.success) {
@@ -88,17 +92,17 @@ export default function ActivityPage() {
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">
                 Pusat <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700">Aktifitas</span>
               </h1>
-              <p className="text-xl text-gray-400">Kelola aktivitas dan pantau performa Anda</p>
+              <p className="text-xl text-gray-300">Kelola aktivitas dan pantau performa Anda</p>
             </div>
-            <button
+            <SecondaryButton
               onClick={handleLogout}
-              className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 border border-gray-800 hover:border-red-600 flex items-center space-x-2"
+              className="flex items-center space-x-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               <span>Keluar</span>
-            </button>
+            </SecondaryButton>
           </div>
 
           {/* Navigation Tabs */}
@@ -108,7 +112,7 @@ export default function ActivityPage() {
               className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 activeTab === 'overview'
                   ? 'bg-red-600 text-white shadow-lg shadow-red-900/50'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
               }`}
             >
               Overview
@@ -118,7 +122,7 @@ export default function ActivityPage() {
               className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 activeTab === 'orders'
                   ? 'bg-red-600 text-white shadow-lg shadow-red-900/50'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
               }`}
             >
               Pesanan
@@ -128,7 +132,7 @@ export default function ActivityPage() {
               className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 activeTab === 'affiliate'
                   ? 'bg-red-600 text-white shadow-lg shadow-red-900/50'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
               }`}
             >
               Afiliasi
@@ -138,7 +142,7 @@ export default function ActivityPage() {
               className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
                 activeTab === 'achievements'
                   ? 'bg-red-600 text-white shadow-lg shadow-red-900/50'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-800'
               }`}
             >
               Misi

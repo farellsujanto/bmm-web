@@ -31,12 +31,12 @@ export default function ProfileSection({
           </div>
           <div>
             <h2 className="text-3xl font-bold text-white mb-1">{userName}</h2>
-            <p className="text-gray-400 text-sm">Premium Member</p>
+            <p className="text-gray-300 text-sm">Premium Member</p>
           </div>
         </div>
         <button
           onClick={() => setIsEditing(!isEditing)}
-          className="text-gray-400 hover:text-white transition-colors p-2"
+          className="text-gray-300 hover:text-white transition-colors p-2"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -64,15 +64,15 @@ export default function ProfileSection({
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-2xl font-bold text-white">{totalOrders}</p>
-            <p className="text-xs text-gray-400 mt-1">Pesanan</p>
+            <p className="text-xs text-gray-300 mt-1">Pesanan</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{totalReferrals}</p>
-            <p className="text-xs text-gray-400 mt-1">Referral</p>
+            <p className="text-xs text-gray-300 mt-1">Referral</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-white">{totalSpent}</p>
-            <p className="text-xs text-gray-400 mt-1">Total</p>
+            <p className="text-xs text-gray-300 mt-1">Total</p>
           </div>
         </div>
       </div>
