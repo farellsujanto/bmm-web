@@ -235,8 +235,8 @@ async function updateProductHandler(
         preOrderReadyLatest: preOrderReadyLatest ? parseInt(preOrderReadyLatest) : null,
         brandId: parseInt(brandId),
         categoryId: parseInt(categoryId),
-        // Create new images if there are any (including when all images were deleted)
-        images: imagesChanged ? (uploadedImages.length > 0 ? {
+        // Create new images if they were changed or reordered
+        images: (imagesChanged || orderChanged) ? (uploadedImages.length > 0 ? {
           create: uploadedImages
         } : undefined) : undefined
       },
