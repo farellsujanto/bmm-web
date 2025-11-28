@@ -3,6 +3,7 @@ import { requireAuth } from '@/src/utils/security/apiGuard.util';
 import { JwtData } from '@/src/utils/security/models/jwt.model';
 import prisma from '@/src/utils/database/prismaOrm.util';
 import { createSignedUrls, uploadImageToSupabase, deleteImagesFromSupabase } from '@/src/utils/storage/supabaseStorage.util';
+import { extractStoragePathFromSignedUrl } from '@/src/utils/formatter/stringFormatter.util';
 
 async function getProductHandler(
   request: NextRequest, 
@@ -134,8 +135,13 @@ async function updateProductHandler(
     // Add existing images first (maintaining their order)
     keptImagePaths.forEach((path, index) => {
       if (path) {
+        // Extract storage path if it's a full URL (signed URL), otherwise use as-is
+        const storagePath = path.includes('supabase.co') 
+          ? extractStoragePathFromSignedUrl(path, 'product_images')
+          : path;
+        
         uploadedImages.push({
-          url: path, // Store path directly
+          url: storagePath, // Store path directly
           alt: name,
           sortOrder: index
         });
@@ -165,17 +171,22 @@ async function updateProductHandler(
 
     // Check if images have changed (paths added/removed, not just reordered)
     const existingImagePaths = new Set(existingProduct.images.map(img => img.url));
+    console.log('Existing Image Paths:', existingImagePaths);
     const newImagePaths = new Set(uploadedImages.map(img => img.url));
+    console.log('New Image Paths:', newImagePaths);
     
     // Find images that were deleted (exist in old but not in new)
     const imagesToDelete = existingProduct.images.filter(
       img => !newImagePaths.has(img.url)
     );
+    console.log('Images to Delete:', imagesToDelete);
+
     
     // Find images that were added (exist in new but not in old)
     const imagesAdded = uploadedImages.filter(
       img => !existingImagePaths.has(img.url)
     );
+    console.log('Images Added:', imagesAdded);
     
     // Images have structurally changed if any were added or deleted
     const imagesChanged = imagesToDelete.length > 0 || imagesAdded.length > 0;

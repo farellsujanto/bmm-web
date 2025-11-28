@@ -24,3 +24,28 @@ export const maskPhoneNumber = (phone: string): string => {
   const end = phone.substring(phone.length - 4); // last 4 digits
   return `${start}****${end}`;
 }
+
+/**
+ * Extract storage path from Supabase signed URL
+ * @param signedUrl - Full Supabase signed URL
+ * @param bucketName - Storage bucket name (e.g., "product_images")
+ * @returns Storage path (e.g., "folder/file.webp")
+ * @example
+ * extractStoragePathFromSignedUrl("https://...supabase.co/.../product_images/asdasd/file.webp?token=...", "product_images")
+ * // Returns: "asdasd/file.webp"
+ */
+export const extractStoragePathFromSignedUrl = (signedUrl: string, bucketName: string): string => {
+  try {
+    const url = new URL(signedUrl);
+    // Extract path after bucket name (e.g., /storage/v1/object/sign/{bucketName}/...)
+    const pathMatch = url.pathname.match(new RegExp(`\\/${bucketName}\\/(.+)$`));
+    if (pathMatch && pathMatch[1]) {
+      return pathMatch[1];
+    }
+    // Fallback: return original if pattern doesn't match
+    return signedUrl;
+  } catch (error) {
+    // If URL parsing fails, return original
+    return signedUrl;
+  }
+}
