@@ -1,7 +1,9 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/src/contexts/CartContext';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button';
 
 interface CartSidebarProps {
@@ -10,11 +12,16 @@ interface CartSidebarProps {
 }
 
 export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const { items, removeFromCart, updateQuantity, totalItems, totalPrice, clearCart } = useCart();
 
   const onCheckoutButtonPressed = () => {
-    // Placeholder for checkout logic
-    alert('Checkout button pressed!');
+    if (!isAuthenticated) {
+      router.push('/login');
+    } else {
+      router.push('/checkout');
+    }
   }
 
   return (
