@@ -169,6 +169,37 @@ export default function ShopPage() {
               preOrderReadyLatest={product.preOrderReadyLatest || undefined}
             />
           ))}
+          
+          {/* Request Item Card */}
+          {filteredProducts.length > 0 && (
+            <button
+              onClick={() => setRequestModalOpen(true)}
+              className="group relative bg-gradient-to-br from-red-600 to-red-700 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 p-8 flex flex-col items-center justify-center text-white min-h-[400px]"
+            >
+              <div className="text-center">
+                <svg 
+                  className="w-20 h-20 mx-auto mb-4 transform group-hover:scale-110 transition-transform duration-300" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M12 4v16m8-8H4" 
+                  />
+                </svg>
+                <h3 className="text-2xl font-bold mb-3">Tidak Menemukan Produk?</h3>
+                <p className="text-red-100 mb-4 text-sm">
+                  Ajukan permintaan produk yang Anda butuhkan
+                </p>
+                <span className="inline-block px-6 py-3 bg-white text-red-600 rounded-full font-semibold group-hover:bg-red-50 transition-colors duration-300">
+                  Klik untuk Ajukan
+                </span>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* No Results */}
@@ -271,14 +302,14 @@ export default function ShopPage() {
                         <div className="flex items-center gap-2 mt-2">
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center transition-colors"
+                            className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-colors"
                           >
                             -
                           </button>
-                          <span className="w-12 text-center font-semibold">{item.quantity}</span>
+                          <span className="w-12 text-center font-semibold text-gray-900">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="w-8 h-8 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center transition-colors"
+                            className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-colors"
                           >
                             +
                           </button>
