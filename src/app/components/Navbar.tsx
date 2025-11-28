@@ -59,6 +59,7 @@ export default function Navbar() {
             >
               Kontak
             </Link>
+            
             {isAuthenticated ? (
               <Link
                 href="/activity"
