@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import ConditionalLayout from "./components/ConditionalLayout";
 import { AuthProvider } from "@/src/contexts/AuthContext";
 import { CartProvider } from "@/src/contexts/CartContext";
 
@@ -26,9 +25,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
           <CartProvider>
-            <Navbar />
-            <main>{children}</main>
-            <Footer />
+            <ConditionalLayout>{children}</ConditionalLayout>
           </CartProvider>
         </AuthProvider>
       </body>

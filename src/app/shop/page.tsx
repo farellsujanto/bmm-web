@@ -2,10 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import ProductCard from '../components/ProductCard';
+import CartSidebar from '../components/CartSidebar';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { Category, Product, ProductImage } from '@/generated/prisma/browser';
 import { useCart } from '@/src/contexts/CartContext';
+import { useAuth } from '@/src/contexts/AuthContext';
 import { PrimaryInput } from '@/src/components/ui/Input';
 
 type ProductWithRelations = Product & {
@@ -14,7 +17,11 @@ type ProductWithRelations = Product & {
   images: ProductImage[];
 };
 
+const STORAGE_KEY = 'bmm_product_requests';
+
 export default function ShopPage() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<ProductWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +35,30 @@ export default function ShopPage() {
 
   useEffect(() => {
     loadData();
+    loadRequestsFromStorage();
   }, []);
+
+  const loadRequestsFromStorage = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setRequestProducts(parsed);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load requests from storage:', error);
+    }
+  };
+
+  const saveRequestsToStorage = (requests: typeof requestProducts) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
+    } catch (error) {
+      console.error('Failed to save requests to storage:', error);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -58,12 +88,16 @@ export default function ShopPage() {
   });
 
   const handleAddRequestProduct = () => {
-    setRequestProducts([...requestProducts, { name: '', description: '', quantity: 1 }]);
+    const updated = [...requestProducts, { name: '', description: '', quantity: 1 }];
+    setRequestProducts(updated);
+    saveRequestsToStorage(updated);
   };
 
   const handleRemoveRequestProduct = (index: number) => {
     if (requestProducts.length > 1) {
-      setRequestProducts(requestProducts.filter((_, i) => i !== index));
+      const updated = requestProducts.filter((_, i) => i !== index);
+      setRequestProducts(updated);
+      saveRequestsToStorage(updated);
     }
   };
 
@@ -71,9 +105,17 @@ export default function ShopPage() {
     const updated = [...requestProducts];
     updated[index] = { ...updated[index], [field]: value };
     setRequestProducts(updated);
+    saveRequestsToStorage(updated);
   };
 
   const handleSubmitRequest = async () => {
+    // Check if user is logged in
+    if (!isAuthenticated) {
+      alert('Silakan login terlebih dahulu untuk mengirim permintaan produk');
+      router.push('/login');
+      return;
+    }
+
     const validProducts = requestProducts.filter(p => p.name.trim() !== '');
     if (validProducts.length === 0) {
       alert('Harap masukkan setidaknya satu nama produk');
@@ -85,7 +127,9 @@ export default function ShopPage() {
       await apiRequest.post('/v1/item-requests', { products: validProducts });
       alert('Permintaan produk berhasil dikirim!');
       setRequestModalOpen(false);
-      setRequestProducts([{ name: '', description: '', quantity: 1 }]);
+      const resetProducts = [{ name: '', description: '', quantity: 1 }];
+      setRequestProducts(resetProducts);
+      saveRequestsToStorage(resetProducts);
     } catch (error) {
       console.error('Failed to submit request:', error);
       alert('Gagal mengirim permintaan. Silakan coba lagi.');
@@ -195,7 +239,7 @@ export default function ShopPage() {
           {filteredProducts.length > 0 && (
             <button
               onClick={() => setRequestModalOpen(true)}
-              className="group relative bg-gradient-to-br from-red-600 to-red-700 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 p-8 flex flex-col items-center justify-center text-white min-h-[400px]"
+              className="group relative bg-linear-to-br from-red-600 to-red-700 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 p-8 flex flex-col items-center justify-center text-white min-h-[400px]"
             >
               <div className="text-center">
                 <svg 
@@ -242,141 +286,8 @@ export default function ShopPage() {
       </div>
       </div>
 
-      {/* Cart FAB */}
-      <button
-        onClick={() => setCartOpen(true)}
-        className="fixed bottom-8 right-8 bg-red-600 text-white p-4 rounded-full shadow-2xl hover:bg-red-700 transition-all duration-300 z-40 hover:scale-110"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-        {totalItems > 0 && (
-          <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
-            {totalItems}
-          </span>
-        )}
-      </button>
-
       {/* Cart Sidebar */}
-      <div
-        className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${
-          cartOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={() => setCartOpen(false)}
-      >
-        <div
-          className={`fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl transform transition-transform duration-300 ${
-            cartOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex flex-col h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-2xl font-bold text-gray-900">Keranjang Belanja</h2>
-              <button
-                onClick={() => setCartOpen(false)}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Cart Items */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {items.length === 0 ? (
-                <div className="text-center py-12">
-                  <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <p className="text-xl text-gray-600 mb-2">Keranjang kosong</p>
-                  <p className="text-gray-500">Tambahkan produk untuk memulai belanja</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex gap-4 bg-gray-50 p-4 rounded-lg">
-                      <div className="w-20 h-20 bg-gray-200 rounded-lg shrink-0 relative">
-                        {item.image && (
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            fill
-                            className="object-cover rounded-lg"
-                            sizes="80px"
-                          />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">{item.name}</h3>
-                        {item.brand && (
-                          <p className="text-xs text-gray-500">{item.brand}</p>
-                        )}
-                        <p className="text-red-600 font-bold">Rp {item.price.toLocaleString('id-ID')}</p>
-                        {item.preOrderReadyEarliest && item.preOrderReadyLatest && (
-                          <p className="text-xs text-yellow-600 font-medium mt-1">
-                            Pre-Order: {item.preOrderReadyEarliest}-{item.preOrderReadyLatest} minggu
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-colors"
-                          >
-                            -
-                          </button>
-                          <span className="w-12 text-center font-semibold text-gray-900">{item.quantity}</span>
-                          <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-colors"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-600 hover:text-red-700 transition-colors"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            {items.length > 0 && (
-              <div className="border-t p-6 bg-gray-50">
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-gray-600">
-                    <span>Total Item:</span>
-                    <span className="font-semibold">{totalItems}</span>
-                  </div>
-                  <div className="flex justify-between text-xl font-bold text-gray-900">
-                    <span>Total:</span>
-                    <span className="text-red-600">Rp {totalPrice.toLocaleString('id-ID')}</span>
-                  </div>
-                </div>
-                <button className="w-full bg-red-600 text-white py-4 rounded-lg font-semibold hover:bg-red-700 transition-colors mb-2">
-                  Checkout
-                </button>
-                <button
-                  onClick={clearCart}
-                  className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-                >
-                  Kosongkan Keranjang
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <CartSidebar isOpen={cartOpen} onClose={() => setCartOpen(!cartOpen)} />
 
       {/* Product Request Modal */}
       {requestModalOpen && (

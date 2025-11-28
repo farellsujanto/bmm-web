@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { DangerButton } from '@/src/components/ui';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: '📊' },
@@ -18,7 +19,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -40,6 +41,11 @@ export default function AdminLayout({
     return null;
   }
 
+  const handleLogout = async () => {
+    console.log('Logging out user:', user);
+    await logout();
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Top Bar */}
@@ -54,12 +60,9 @@ export default function AdminLayout({
             <span className="text-sm">
               {user.name || user.phoneNumber}
             </span>
-            <Link
-              href="/api/v1/auth/logout"
-              className="text-sm hover:text-red-400 transition-colors"
-            >
+            <DangerButton onClick={handleLogout}>
               Logout
-            </Link>
+            </DangerButton>
           </div>
         </div>
       </div>
