@@ -29,13 +29,8 @@ async function getProductsHandler(request: NextRequest, user: JwtData) {
     const productsWithSignedUrls = await Promise.all(
       products.map(async (product) => {
         if (product.images && product.images.length > 0) {
-          // Extract storage paths from URLs
-          const paths = product.images.map(img => {
-            // Extract path after bucket name from the URL
-            const url = new URL(img.url);
-            const pathParts = url.pathname.split('/product_images/');
-            return pathParts[1] || img.url;
-          });
+          // Use storage paths directly from database
+          const paths = product.images.map(img => img.url);
 
           try {
             // Generate signed URLs (valid for 24 hours)
@@ -134,7 +129,7 @@ async function createProductHandler(request: NextRequest, user: JwtData) {
         });
         
         uploadedImages.push({
-          url: result.publicUrl,
+          url: result.path, // Store path instead of full URL
           alt: name,
           sortOrder: i
         });

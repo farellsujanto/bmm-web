@@ -84,11 +84,11 @@ export default function ProductsPage() {
       });
       
       if (editingProduct) {
-        // For updates, send existing image URLs and new files
+        // For updates, send existing image storage paths and new files
         images.forEach((img) => {
-          // Only add existing Supabase URLs (not blob URLs)
-          if (img.url.startsWith('http')) {
-            formDataToSend.append('existingImageUrls', img.url);
+          // Only add storage paths (not blob URLs from new uploads)
+          if (!img.url.startsWith('blob:')) {
+            formDataToSend.append('existingImagePaths', img.url);
           }
         });
         

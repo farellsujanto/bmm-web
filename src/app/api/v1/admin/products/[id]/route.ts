@@ -45,11 +45,7 @@ async function getProductHandler(
 
     // Generate signed URLs for product images
     if (product.images && product.images.length > 0) {
-      const paths = product.images.map(img => {
-        const url = new URL(img.url);
-        const pathParts = url.pathname.split('/product_images/');
-        return pathParts[1] || img.url;
-      });
+      const paths = product.images.map(img => img.url); // url column contains storage path
 
       try {
         const signedUrls = await createSignedUrls('product_images', paths, 86400);
@@ -128,18 +124,18 @@ async function updateProductHandler(
       );
     }
 
-    // Get existing image URLs (for images that weren't changed)
-    const keptImageUrls = formData.getAll('existingImageUrls') as string[];
+    // Get existing image paths (for images that weren't changed)
+    const keptImagePaths = formData.getAll('existingImagePaths') as string[];
     
     // Upload new images to Supabase
     const uploadedImages: { url: string; alt: string; sortOrder: number }[] = [];
     const imageFiles = formData.getAll('images') as File[];
     
-    // Add existing images first
-    keptImageUrls.forEach((url, index) => {
-      if (url) {
+    // Add existing images first (maintaining their order)
+    keptImagePaths.forEach((path, index) => {
+      if (path) {
         uploadedImages.push({
-          url: url,
+          url: path, // Store path directly
           alt: name,
           sortOrder: index
         });
@@ -160,25 +156,25 @@ async function updateProductHandler(
         });
         
         uploadedImages.push({
-          url: result.publicUrl,
+          url: result.path, // Store path instead of full URL
           alt: name,
-          sortOrder: keptImageUrls.length + i
+          sortOrder: keptImagePaths.length + i
         });
       }
     }
 
-    // Check if images have changed (URLs added/removed, not just reordered)
-    const existingImageUrls = new Set(existingProduct.images.map(img => img.url));
-    const newImageUrls = new Set(uploadedImages.map(img => img.url));
+    // Check if images have changed (paths added/removed, not just reordered)
+    const existingImagePaths = new Set(existingProduct.images.map(img => img.url));
+    const newImagePaths = new Set(uploadedImages.map(img => img.url));
     
     // Find images that were deleted (exist in old but not in new)
     const imagesToDelete = existingProduct.images.filter(
-      img => !newImageUrls.has(img.url)
+      img => !newImagePaths.has(img.url)
     );
     
     // Find images that were added (exist in new but not in old)
     const imagesAdded = uploadedImages.filter(
-      img => !existingImageUrls.has(img.url)
+      img => !existingImagePaths.has(img.url)
     );
     
     // Images have structurally changed if any were added or deleted
@@ -192,12 +188,7 @@ async function updateProductHandler(
     // Delete removed images from Supabase Storage
     if (imagesToDelete.length > 0) {
       try {
-        const pathsToDelete = imagesToDelete.map(img => {
-          const url = new URL(img.url);
-          const pathParts = url.pathname.split('/product_images/');
-          return pathParts[1] || img.url;
-        });
-        
+        const pathsToDelete = imagesToDelete.map(img => img.url); // url column contains path
         await deleteImagesFromSupabase('product_images', pathsToDelete);
       } catch (error) {
         console.error('Failed to delete images from storage:', error);
