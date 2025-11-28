@@ -48,7 +48,12 @@ export default function ShopPage() {
 
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'Semua' || product.category.name === selectedCategory;
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = searchQuery === '' || 
+      product.name.toLowerCase().includes(searchLower) ||
+      product.description?.toLowerCase().includes(searchLower) ||
+      product.category.name.toLowerCase().includes(searchLower) ||
+      product.brand.name.toLowerCase().includes(searchLower);
     return matchesCategory && matchesSearch;
   });
 
@@ -116,14 +121,30 @@ export default function ShopPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-8 max-w-2xl mx-auto">
+        <div className="mb-8 max-w-2xl mx-auto relative">
           <PrimaryInput
             type="text"
-            placeholder="Cari produk..."
+            placeholder="Cari produk, kategori, merek, deskripsi..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="rounded-full px-6 py-4 text-lg"
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              if (e.target.value !== '') {
+                setSelectedCategory('Semua');
+              }
+            }}
+            className="rounded-full px-6 py-4 text-lg pr-12"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              title="Hapus pencarian"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Category Filter */}
