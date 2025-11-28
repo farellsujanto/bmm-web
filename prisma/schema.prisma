@@ -24,6 +24,7 @@ model User {
   name          String?
   phoneNumber   String @unique
   governmentId  String?
+  address       String?
   role          UserRole @default(CUSTOMER)
   
   // Referral System
