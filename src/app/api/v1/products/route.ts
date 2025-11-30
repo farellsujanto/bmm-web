@@ -7,6 +7,58 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const categorySlug = searchParams.get('category');
     const search = searchParams.get('search');
+    const slug = searchParams.get('slug');
+
+    // If slug is provided, return single product
+    if (slug) {
+      const product = await prisma.product.findUnique({
+        where: { slug, enabled: true, isActive: true },
+        include: {
+          brand: true,
+          category: true,
+          images: {
+            orderBy: { sortOrder: 'asc' }
+          }
+        }
+      });
+
+      if (!product) {
+        return NextResponse.json(
+          { success: false, message: 'Product not found' },
+          { status: 404 }
+        );
+      }
+
+      // Generate signed URLs for product images
+      if (product.images && product.images.length > 0) {
+        const paths = product.images.map(img => img.url);
+
+        try {
+          const signedUrls = await createSignedUrls('product_images', paths, 86400);
+          
+          const imagesWithSignedUrls = product.images.map((img, idx) => ({
+            ...img,
+            url: signedUrls[idx]?.signedUrl || img.url
+          }));
+
+          return NextResponse.json(
+            { success: true, message: 'Product retrieved', data: { ...product, images: imagesWithSignedUrls } },
+            { status: 200 }
+          );
+        } catch (error) {
+          console.error('Failed to generate signed URLs for product:', product.id, error);
+          return NextResponse.json(
+            { success: true, message: 'Product retrieved', data: product },
+            { status: 200 }
+          );
+        }
+      }
+
+      return NextResponse.json(
+        { success: true, message: 'Product retrieved', data: product },
+        { status: 200 }
+      );
+    }
 
     const where: any = {
       enabled: true,

@@ -10,6 +10,7 @@ import { Category, Product, ProductImage } from '@/generated/prisma/browser';
 import { useCart } from '@/src/contexts/CartContext';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { PrimaryInput } from '@/src/components/ui/Input';
+import ShopStructuredData from './components/ShopStructuredData';
 
 type ProductWithRelations = Product & {
   category: Category;
@@ -151,6 +152,9 @@ export default function ShopPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Structured Data for SEO */}
+      <ShopStructuredData products={filteredProducts} />
+      
       {/* Black overlay for navbar */}
       <div className="fixed top-0 left-0 right-0 h-20 bg-black z-40"></div>
       
