@@ -266,13 +266,24 @@ export default function OrderDetailsPage() {
                         </p>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-gray-400 text-sm">
-                              {formatCurrency(orderProduct.price)} × {orderProduct.quantity}
-                            </p>
-                            {orderProduct.discount > 0 && (
-                              <span className="inline-block mt-1 bg-green-900/50 text-green-400 border border-green-700 px-2 py-1 rounded text-xs">
-                                Diskon {orderProduct.discount}%
-                              </span>
+                            {orderProduct.discount > 0 ? (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm text-gray-500 line-through">
+                                    {formatCurrency(orderProduct.price)}
+                                  </p>
+                                  <span className="text-xs bg-green-900/50 text-green-400 border border-green-700 px-2 py-0.5 rounded font-semibold">
+                                    -{orderProduct.discount}%
+                                  </span>
+                                </div>
+                                <p className="text-gray-400 text-sm">
+                                  {formatCurrency(orderProduct.price * (1 - orderProduct.discount / 100))} × {orderProduct.quantity}
+                                </p>
+                              </>
+                            ) : (
+                              <p className="text-gray-400 text-sm">
+                                {formatCurrency(orderProduct.price)} × {orderProduct.quantity}
+                              </p>
                             )}
                           </div>
                           <p className="text-xl font-bold text-white">

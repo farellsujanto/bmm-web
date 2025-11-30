@@ -99,9 +99,25 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-gray-900 mb-1 truncate">{item.name}</h3>
                           <p className="text-sm text-gray-600 mb-2">{item.brand}</p>
-                          <p className="text-lg font-bold text-red-600">
-                            Rp {(item.price * item.quantity).toLocaleString('id-ID')}
-                          </p>
+                          {item.discount && item.discount > 0 ? (
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm text-gray-400 line-through">
+                                  Rp {item.price.toLocaleString('id-ID')}
+                                </p>
+                                <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-semibold">
+                                  -{item.discount}%
+                                </span>
+                              </div>
+                              <p className="text-lg font-bold text-red-600">
+                                Rp {((item.price * (1 - item.discount / 100)) * item.quantity).toLocaleString('id-ID')}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-lg font-bold text-red-600">
+                              Rp {(item.price * item.quantity).toLocaleString('id-ID')}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center justify-between mt-4">

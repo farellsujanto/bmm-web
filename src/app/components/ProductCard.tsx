@@ -14,6 +14,9 @@ interface ProductCardProps {
   brand: string;
   preOrderReadyEarliest?: number;
   preOrderReadyLatest?: number;
+  discount?: number;
+  affiliatePercent?: number;
+  isPreOrder?: boolean;
 }
 
 export default function ProductCard({
@@ -25,7 +28,10 @@ export default function ProductCard({
   slug,
   brand,
   preOrderReadyEarliest,
-  preOrderReadyLatest
+  preOrderReadyLatest,
+  discount,
+  affiliatePercent,
+  isPreOrder
 }: ProductCardProps) {
   const { items, addToCart, updateQuantity } = useCart();
   
@@ -42,7 +48,10 @@ export default function ProductCard({
       slug,
       brand,
       preOrderReadyEarliest,
-      preOrderReadyLatest
+      preOrderReadyLatest,
+      discount,
+      affiliatePercent,
+      isPreOrder
     });
   };
   
@@ -90,9 +99,16 @@ export default function ProductCard({
         <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
           {category}
         </div>
-        <div className="absolute top-4 left-4 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-          Pre-Order: {formatPreOrderTime()}
-        </div>
+        {discount && discount > 0 && (
+          <div className="absolute top-16 right-4 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+            -{discount}%
+          </div>
+        )}
+        {isPreOrder && (
+          <div className="absolute top-4 left-4 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+            Pre-Order: {formatPreOrderTime()}
+          </div>
+        )}
       </div>
 
       {/* Product Info */}
@@ -101,9 +117,25 @@ export default function ProductCard({
           {name}
         </h3>
         <p className="text-sm text-gray-600 mb-3">{brand}</p>
-        <p className="text-2xl font-bold text-red-600 mb-4">
-          Rp {price.toLocaleString('id-ID')}
-        </p>
+        {discount && discount > 0 ? (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-lg text-gray-400 line-through">
+                Rp {price.toLocaleString('id-ID')}
+              </p>
+              <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded font-bold">
+                -{discount}%
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-red-600">
+              Rp {(price * (1 - discount / 100)).toLocaleString('id-ID')}
+            </p>
+          </div>
+        ) : (
+          <p className="text-2xl font-bold text-red-600 mb-4">
+            Rp {price.toLocaleString('id-ID')}
+          </p>
+        )}
         <div className="space-y-2">
           <Link
             href={`/shop/${slug}`}
