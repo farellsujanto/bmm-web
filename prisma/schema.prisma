@@ -42,6 +42,8 @@ model User {
   
   statistics  UserStatistics?
   missions    UserMission[]
+  orders      Order[] @relation("UserOrders")
+  referredOrders Order[] @relation("UserReferredOrders")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -145,6 +147,7 @@ model Product {
 
   affiliatePercent Decimal? @db.Decimal(5, 2)    // ← 99.99% max, 2 decimal places
   isPreOrder       Boolean  @default(false)
+  downpaymentPercentage Decimal @default(50) @db.Decimal(5, 2) // Default 50% downpayment
 
   preOrderReadyEarliest    Int? // Weeks
   preOrderReadyLatest      Int? // Weeks
@@ -156,6 +159,7 @@ model Product {
   category         Category @relation(fields: [categoryId], references: [id])
 
   images           ProductImage[]
+  orderProducts    OrderProduct[]
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -240,4 +244,121 @@ model UserMission {
   enabled Boolean @default(true)
 
   @@unique([userId, missionId])
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  PROCESSING
+  READY_TO_SHIP
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+model Order {
+  id                Int      @id @default(autoincrement())
+  orderNumber       String   @unique
+  
+  // User who placed the order
+  userId            Int
+  user              User     @relation("UserOrders", fields: [userId], references: [id])
+  
+  // Referrer (affiliate) who gets commission
+  referrerId        Int?
+  referrer          User?    @relation("UserReferredOrders", fields: [referrerId], references: [id])
+  
+  // Order details
+  status            OrderStatus @default(PENDING_PAYMENT)
+  subtotal          Decimal  @db.Decimal(12, 2)
+  discount          Decimal  @default(0) @db.Decimal(12, 2)
+  affiliateCommission Decimal @default(0) @db.Decimal(12, 2)
+  total             Decimal  @db.Decimal(12, 2)
+  
+  // Payment tracking
+  amountPaid        Decimal  @default(0) @db.Decimal(12, 2)
+  remainingBalance  Decimal  @db.Decimal(12, 2)
+  
+  // Shipping info
+  shippingAddress   String?
+  shippingCost      Decimal  @default(0) @db.Decimal(12, 2)
+  
+  // Order items
+  orderProducts     OrderProduct[]
+  paymentLogs       PaymentLog[]
+  
+  notes             String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enabled Boolean @default(true)
+  
+  @@index([userId])
+  @@index([referrerId])
+  @@index([status])
+  @@index([orderNumber])
+  @@index([createdAt])
+}
+
+model OrderProduct {
+  id        Int      @id @default(autoincrement())
+  
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  
+  // Copy product details at time of order
+  name              String
+  sku               String
+  price             Int
+  discount          Decimal  @default(0) @db.Decimal(5, 2)
+  affiliatePercent  Decimal  @default(0) @db.Decimal(5, 2)
+  downpaymentPercentage Decimal @default(50) @db.Decimal(5, 2)
+  
+  // Order-specific data
+  quantity          Int
+  subtotal          Decimal  @db.Decimal(12, 2) // price * quantity
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enabled Boolean @default(true)
+  
+  @@index([orderId])
+  @@index([productId])
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CREDIT_CARD
+  DEBIT_CARD
+  E_WALLET
+  CASH
+  QRIS
+  VIRTUAL_ACCOUNT
+  OTHER
+}
+
+model PaymentLog {
+  id            Int      @id @default(autoincrement())
+  
+  orderId       Int
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  amount        Decimal  @db.Decimal(12, 2)
+  paymentMethod PaymentMethod
+  
+  transactionId String?  // External transaction reference
+  notes         String?
+  
+  paidAt        DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enabled Boolean @default(true)
+  
+  @@index([orderId])
+  @@index([createdAt])
 }
