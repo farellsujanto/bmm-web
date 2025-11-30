@@ -29,7 +29,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <div className="text-2xl font-bold text-white tracking-wider">
-              CV. BOCAH MANTUL MABUR
+              BMM PARTS
             </div>
           </Link>
 

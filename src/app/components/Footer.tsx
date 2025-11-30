@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="col-span-1 md:col-span-1">
-            <h3 className="text-2xl font-bold mb-4">CV. BOCAH MANTUL MABUR</h3>
+            <h3 className="text-2xl font-bold mb-4">BMM PARTS</h3>
             <p className="text-gray-400 mb-4">
               Solusi lengkap untuk suku cadang teknik premium. 
               Keunggulan dalam kualitas, keandalan, dan layanan.
@@ -79,15 +79,13 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Kontak</h4>
             <ul className="space-y-2 text-gray-400">
-              <li>Email: info@bocahmantulmabur.com</li>
-              <li>Telepon: +62 XXX XXXX XXXX</li>
-              <li>Alamat: Indonesia</li>
+              <li>Email: support@bmmparts.co.id</li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} CV. Bocah Mantul Mabur. Hak cipta dilindungi.</p>
+          <p>&copy; {new Date().getFullYear()} BMM Parts. Hak cipta dilindungi.</p>
         </div>
       </div>
     </footer>

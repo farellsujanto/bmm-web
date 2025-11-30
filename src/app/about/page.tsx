@@ -9,7 +9,7 @@ export default function AboutPage() {
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">Tentang Kami</h1>
           <p className="text-xl md:text-2xl text-gray-200">
-            Memimpin industri suku cadang teknik sejak 2008
+            Memimpin industri suku cadang teknik sejak 2025
           </p>
         </div>
       </section>
@@ -19,7 +19,7 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-gray-900 mb-6">Misi Kami</h2>
           <p className="text-xl text-gray-600 leading-relaxed">
-            Di CV. Bocah Mantul Mabur, kami berkomitmen untuk menyediakan suku cadang teknik 
+            Di BMM Parts, kami berkomitmen untuk menyediakan suku cadang teknik 
             berkualitas tinggi dan layanan luar biasa kepada pelanggan kami. Misi kami adalah 
             menjadi solusi lengkap terpercaya Anda untuk semua kebutuhan teknik, menghadirkan 
             keandalan, inovasi, dan keunggulan dalam setiap produk yang kami tawarkan.
@@ -91,7 +91,7 @@ export default function AboutPage() {
               <h2 className="text-4xl font-bold text-gray-900 mb-6">Kisah Kami</h2>
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>
-                  Didirikan pada tahun 2008, CV. Bocah Mantul Mabur telah berkembang dari pemasok lokal kecil 
+                  Didirikan pada tahun 2025, BMM Parts telah berkembang dari pemasok lokal kecil 
                   menjadi nama terpercaya di industri suku cadang teknik. Perjalanan kami dimulai dengan 
                   visi sederhana: menyediakan komponen berkualitas tinggi dan andal kepada produsen 
                   dan insinyur di seluruh Indonesia.
@@ -113,7 +113,7 @@ export default function AboutPage() {
               <div 
                 className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-600"
                 style={{
-                  backgroundImage: `url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"%3E%3Crect fill="%23374151" width="600" height="400"/%3E%3Ctext x="50%25" y="50%25" font-size="24" fill="%23ffffff" text-anchor="middle" dy=".3em"%3ECV. BOCAH MANTUL MABUR%3C/text%3E%3C/svg%3E')`
+                  backgroundImage: `url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"%3E%3Crect fill="%23374151" width="600" height="400"/%3E%3Ctext x="50%25" y="50%25" font-size="24" fill="%23ffffff" text-anchor="middle" dy=".3em"%3EBMM PARTS%3C/text%3E%3C/svg%3E')`
                 }}
               />
             </div>

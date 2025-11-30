@@ -20,7 +20,7 @@ export default function PrivacyPage() {
             {/* Introduction */}
             <div className="mb-12">
               <p className="text-gray-600 leading-relaxed mb-4">
-                CV. Bocah Mantul Mabur ("kami", "kita", atau "perusahaan") menghormati privasi Anda 
+                BMM Parts ("kami", "kita", atau "perusahaan") menghormati privasi Anda 
                 dan berkomitmen untuk melindungi data pribadi Anda. Kebijakan Privasi ini menjelaskan 
                 bagaimana kami mengumpulkan, menggunakan, menyimpan, dan melindungi informasi Anda.
               </p>
@@ -272,10 +272,8 @@ export default function PrivacyPage() {
                 ini atau data pribadi Anda, silakan hubungi kami:
               </p>
               <div className="space-y-2 text-gray-600">
-                <p><strong>CV. Bocah Mantul Mabur</strong></p>
-                <p><strong>Email:</strong> privacy@bocahmantulmabur.com</p>
-                <p><strong>Telepon:</strong> +62 XXX XXXX XXXX</p>
-                <p><strong>Alamat:</strong> Jakarta, Indonesia</p>
+                <p><strong>BMM Parts</strong></p>
+                <p><strong>Email:</strong> support@bmmparts.co.id</p>
               </div>
               <p className="text-gray-600 leading-relaxed mt-4">
                 Kami akan merespons permintaan Anda dalam waktu 30 hari kerja.

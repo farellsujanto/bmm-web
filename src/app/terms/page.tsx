@@ -20,7 +20,7 @@ export default function TermsPage() {
             {/* Introduction */}
             <div className="mb-12">
               <p className="text-gray-600 leading-relaxed">
-                Selamat datang di CV. Bocah Mantul Mabur. Dengan mengakses dan menggunakan situs web ini, 
+                Selamat datang di BMM Parts. Dengan mengakses dan menggunakan situs web ini, 
                 Anda menyetujui untuk terikat oleh syarat dan ketentuan berikut. Harap baca dengan saksama 
                 sebelum menggunakan layanan kami.
               </p>
@@ -30,7 +30,7 @@ export default function TermsPage() {
             <div className="mb-10">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">1. Penerimaan Syarat</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                Dengan mengakses situs web CV. Bocah Mantul Mabur, Anda menyetujui untuk mematuhi 
+                Dengan mengakses situs web BMM Parts, Anda menyetujui untuk mematuhi 
                 syarat dan ketentuan penggunaan ini. Jika Anda tidak setuju dengan salah satu bagian 
                 dari syarat ini, Anda tidak diperkenankan untuk menggunakan situs web kami.
               </p>
@@ -159,7 +159,7 @@ export default function TermsPage() {
               <h2 className="text-3xl font-bold text-gray-900 mb-4">9. Hak Kekayaan Intelektual</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
                 Semua konten di situs web ini, termasuk teks, grafik, logo, gambar, dan perangkat lunak, 
-                adalah milik CV. Bocah Mantul Mabur atau pemberi lisensinya dan dilindungi oleh hukum 
+                adalah milik BMM Parts atau pemberi lisensinya dan dilindungi oleh hukum 
                 hak cipta Indonesia dan internasional.
               </p>
               <p className="text-gray-600 leading-relaxed">
@@ -172,7 +172,7 @@ export default function TermsPage() {
             <div className="mb-10">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">10. Batasan Tanggung Jawab</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                CV. Bocah Mantul Mabur tidak bertanggung jawab atas:
+                BMM Parts tidak bertanggung jawab atas:
               </p>
               <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
                 <li>Kerugian tidak langsung atau konsekuensial</li>
@@ -213,6 +213,17 @@ export default function TermsPage() {
                 <li>Mediasi oleh pihak ketiga yang netral</li>
                 <li>Arbitrase jika mediasi tidak berhasil</li>
               </ul>
+              <p className="text-gray-600 leading-relaxed mt-4">
+                Untuk kasus tertentu yang memerlukan penanganan khusus:
+              </p>
+              <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
+                <li>Permintaan pengembalian dana DP dapat ditolak tergantung pada kondisi tertentu</li>
+                <li>Permintaan pengembalian dana setelah pelunasan dapat ditolak</li>
+                <li>Penghapusan akun memerlukan persetujuan dan verifikasi</li>
+              </ul>
+              <p className="text-gray-600 leading-relaxed mt-4">
+                Untuk resolusi kasus di atas, silakan hubungi tim dukungan kami di support@bmmparts.co.id
+              </p>
             </div>
 
             {/* Section 14 */}
@@ -231,9 +242,7 @@ export default function TermsPage() {
                 Jika Anda memiliki pertanyaan tentang Syarat dan Ketentuan ini, silakan hubungi kami:
               </p>
               <div className="space-y-2 text-gray-600">
-                <p><strong>Email:</strong> info@bocahmantulmabur.com</p>
-                <p><strong>Telepon:</strong> +62 XXX XXXX XXXX</p>
-                <p><strong>Alamat:</strong> Jakarta, Indonesia</p>
+                <p><strong>Email:</strong> support@bmmparts.co.id</p>
               </div>
             </div>
 

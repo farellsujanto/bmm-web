@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CV. Bocah Mantul Mabur - Engineering Spareparts Excellence",
+  title: "BMM Parts - Engineering Spareparts Excellence",
   description: "Your one-stop solution for premium engineering spareparts. Quality, reliability, and expert service for all your industrial needs.",
 };
 
