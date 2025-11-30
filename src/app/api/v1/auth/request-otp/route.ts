@@ -63,7 +63,9 @@ export async function POST(request: NextRequest) {
 
     // Send OTP via WhatsApp
     try {
-      await sendWhatsAppOtp(otp, validatedPhoneNumber);
+      if (process.env.NODE_ENV !== 'development') {
+        await sendWhatsAppOtp(validatedPhoneNumber, otp);
+      }
     } catch (error) {
       console.error('Failed to send WhatsApp OTP:', error);
       // Continue anyway - OTP is stored in DB

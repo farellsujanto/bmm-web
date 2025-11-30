@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     // OTP is valid - find or create user
     console.log('OTP verified for phone number:', validatedPhoneNumber);
-    let user = await prisma.user.findUnique({
+    let user = await prisma.user.findFirst({
       where: { phoneNumber: validatedPhoneNumber }
     });
     console.log('User found:', user);
