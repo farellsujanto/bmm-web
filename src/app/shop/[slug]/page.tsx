@@ -3,7 +3,7 @@ import ProductDetailClient from "./client-page";
 
 // This is a server component that generates metadata
 type Props = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 };
 
 // Function to fetch product data for metadata
@@ -15,13 +15,24 @@ async function getProductBySlug(slug: string) {
     });
     
     if (!response.ok) {
+      console.error('API response not ok:', response.status);
       return null;
     }
     
     const result = await response.json();
+    console.log('API result for slug', slug, ':', result);
     
-    // Handle both direct data and wrapped response
-    return result.data || result;
+    // Handle wrapped response with success field
+    if (result.success === false) {
+      console.error('API returned success: false');
+      return null;
+    }
+    
+    // Return data field if it exists, otherwise return result
+    const product = result.data || result;
+    console.log('Product found:', product ? product.name : 'null');
+    
+    return product;
   } catch (error) {
     console.error('Error fetching product for metadata:', error);
     return null;
@@ -29,14 +40,23 @@ async function getProductBySlug(slug: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const product = await getProductBySlug(params.slug);
+  const { slug } = await params;
+  console.log('Generating metadata for slug:', slug);
+  const product = await getProductBySlug(slug);
 
-  if (!product) {
+  if (!product || !product.name) {
+    console.log('Product not found or invalid for slug:', slug);
     return {
       title: "Product Not Found | BMM Parts",
       description: "The product you're looking for could not be found.",
+      robots: {
+        index: false,
+        follow: true,
+      },
     };
   }
+
+  console.log('Generating metadata for product:', product.name);
 
   const price = Number(product.price) || 0;
   const discount = Number(product.discount) || 0;
@@ -98,6 +118,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default function ProductDetailPage({ params }: Props) {
+export default async function ProductDetailPage({ params }: Props) {
   return <ProductDetailClient />;
 }

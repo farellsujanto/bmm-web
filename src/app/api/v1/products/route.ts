@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     // If slug is provided, return single product
     if (slug) {
-      const product = await prisma.product.findUnique({
+      const product = await prisma.product.findFirst({
         where: { slug, enabled: true, isActive: true },
         include: {
           brand: true,
@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      if (!product) {
+      // Check if product exists and is enabled/active
+      if (!product || !product.enabled || !product.isActive) {
         return NextResponse.json(
           { success: false, message: 'Product not found' },
           { status: 404 }
