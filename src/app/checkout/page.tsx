@@ -16,10 +16,13 @@ export default function CheckoutPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [useCompany, setUseCompany] = useState(false);
 
-    // Calculate discount and final price
+    // Calculate subtotal (after product discounts, this is what totalPrice already includes)
+    const subtotal = totalPrice;
+    
+    // Calculate global discount on subtotal
     const discountPercentage = user?.globalDiscountPercentage ? Number(user.globalDiscountPercentage) : 0;
-    const discountAmount = (totalPrice * discountPercentage) / 100;
-    const finalPrice = totalPrice - discountAmount;
+    const discountAmount = (subtotal * discountPercentage) / 100;
+    const finalPrice = subtotal - discountAmount;
 
     const [customerInfo, setCustomerInfo] = useState<Partial<User>>({
         name: '',
@@ -93,7 +96,7 @@ export default function CheckoutPage() {
                     affiliatePercent: item.affiliatePercent,
                     isPreOrder: item.isPreOrder,
                 })),
-                subtotal: totalPrice,
+                subtotal: subtotal,
                 discountPercentage,
                 discountAmount,
                 finalPrice,
@@ -175,15 +178,29 @@ export default function CheckoutPage() {
                                                 )}
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <p className="text-lg font-bold text-red-600">
-                                                            Rp {item.price.toLocaleString('id-ID')}
-                                                        </p>
+                                                        {item.discount && item.discount > 0 ? (
+                                                            <>
+                                                                <p className="text-sm text-gray-400 line-through">
+                                                                    Rp {item.price.toLocaleString('id-ID')}
+                                                                </p>
+                                                                <p className="text-lg font-bold text-red-600">
+                                                                    Rp {(item.price * (1 - item.discount / 100)).toLocaleString('id-ID')}
+                                                                    <span className="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
+                                                                        -{item.discount}%
+                                                                    </span>
+                                                                </p>
+                                                            </>
+                                                        ) : (
+                                                            <p className="text-lg font-bold text-red-600">
+                                                                Rp {item.price.toLocaleString('id-ID')}
+                                                            </p>
+                                                        )}
                                                         <p className="text-sm text-gray-600">
                                                             Qty: {item.quantity}
                                                         </p>
                                                     </div>
                                                     <p className="text-xl font-bold text-gray-900">
-                                                        Rp {(item.price * item.quantity).toLocaleString('id-ID')}
+                                                        Rp {((item.price * (1 - (item.discount || 0) / 100)) * item.quantity).toLocaleString('id-ID')}
                                                     </p>
                                                 </div>
                                                 {(item.preOrderReadyEarliest || item.preOrderReadyLatest) && (
@@ -367,11 +384,11 @@ export default function CheckoutPage() {
                                 <div className="space-y-4 mb-6">
                                     <div className="flex justify-between text-gray-600">
                                         <span>Subtotal ({totalItems} item)</span>
-                                        <span>Rp {totalPrice.toLocaleString('id-ID')}</span>
+                                        <span>Rp {subtotal.toLocaleString('id-ID')}</span>
                                     </div>
                                     {discountPercentage > 0 && (
                                         <div className="flex justify-between text-green-600">
-                                            <span>Diskon ({discountPercentage}%)</span>
+                                            <span>Diskon Global ({discountPercentage}%)</span>
                                             <span>- Rp {discountAmount.toLocaleString('id-ID')}</span>
                                         </div>
                                     )}

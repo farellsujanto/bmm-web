@@ -78,30 +78,61 @@ async function createOrderHandler(request: NextRequest, user: JwtData) {
       );
     }
 
-    // Calculate affiliate commission
-    let referralCommission = new Prisma.Decimal(0);
-    let referrerId: number | undefined = undefined;
-
+    // Get current user with discount info
     const currentUser = await prisma.user.findUnique({
       where: { id: user.id },
       select: { referrerId: true, referrer: true, phoneNumber: true, globalDiscountPercentage: true }
     });
 
+    const userGlobalDiscountPercent = currentUser?.globalDiscountPercentage?.toNumber() || 0;
+
+    // Recalculate order totals on backend to ensure accuracy
+    let calculatedSubtotal = new Prisma.Decimal(0);
+    const calculatedItems = items.map(item => {
+      const product = products.find(p => p.id === item.id)!;
+      
+      // Use product price from database (not from frontend)
+      const productPrice = product.price ? Number(product.price) : 0;
+      const productDiscount = product.discount ? product.discount.toNumber() : 0;
+      
+      // Calculate price after product discount
+      const priceAfterDiscount = productPrice * (1 - productDiscount / 100);
+      const itemSubtotal = priceAfterDiscount * item.quantity;
+      
+      calculatedSubtotal = calculatedSubtotal.add(itemSubtotal);
+      
+      return {
+        productId: item.id,
+        name: product.name,
+        sku: product.sku,
+        price: productPrice,
+        discount: productDiscount,
+        priceAfterDiscount,
+        quantity: item.quantity,
+        subtotal: itemSubtotal
+      };
+    });
+
+    // Calculate global discount on the subtotal
+    const calculatedGlobalDiscount = calculatedSubtotal.toNumber() * (userGlobalDiscountPercent / 100);
+    const calculatedTotal = calculatedSubtotal.toNumber() - calculatedGlobalDiscount;
+
+    // Calculate affiliate commission
+    let referralCommission = new Prisma.Decimal(0);
+    let referrerId: number | undefined = undefined;
+
     if (currentUser?.referrerId && currentUser.referrer) {
       referrerId = currentUser.referrerId;
       const maxReferralPercent = currentUser.referrer.maxReferralPercentage.toNumber();
       
-      // Calculate commission based on affiliate percentage or max referral percentage
-      items.forEach(item => {
-        const product = products.find(p => p.id === item.id);
-        if (product) {
-          const itemTotal = item.price * item.quantity;
-          const affiliatePercent = product.affiliatePercent 
-            ? Math.min(product.affiliatePercent.toNumber(), maxReferralPercent)
-            : maxReferralPercent;
-          const commission = (itemTotal * affiliatePercent) / 100;
-          referralCommission = referralCommission.add(commission);
-        }
+      // Calculate commission based on subtotal (before global discount)
+      calculatedItems.forEach(calcItem => {
+        const product = products.find(p => p.id === calcItem.productId)!;
+        const affiliatePercent = product.affiliatePercent 
+          ? Math.min(product.affiliatePercent.toNumber(), maxReferralPercent)
+          : maxReferralPercent;
+        const commission = (calcItem.subtotal * affiliatePercent) / 100;
+        referralCommission = referralCommission.add(commission);
       });
     }
 
@@ -140,9 +171,6 @@ async function createOrderHandler(request: NextRequest, user: JwtData) {
     const randomChars = Math.random().toString(36).substring(2, 8).toUpperCase();
     const orderNumber = `${last4Digits}-${dateStr}-${randomChars}`;
     
-    // Get user's global discount percentage
-    const userGlobalDiscount = currentUser?.globalDiscountPercentage?.toNumber() || 0;
-    
     // Create the order with products
     const order = await prisma.order.create({
       data: {
@@ -150,32 +178,30 @@ async function createOrderHandler(request: NextRequest, user: JwtData) {
         userId: user.id,
         referrerId: referrerId,
         status: 'PENDING_PAYMENT',
-        subtotal: new Prisma.Decimal(subtotal),
-        discount: new Prisma.Decimal(discountAmount),
-        discountPercentage: new Prisma.Decimal(userGlobalDiscount),
+        subtotal: calculatedSubtotal,
+        discount: new Prisma.Decimal(calculatedGlobalDiscount),
+        discountPercentage: new Prisma.Decimal(userGlobalDiscountPercent),
         affiliateCommission: referralCommission,
-        total: new Prisma.Decimal(finalPrice),
+        total: new Prisma.Decimal(calculatedTotal),
         amountPaid: new Prisma.Decimal(0),
-        remainingBalance: new Prisma.Decimal(finalPrice),
+        remainingBalance: new Prisma.Decimal(calculatedTotal),
         orderProducts: {
-          create: items.map(item => {
-            const product = products.find(p => p.id === item.id)!;
+          create: calculatedItems.map(calcItem => {
+            const product = products.find(p => p.id === calcItem.productId)!;
             const affiliatePercent = product.affiliatePercent 
               ? Math.min(product.affiliatePercent.toNumber(), currentUser?.referrer?.maxReferralPercentage.toNumber() || 0)
               : (currentUser?.referrer?.maxReferralPercentage.toNumber() || 0);
             
-            const itemSubtotal = item.price * item.quantity;
-            
             return {
-              productId: item.id,
-              name: item.name,
-              sku: product.sku,
-              price: item.price,
-              discount: item.discount ? new Prisma.Decimal(item.discount) : new Prisma.Decimal(0),
+              productId: calcItem.productId,
+              name: calcItem.name,
+              sku: calcItem.sku,
+              price: calcItem.price,
+              discount: new Prisma.Decimal(calcItem.discount),
               affiliatePercent: new Prisma.Decimal(affiliatePercent),
               downpaymentPercentage: product.downpaymentPercentage,
-              quantity: item.quantity,
-              subtotal: new Prisma.Decimal(itemSubtotal),
+              quantity: calcItem.quantity,
+              subtotal: new Prisma.Decimal(calcItem.subtotal),
             };
           })
         }
