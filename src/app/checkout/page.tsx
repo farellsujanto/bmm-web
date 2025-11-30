@@ -8,19 +8,6 @@ import { useCart } from '@/src/contexts/CartContext';
 import { PrimaryButton, SecondaryButton, PrimaryInput, PrimaryTextArea } from '@/src/components/ui';
 import type { User, Company } from '@/generated/prisma/browser';
 
-interface CustomerInfo {
-    name: string;
-    governmentId: string;
-    address: string;
-}
-
-interface CompanyInfo {
-    name: string;
-    taxId: string;
-    address: string;
-    phoneNumber: string;
-}
-
 export default function CheckoutPage() {
     const router = useRouter();
     const { isAuthenticated, user, isLoading } = useAuth();
@@ -33,13 +20,13 @@ export default function CheckoutPage() {
     const discountAmount = (totalPrice * discountPercentage) / 100;
     const finalPrice = totalPrice - discountAmount;
 
-    const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
+    const [customerInfo, setCustomerInfo] = useState<Partial<User>>({
         name: '',
         governmentId: '',
         address: '',
     });
 
-    const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
+    const [companyInfo, setCompanyInfo] = useState<Partial<Company>>({
         name: '',
         taxId: '',
         address: '',
@@ -70,21 +57,21 @@ export default function CheckoutPage() {
 
     const handlePayment = async () => {
         // Validate required fields
-        if (!customerInfo.name.trim()) {
+        if (!customerInfo.name?.trim()) {
             alert('Nama harus diisi');
             return;
         }
-        if (!customerInfo.address.trim()) {
+        if (!customerInfo.address?.trim()) {
             alert('Alamat harus diisi');
             return;
         }
 
         if (useCompany) {
-            if (!companyInfo.name.trim()) {
+            if (!companyInfo.name?.trim()) {
                 alert('Nama perusahaan harus diisi');
                 return;
             }
-            if (!companyInfo.taxId.trim()) {
+            if (!companyInfo.taxId?.trim()) {
                 alert('NPWP perusahaan harus diisi');
                 return;
             }
@@ -201,7 +188,7 @@ export default function CheckoutPage() {
                                         </label>
                                         <PrimaryInput
                                             type="text"
-                                            value={customerInfo.name}
+                                            value={customerInfo.name || ''}
                                             onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
                                             placeholder="Masukkan nama lengkap"
                                             required
@@ -213,7 +200,7 @@ export default function CheckoutPage() {
                                         </label>
                                         <PrimaryInput
                                             type="text"
-                                            value={customerInfo.governmentId}
+                                            value={customerInfo.governmentId || ''}
                                             onChange={(e) => setCustomerInfo({ ...customerInfo, governmentId: e.target.value })}
                                             placeholder="Masukkan NIK (opsional)"
                                         />
@@ -235,7 +222,7 @@ export default function CheckoutPage() {
                                             Alamat Lengkap <span className="text-red-600">*</span>
                                         </label>
                                         <PrimaryTextArea
-                                            value={customerInfo.address}
+                                            value={customerInfo.address || ''}
                                             onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
                                             placeholder="Masukkan alamat lengkap pengiriman"
                                             rows={3}
@@ -277,7 +264,7 @@ export default function CheckoutPage() {
                                             </label>
                                             <PrimaryInput
                                                 type="text"
-                                                value={companyInfo.name}
+                                                value={companyInfo.name || ''}
                                                 onChange={(e) => setCompanyInfo({ ...companyInfo, name: e.target.value })}
                                                 placeholder="PT. Nama Perusahaan"
                                                 required
@@ -289,7 +276,7 @@ export default function CheckoutPage() {
                                             </label>
                                             <PrimaryInput
                                                 type="text"
-                                                value={companyInfo.taxId}
+                                                value={companyInfo.taxId || ''}
                                                 onChange={(e) => setCompanyInfo({ ...companyInfo, taxId: e.target.value })}
                                                 placeholder="00.000.000.0-000.000"
                                                 required
@@ -301,7 +288,7 @@ export default function CheckoutPage() {
                                                 Alamat Perusahaan
                                             </label>
                                             <PrimaryTextArea
-                                                value={companyInfo.address}
+                                                value={companyInfo.address || ''}
                                                 onChange={(e) => setCompanyInfo({ ...companyInfo, address: e.target.value })}
                                                 placeholder="Alamat lengkap perusahaan"
                                                 rows={3}
@@ -313,7 +300,7 @@ export default function CheckoutPage() {
                                             </label>
                                             <PrimaryInput
                                                 type="text"
-                                                value={companyInfo.phoneNumber}
+                                                value={companyInfo.phoneNumber || ''}
                                                 onChange={(e) => setCompanyInfo({ ...companyInfo, phoneNumber: e.target.value })}
                                                 placeholder="021-xxxxxxxx"
                                             />
