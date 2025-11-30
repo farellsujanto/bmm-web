@@ -60,6 +60,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Check if 55 seconds have passed since last OTP request
+    if (existingOtp) {
+      const now = new Date();
+      const lastRequestTime = existingOtp.updatedAt;
+      const timeSinceLastRequest = (now.getTime() - lastRequestTime.getTime()) / 1000; // in seconds
+      
+      if (timeSinceLastRequest < 55) {
+        const remainingSeconds = Math.ceil(55 - timeSinceLastRequest);
+        return NextResponse.json(
+          { 
+            success: false, 
+            message: `Mohon tunggu ${remainingSeconds + 5} detik sebelum mengirim ulang OTP`,
+            remainingSeconds
+          },
+          { status: 429 }
+        );
+      }
+    }
+
     // Check resend limit (maximum 2 resends = 3 total requests)
     if (existingOtp && existingOtp.resendCount >= 2) {
       return NextResponse.json(
