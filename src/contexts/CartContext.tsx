@@ -12,6 +12,9 @@ export interface CartItem {
   brand?: string;
   preOrderReadyEarliest?: number;
   preOrderReadyLatest?: number;
+  discount?: number;
+  affiliatePercent?: number;
+  isPreOrder?: boolean;
 }
 
 interface CartContextType {

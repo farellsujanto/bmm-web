@@ -7,11 +7,12 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useCart } from '@/src/contexts/CartContext';
 import { PrimaryButton, SecondaryButton, PrimaryInput, PrimaryTextArea } from '@/src/components/ui';
 import type { User, Company } from '@/generated/prisma/browser';
+import { apiRequest } from '@/src/utils/api/apiRequest';
 
 export default function CheckoutPage() {
     const router = useRouter();
     const { isAuthenticated, user, isLoading } = useAuth();
-    const { items, totalPrice, totalItems } = useCart();
+    const { items, totalPrice, totalItems, clearCart } = useCart();
     const [isProcessing, setIsProcessing] = useState(false);
     const [useCompany, setUseCompany] = useState(false);
 
@@ -78,19 +79,42 @@ export default function CheckoutPage() {
         }
 
         setIsProcessing(true);
-        // Payment logic will be implemented later
-        const orderData = {
-            customer: customerInfo,
-            company: useCompany ? companyInfo : null,
-            items,
-            subtotal: totalPrice,
-            discountPercentage,
-            discountAmount,
-            finalPrice,
-        };
-        console.log('Order data:', orderData);
-        alert('Payment functionality coming soon!');
-        setIsProcessing(false);
+        
+        try {
+            const orderData = {
+                customer: customerInfo,
+                company: useCompany ? companyInfo : null,
+                items: items.map(item => ({
+                    id: parseInt(item.id),
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    discount: item.discount,
+                    affiliatePercent: item.affiliatePercent,
+                    isPreOrder: item.isPreOrder,
+                })),
+                subtotal: totalPrice,
+                discountPercentage,
+                discountAmount,
+                finalPrice,
+            };
+
+            const response = await apiRequest.post('/v1/orders', orderData);
+
+            if (response.success) {
+                // Clear the cart
+                clearCart();
+                // Redirect to order details page
+                router.push(`/activity/orders/${(response.data as any).id}`);
+            } else {
+                alert(response.message || 'Gagal membuat pesanan');
+            }
+        } catch (error: any) {
+            console.error('Order creation error:', error);
+            alert(error.message || 'Terjadi kesalahan saat membuat pesanan');
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     if (isLoading) {

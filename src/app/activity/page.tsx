@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import ProfileSection from './components/ProfileSection';
 import AffiliateSection from './components/AffiliateSection';
@@ -13,6 +13,7 @@ import { SecondaryButton } from '@/src/components/ui';
 
 export default function ActivityPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated, user, logout, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [userData, setUserData] = useState<any>(null);
@@ -20,6 +21,14 @@ export default function ActivityPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [affiliateData, setAffiliateData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Set active tab from URL params
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['overview', 'orders', 'affiliate', 'achievements'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -34,26 +43,16 @@ export default function ActivityPage() {
     }
   }, [isAuthenticated, authLoading, user, router]);
 
-  const fetchOrders = async () => {
-    try {
-      const ordersData = await apiRequest.get('/v1/user/orders');
-      if (ordersData.success) {
-        setOrders(ordersData.data as any);
-      }
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-    }
-  };
-
   const fetchUserData = async () => {
     try {
       setLoading(true);
 
       // Fetch all data in parallel
-      const [profileData, missionsData, affiliateResData] = await Promise.all([
+      const [profileData, missionsData, affiliateResData, ordersData] = await Promise.all([
         apiRequest.get('/v1/user/profile'),
         apiRequest.get('/v1/user/missions'),
-        apiRequest.get('/v1/user/affiliate')
+        apiRequest.get('/v1/user/affiliate'),
+        apiRequest.get('/v1/user/orders')
       ]);
 
       if (profileData.success) {
@@ -66,6 +65,10 @@ export default function ActivityPage() {
 
       if (affiliateResData.success) {
         setAffiliateData(affiliateResData.data);
+      }
+
+      if (ordersData.success) {
+        setOrders(ordersData.data as any[]);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);

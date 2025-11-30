@@ -74,6 +74,9 @@ export default function ProductDetailPage() {
       brand: product.brand.name,
       preOrderReadyEarliest: product.preOrderReadyEarliest || undefined,
       preOrderReadyLatest: product.preOrderReadyLatest || undefined,
+      discount: product.discount ? Number(product.discount) : undefined,
+      affiliatePercent: product.affiliatePercent ? Number(product.affiliatePercent) : undefined,
+      isPreOrder: product.isPreOrder || false,
     });
     
     setQuantity(1);

@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 interface OrderSectionProps {
   orders?: any[];
   isSnippet?: boolean;
@@ -10,19 +12,37 @@ export default function OrderSection({ orders = [], isSnippet = false }: OrderSe
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      delivered: { bg: 'bg-green-900/50', text: 'text-green-400', label: 'Terkirim', border: 'border-green-700' },
-      shipping: { bg: 'bg-blue-900/50', text: 'text-blue-400', label: 'Dalam Pengiriman', border: 'border-blue-700' },
-      processing: { bg: 'bg-yellow-900/50', text: 'text-yellow-400', label: 'Diproses', border: 'border-yellow-700' },
-      cancelled: { bg: 'bg-red-900/50', text: 'text-red-400', label: 'Dibatalkan', border: 'border-red-700' },
+      PENDING_PAYMENT: { bg: 'bg-yellow-900/50', text: 'text-yellow-400', label: 'Menunggu Pembayaran', border: 'border-yellow-700' },
+      PROCESSING: { bg: 'bg-blue-900/50', text: 'text-blue-400', label: 'Diproses', border: 'border-blue-700' },
+      SHIPPED: { bg: 'bg-purple-900/50', text: 'text-purple-400', label: 'Dalam Pengiriman', border: 'border-purple-700' },
+      DELIVERED: { bg: 'bg-green-900/50', text: 'text-green-400', label: 'Terkirim', border: 'border-green-700' },
+      CANCELLED: { bg: 'bg-red-900/50', text: 'text-red-400', label: 'Dibatalkan', border: 'border-red-700' },
+      REFUNDED: { bg: 'bg-gray-900/50', text: 'text-gray-400', label: 'Dikembalikan', border: 'border-gray-700' },
     };
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.processing;
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING_PAYMENT;
 
     return (
       <span className={`${config.bg} ${config.text} ${config.border} border px-3 py-1 rounded-full text-xs font-semibold`}>
         {config.label}
       </span>
     );
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('id-ID', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    }).format(date);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(amount);
   };
 
   return (
@@ -49,55 +69,44 @@ export default function OrderSection({ orders = [], isSnippet = false }: OrderSe
       ) : (
         <div className="space-y-4">
           {displayOrders.map((order) => (
-            <div
+            <Link
               key={order.id}
-              className="bg-gray-900/50 border border-gray-800 rounded-2xl p-6 hover:border-red-900 transition-all duration-300 group"
+              href={`/activity/orders/${order.id}`}
+              className="block bg-gray-900/50 border border-gray-800 rounded-2xl p-6 hover:border-red-900 transition-all duration-300 group cursor-pointer"
             >
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <div className="flex items-center space-x-3 mb-2">
-                  <h3 className="text-lg font-bold text-white">{order.id}</h3>
-                  {getStatusBadge(order.status)}
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <div className="flex items-center space-x-3 mb-2">
+                    <h3 className="text-lg font-bold text-white">{order.orderNumber || `#${order.id}`}</h3>
+                    {getStatusBadge(order.status)}
+                  </div>
+                  <p className="text-sm text-gray-400">{formatDate(order.createdAt)}</p>
                 </div>
-                <p className="text-sm text-gray-400">{order.date}</p>
+                <p className="text-xl font-bold text-white">{formatCurrency(order.total)}</p>
               </div>
-              <p className="text-xl font-bold text-white">{order.total}</p>
-            </div>
 
-            <div className="border-t border-gray-800 pt-4 mb-4">
-              <p className="text-gray-300 text-sm mb-2">{order.items}</p>
-              {order.trackingNumber !== '-' && (
-                <div className="flex items-center space-x-2 text-xs text-gray-500">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span>Resi: {order.trackingNumber}</span>
-                </div>
-              )}
-            </div>
+              <div className="border-t border-gray-800 pt-4 mb-4">
+                <p className="text-gray-300 text-sm mb-2">
+                  {order.orderProducts?.length || 0} item{(order.orderProducts?.length || 0) > 1 ? 's' : ''}
+                </p>
+                {order.shippingAddress && (
+                  <div className="flex items-center space-x-2 text-xs text-gray-500">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Alamat: {order.shippingAddress.substring(0, 30)}...</span>
+                  </div>
+                )}
+              </div>
 
-            <div className="flex space-x-3">
-              {order.status === 'delivered' && (
-                <button className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg font-semibold text-sm transition-colors">
-                  Beli Lagi
-                </button>
-              )}
-              {order.status === 'shipping' && (
-                <button className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold text-sm transition-colors">
-                  Lacak Paket
-                </button>
-              )}
-              {order.status === 'processing' && (
-                <button className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg font-semibold text-sm transition-colors">
-                  Batalkan
-                </button>
-              )}
-              <button className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2 rounded-lg font-semibold text-sm transition-colors">
-                Detail
-              </button>
-            </div>
-            </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-sm">Klik untuk melihat detail</span>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </Link>
           ))}
         </div>
       )}
