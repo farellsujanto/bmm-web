@@ -125,7 +125,7 @@ export default function OTPVerificationForm({
                 onClick={onResendOTP}
                 className="text-red-600 font-semibold hover:text-red-700 transition"
               >
-                Kirim Ulang Kode OTP ({resendCount}/{maxResends})
+                Kirim Ulang Kode OTP
               </button>
             )}
           </p>

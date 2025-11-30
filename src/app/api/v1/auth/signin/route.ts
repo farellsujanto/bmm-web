@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           success: false, 
-          message: `Kode OTP tidak valid. Sisa percobaan: ${remainingAttempts}x` 
+          message: `Kode OTP tidak valid.` 
         },
         { status: 400 }
       );
