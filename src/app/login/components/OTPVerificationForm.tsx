@@ -11,6 +11,8 @@ interface OTPVerificationFormProps {
   timer: number;
   error: string;
   loading: boolean;
+  resendCount: number;
+  maxResends: number;
   onSubmit: (e: React.FormEvent) => void;
   onResendOTP: () => void;
   onBackToForm: () => void;
@@ -24,6 +26,8 @@ export default function OTPVerificationForm({
   timer,
   error,
   loading,
+  resendCount,
+  maxResends,
   onSubmit,
   onResendOTP,
   onBackToForm
@@ -113,13 +117,15 @@ export default function OTPVerificationForm({
           <p className="text-sm text-gray-800">
             {timer > 0 ? (
               <>Kirim ulang kode dalam <span className="font-semibold text-red-600">{timer} detik</span></>
+            ) : resendCount >= maxResends ? (
+              <span className="text-gray-600">Batas pengiriman ulang telah tercapai</span>
             ) : (
               <button
                 type="button"
                 onClick={onResendOTP}
                 className="text-red-600 font-semibold hover:text-red-700 transition"
               >
-                Kirim Ulang Kode OTP
+                Kirim Ulang Kode OTP ({resendCount}/{maxResends})
               </button>
             )}
           </p>

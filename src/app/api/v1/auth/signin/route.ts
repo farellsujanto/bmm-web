@@ -53,6 +53,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if blocked
+    if (phoneOtpRecord.blockedUntil && phoneOtpRecord.blockedUntil > new Date()) {
+      const remainingHours = Math.ceil((phoneOtpRecord.blockedUntil.getTime() - new Date().getTime()) / (1000 * 60 * 60));
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: `Terlalu banyak percobaan gagal. Silakan coba lagi dalam ${remainingHours} jam` 
+        },
+        { status: 429 }
+      );
+    }
+
     // Check if OTP has expired
     if (isOtpExpired(phoneOtpRecord.expiresAt)) {
       return NextResponse.json(
@@ -63,8 +75,45 @@ export async function POST(request: NextRequest) {
 
     // Verify OTP
     if (phoneOtpRecord.otp !== otp) {
+      // Increment wrong attempts
+      const newWrongAttempts = phoneOtpRecord.wrongAttempts + 1;
+      const remainingAttempts = 3 - newWrongAttempts;
+      
+      // Block for 24 hours after 3 wrong attempts
+      if (newWrongAttempts >= 3) {
+        const blockedUntil = new Date();
+        blockedUntil.setHours(blockedUntil.getHours() + 24);
+        
+        await prisma.phoneOtp.update({
+          where: { phoneNumber: validatedPhoneNumber },
+          data: {
+            wrongAttempts: newWrongAttempts,
+            blockedUntil: blockedUntil
+          }
+        });
+        
+        return NextResponse.json(
+          { 
+            success: false, 
+            message: 'Terlalu banyak percobaan gagal. Akun Anda diblokir selama 24 jam.'
+          },
+          { status: 429 }
+        );
+      }
+      
+      // Update wrong attempts
+      await prisma.phoneOtp.update({
+        where: { phoneNumber: validatedPhoneNumber },
+        data: {
+          wrongAttempts: newWrongAttempts
+        }
+      });
+      
       return NextResponse.json(
-        { success: false, message: 'Kode OTP tidak valid' },
+        { 
+          success: false, 
+          message: `Kode OTP tidak valid. Sisa percobaan: ${remainingAttempts}x` 
+        },
         { status: 400 }
       );
     }

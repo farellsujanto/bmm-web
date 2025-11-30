@@ -20,6 +20,8 @@ export default function LoginPage() {
   const [maskedPhone, setMaskedPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resendCount, setResendCount] = useState(0);
+  const [maxResends, setMaxResends] = useState(2);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Redirect if already logged in
@@ -84,6 +86,14 @@ export default function LoginPage() {
         } catch {
           setMaskedPhone(phoneNumber);
         }
+      }
+
+      // Store resend tracking
+      if (data.data?.resendCount !== undefined) {
+        setResendCount(data.data.resendCount);
+      }
+      if (data.data?.maxResends !== undefined) {
+        setMaxResends(data.data.maxResends);
       }
 
       // Show OTP screen and start timer
@@ -161,6 +171,11 @@ export default function LoginPage() {
   };
 
   const handleResendOTP = async () => {
+    if (resendCount >= maxResends) {
+      setError('Batas pengiriman ulang OTP telah tercapai');
+      return;
+    }
+
     setTimer(60);
     setOtp(['', '', '', '', '', '']);
     setError('');
@@ -181,6 +196,11 @@ export default function LoginPage() {
       if (!response.ok) {
         throw new Error(data.message || 'Failed to resend OTP');
       }
+
+      // Update resend count
+      if (data.data?.resendCount !== undefined) {
+        setResendCount(data.data.resendCount);
+      }
     } catch (err: any) {
       setError(err.message || 'Gagal mengirim ulang OTP');
     }
@@ -191,6 +211,7 @@ export default function LoginPage() {
     setOtp(['', '', '', '', '', '']);
     setTimer(60);
     setError('');
+    setResendCount(0);
   };
 
   return (
@@ -241,6 +262,8 @@ export default function LoginPage() {
               timer={timer}
               error={showOTP ? error : ''}
               loading={loading}
+              resendCount={resendCount}
+              maxResends={maxResends}
               onSubmit={handleOTPSubmit}
               onResendOTP={handleResendOTP}
               onBackToForm={handleBackToForm}

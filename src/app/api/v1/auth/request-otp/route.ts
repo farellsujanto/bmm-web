@@ -40,6 +40,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if phone number is blocked
+    const existingOtp = await prisma.phoneOtp.findUnique({
+      where: { phoneNumber: validatedPhoneNumber }
+    });
+
+    if (existingOtp?.blockedUntil) {
+      const now = new Date();
+      if (existingOtp.blockedUntil > now) {
+        const remainingHours = Math.ceil((existingOtp.blockedUntil.getTime() - now.getTime()) / (1000 * 60 * 60));
+        return NextResponse.json(
+          { 
+            success: false, 
+            message: `Terlalu banyak percobaan gagal. Silakan coba lagi dalam ${remainingHours} jam`,
+            blockedUntil: existingOtp.blockedUntil.toISOString()
+          },
+          { status: 429 }
+        );
+      }
+    }
+
+    // Check resend limit (maximum 2 resends = 3 total requests)
+    if (existingOtp && existingOtp.resendCount >= 2) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Batas pengiriman ulang OTP telah tercapai. Silakan coba lagi nanti'
+        },
+        { status: 429 }
+      );
+    }
+
     // Generate OTP
     const otp = generateOtp();
     
@@ -47,17 +78,24 @@ export async function POST(request: NextRequest) {
     const expiresAt = createOtpExpiry(1); // 1 minute
 
     // Store or update OTP in database
+    const resendCount = existingOtp ? existingOtp.resendCount + 1 : 0;
     await prisma.phoneOtp.upsert({
       where: { phoneNumber: validatedPhoneNumber },
       update: {
         otp,
         expiresAt,
+        resendCount,
+        // Reset wrong attempts and blocked status when new OTP is requested
+        wrongAttempts: 0,
+        blockedUntil: null,
         updatedAt: new Date()
       },
       create: {
         phoneNumber: validatedPhoneNumber,
         otp,
-        expiresAt
+        expiresAt,
+        wrongAttempts: 0,
+        resendCount: 0
       }
     });
 
@@ -77,7 +115,9 @@ export async function POST(request: NextRequest) {
         message: 'Kode OTP telah dikirim ke nomor WhatsApp Anda',
         data: {
           expiresAt: expiresAt.toISOString(),
-          maskedPhone: maskPhoneNumber(validatedPhoneNumber)
+          maskedPhone: maskPhoneNumber(validatedPhoneNumber),
+          resendCount: resendCount,
+          maxResends: 2
         }
       },
       { status: 200 }
