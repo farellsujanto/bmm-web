@@ -15,6 +15,7 @@ export default function CheckoutPage() {
     const { items, totalPrice, totalItems, clearCart } = useCart();
     const [isProcessing, setIsProcessing] = useState(false);
     const [useCompany, setUseCompany] = useState(false);
+    const [orderCompleted, setOrderCompleted] = useState(false);
 
     // Calculate subtotal (after product discounts, this is what totalPrice already includes)
     const subtotal = totalPrice;
@@ -44,10 +45,10 @@ export default function CheckoutPage() {
     }, [isAuthenticated, isLoading, router]);
 
     useEffect(() => {
-        if (items.length === 0 && !isLoading) {
+        if (items.length === 0 && !isLoading && !orderCompleted) {
             router.push('/shop');
         }
-    }, [items, isLoading, router]);
+    }, [items, isLoading, orderCompleted, router]);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -134,6 +135,8 @@ export default function CheckoutPage() {
             const response = await apiRequest.post('/v1/orders', orderData);
 
             if (response.success) {
+                // Set order completed flag to prevent redirect to shop
+                setOrderCompleted(true);
                 // Clear the cart
                 clearCart();
                 // Redirect to order details page using order number

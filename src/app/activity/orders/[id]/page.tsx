@@ -50,13 +50,13 @@ interface Order {
     phoneNumber: string;
     address?: string;
     governmentId?: string;
-    company?: {
-      name: string;
-      taxId?: string;
-      address?: string;
-      phoneNumber?: string;
-    };
   };
+  companyOrder?: {
+    name: string;
+    taxId: string;
+    address?: string;
+    phoneNumber?: string;
+  } | null;
   paymentLogs: Array<{
     id: number;
     method: string;
@@ -320,19 +320,31 @@ export default function OrderDetailsPage() {
                   <p className="text-gray-400 text-sm mb-1">Alamat Pengiriman</p>
                   <p className="text-white font-semibold">{order.user.address || '-'}</p>
                 </div>
-                {order.user.company && (
+                {order.companyOrder && (
                   <>
                     <div className="border-t border-gray-800 pt-4 mt-4">
                       <p className="text-gray-400 text-sm mb-3 font-semibold">Informasi Perusahaan</p>
                     </div>
                     <div>
                       <p className="text-gray-400 text-sm mb-1">Nama Perusahaan</p>
-                      <p className="text-white font-semibold">{order.user.company.name}</p>
+                      <p className="text-white font-semibold">{order.companyOrder.name}</p>
                     </div>
-                    {order.user.company.taxId && (
+                    {order.companyOrder.taxId && (
                       <div>
                         <p className="text-gray-400 text-sm mb-1">NPWP</p>
-                        <p className="text-white font-semibold">{order.user.company.taxId}</p>
+                        <p className="text-white font-semibold">{order.companyOrder.taxId}</p>
+                      </div>
+                    )}
+                    {order.companyOrder.address && (
+                      <div>
+                        <p className="text-gray-400 text-sm mb-1">Alamat Perusahaan</p>
+                        <p className="text-white font-semibold">{order.companyOrder.address}</p>
+                      </div>
+                    )}
+                    {order.companyOrder.phoneNumber && (
+                      <div>
+                        <p className="text-gray-400 text-sm mb-1">Nomor Telepon Perusahaan</p>
+                        <p className="text-white font-semibold">{order.companyOrder.phoneNumber}</p>
                       </div>
                     )}
                   </>

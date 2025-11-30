@@ -147,7 +147,7 @@ async function createOrderHandler(request: NextRequest, user: JwtData) {
     }
 
     // Handle company - find existing or create new
-    let companyId: number | undefined = currentUser?.companyId || undefined;
+    let companyId: number | undefined = undefined;
     if (company?.name && company?.taxId) {
       // Check if company with this taxId already exists
       const existingCompany = await prisma.company.findFirst({
@@ -170,15 +170,20 @@ async function createOrderHandler(request: NextRequest, user: JwtData) {
       }
     }
 
-    // Update user info
+    // Update user info - only update companyId if company info was provided
+    const userUpdateData: any = {
+      name: customer.name,
+      governmentId: customer.governmentId,
+      address: customer.address,
+    };
+    
+    if (company?.name && company?.taxId) {
+      userUpdateData.companyId = companyId;
+    }
+
     await prisma.user.update({
       where: { id: user.id },
-      data: {
-        name: customer.name,
-        governmentId: customer.governmentId,
-        address: customer.address,
-        companyId: companyId
-      }
+      data: userUpdateData
     });
 
     // Get user's phone number for order number generation
@@ -224,7 +229,17 @@ async function createOrderHandler(request: NextRequest, user: JwtData) {
               subtotal: new Prisma.Decimal(calcItem.subtotal),
             };
           })
-        }
+        },
+        ...(company?.name && company?.taxId ? {
+          companyOrder: {
+            create: {
+              name: company.name,
+              taxId: company.taxId,
+              address: company.address,
+              phoneNumber: company.phoneNumber,
+            }
+          }
+        } : {})
       },
       include: {
         orderProducts: {
@@ -245,7 +260,8 @@ async function createOrderHandler(request: NextRequest, user: JwtData) {
             phoneNumber: true,
             address: true,
           }
-        }
+        },
+        companyOrder: true
       }
     });
 

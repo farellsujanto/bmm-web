@@ -49,10 +49,10 @@ async function getOrderHandler(
             name: true,
             phoneNumber: true,
             address: true,
-            governmentId: true,
-            company: true
+            governmentId: true
           }
         },
+        companyOrder: true,
         paymentLogs: {
           orderBy: { createdAt: 'desc' }
         }

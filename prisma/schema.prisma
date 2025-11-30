@@ -269,6 +269,10 @@ model Order {
   referrerId        Int?
   referrer          User?    @relation("UserReferredOrders", fields: [referrerId], references: [id])
   
+  // Company order details (if order is for a company)
+  companyOrderId    Int?     @unique
+  companyOrder      CompanyOrder?
+  
   // Order details
   status            OrderStatus @default(PENDING_PAYMENT)
   subtotal          Decimal  @db.Decimal(12, 2)
@@ -300,6 +304,27 @@ model Order {
   @@index([status])
   @@index([orderNumber])
   @@index([createdAt])
+  @@index([companyOrderId])
+}
+
+model CompanyOrder {
+  id            Int      @id @default(autoincrement())
+  
+  orderId       Int      @unique
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  // Company details at time of order
+  name          String
+  taxId         String
+  address       String?
+  phoneNumber   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enabled Boolean @default(true)
+  
+  @@index([orderId])
+  @@index([taxId])
 }
 
 model OrderProduct {
