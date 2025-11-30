@@ -88,6 +88,7 @@ export default function OrderDetailsPage() {
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
+      // params.id contains the order number from the URL
       const response = await apiRequest.get(`/v1/orders/${params.id}`);
       
       if (response.success) {

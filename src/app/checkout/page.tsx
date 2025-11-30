@@ -50,13 +50,42 @@ export default function CheckoutPage() {
     }, [items, isLoading, router]);
 
     useEffect(() => {
-        if (user) {
-            setCustomerInfo({
-                name: user.name || '',
-                governmentId: '',
-                address: '',
-            });
-        }
+        const fetchUserData = async () => {
+            if (user) {
+                try {
+                    const response = await apiRequest.get('/v1/user/profile');
+                    if (response.success && response.data) {
+                        const userData = response.data as any;
+                        setCustomerInfo({
+                            name: userData.name || '',
+                            governmentId: userData.governmentId || '',
+                            address: userData.address || '',
+                        });
+                        
+                        // Prefill company data if user has a company
+                        if (userData.company) {
+                            setUseCompany(true);
+                            setCompanyInfo({
+                                name: userData.company.name || '',
+                                taxId: userData.company.taxId || '',
+                                address: userData.company.address || '',
+                                phoneNumber: userData.company.phoneNumber || '',
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch user data:', error);
+                    // Fallback to basic user data from auth context
+                    setCustomerInfo({
+                        name: user.name || '',
+                        governmentId: '',
+                        address: '',
+                    });
+                }
+            }
+        };
+        
+        fetchUserData();
     }, [user]);
 
     const handlePayment = async () => {
@@ -107,8 +136,8 @@ export default function CheckoutPage() {
             if (response.success) {
                 // Clear the cart
                 clearCart();
-                // Redirect to order details page
-                router.push(`/activity/orders/${(response.data as any).id}`);
+                // Redirect to order details page using order number
+                router.push(`/activity/orders/${(response.data as any).orderNumber}`);
             } else {
                 alert(response.message || 'Gagal membuat pesanan');
             }

@@ -78,10 +78,20 @@ async function createOrderHandler(request: NextRequest, user: JwtData) {
       );
     }
 
-    // Get current user with discount info
+    // Get current user with discount info and company
     const currentUser = await prisma.user.findUnique({
       where: { id: user.id },
-      select: { referrerId: true, referrer: true, phoneNumber: true, globalDiscountPercentage: true }
+      select: { 
+        referrerId: true, 
+        referrer: true, 
+        phoneNumber: true, 
+        globalDiscountPercentage: true,
+        name: true,
+        governmentId: true,
+        address: true,
+        companyId: true,
+        company: true
+      }
     });
 
     const userGlobalDiscountPercent = currentUser?.globalDiscountPercentage?.toNumber() || 0;
@@ -136,21 +146,31 @@ async function createOrderHandler(request: NextRequest, user: JwtData) {
       });
     }
 
-    // Create company if provided
-    let companyId: number | undefined = undefined;
+    // Handle company - find existing or create new
+    let companyId: number | undefined = currentUser?.companyId || undefined;
     if (company?.name && company?.taxId) {
-      const newCompany = await prisma.company.create({
-        data: {
-          name: company.name,
-          taxId: company.taxId,
-          address: company.address,
-          phoneNumber: company.phoneNumber,
-        }
+      // Check if company with this taxId already exists
+      const existingCompany = await prisma.company.findFirst({
+        where: { taxId: company.taxId }
       });
-      companyId = newCompany.id;
+
+      if (existingCompany) {
+        companyId = existingCompany.id;
+      } else {
+        // Create new company if taxId doesn't exist
+        const newCompany = await prisma.company.create({
+          data: {
+            name: company.name,
+            taxId: company.taxId,
+            address: company.address,
+            phoneNumber: company.phoneNumber,
+          }
+        });
+        companyId = newCompany.id;
+      }
     }
 
-    // Update user info if changed
+    // Update user info
     await prisma.user.update({
       where: { id: user.id },
       data: {

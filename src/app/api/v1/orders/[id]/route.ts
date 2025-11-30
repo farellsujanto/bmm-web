@@ -5,26 +5,27 @@ import prisma from '@/src/utils/database/prismaOrm.util';
 import { createSignedUrls } from '@/src/utils/storage/supabaseStorage.util';
 
 /**
- * Get order by ID
+ * Get order by order number
  */
 async function getOrderHandler(
   request: NextRequest,
   user: JwtData,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = parseInt(context.params.id);
+    const params = await context.params;
+    const orderNumber = params.id;
 
-    if (isNaN(orderId)) {
+    if (!orderNumber) {
       return NextResponse.json(
-        { success: false, message: 'Invalid order ID' },
+        { success: false, message: 'Invalid order number' },
         { status: 400 }
       );
     }
 
     const order = await prisma.order.findFirst({
       where: {
-        id: orderId,
+        orderNumber: orderNumber,
         userId: user.id, // Only allow users to see their own orders
         enabled: true
       },

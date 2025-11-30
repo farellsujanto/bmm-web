@@ -16,6 +16,8 @@ async function getProfileHandler(request: NextRequest, user: JwtData) {
         id: true,
         name: true,
         phoneNumber: true,
+        governmentId: true,
+        address: true,
         role: true,
         referralCode: true,
         maxReferralPercentage: true,
@@ -25,6 +27,7 @@ async function getProfileHandler(request: NextRequest, user: JwtData) {
           select: {
             id: true,
             name: true,
+            taxId: true,
             address: true,
             phoneNumber: true
           }

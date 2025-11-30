@@ -71,7 +71,7 @@ export default function OrderSection({ orders = [], isSnippet = false }: OrderSe
           {displayOrders.map((order) => (
             <Link
               key={order.id}
-              href={`/activity/orders/${order.id}`}
+              href={`/activity/orders/${order.orderNumber}`}
               className="block bg-gray-900/50 border border-gray-800 rounded-2xl p-6 hover:border-red-900 transition-all duration-300 group cursor-pointer"
             >
               <div className="flex items-start justify-between mb-4">
