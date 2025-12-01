@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
           data: {
             orderId: order.id,
             amount: paidAmount,
+            paymentProvider: 'MIDTRANS',
             paymentMethod: mappedPaymentMethod,
             transactionId: transactionId,
             notes: `Midtrans payment: ${transactionStatus} (${fraudStatus || 'N/A'})`,
