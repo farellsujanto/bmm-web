@@ -304,7 +304,9 @@ export async function updateUserStatistics(
         totalOrders: 0,
         totalSpent: 0,
         totalReferrals: 0,
-        totalReferralEarnings: 0
+        totalReferralEarnings: 0,
+        availableBalance: 0,
+        totalWithdrawn: 0
       }
     });
   }
@@ -343,19 +345,19 @@ export async function updateReferrerStatistics(
         totalOrders: 0,
         totalSpent: 0,
         totalReferrals: 0,
-        totalReferralEarnings: 0
+        totalReferralEarnings: 0,
+        availableBalance: 0,
+        totalWithdrawn: 0
       }
     });
   }
 
-  // Update referrer's statistics
-  // Increment total referrals count (this represents unique referred users who have ordered)
-  // Note: totalReferrals is typically incremented when a referred user makes their first order
-  // For this, we'll update the earnings
+  // Update referrer's statistics and credit their balance
   await tx.userStatistics.update({
     where: { userId: referrerId },
     data: {
       totalReferralEarnings: Number(referrerStats.totalReferralEarnings) + commissionAmount,
+      availableBalance: Number(referrerStats.availableBalance) + commissionAmount,
       updatedAt: new Date()
     }
   });

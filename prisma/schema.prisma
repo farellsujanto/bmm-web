@@ -44,6 +44,7 @@ model User {
   missions    UserMission[]
   orders      Order[] @relation("UserOrders")
   referredOrders Order[] @relation("UserReferredOrders")
+  withdrawals Withdrawal[] @relation("UserWithdrawals")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -100,6 +101,10 @@ model UserStatistics {
   totalSpent            Decimal  @default(0) @db.Decimal(12, 2)
   totalReferrals        Int      @default(0)
   totalReferralEarnings Decimal  @default(0) @db.Decimal(12, 2)
+  
+  // Balance tracking for affiliate earnings
+  availableBalance      Decimal  @default(0) @db.Decimal(12, 2) // Earnings available to withdraw
+  totalWithdrawn        Decimal  @default(0) @db.Decimal(12, 2) // Total amount withdrawn
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -401,4 +406,40 @@ model PaymentLog {
   @@index([orderId])
   @@index([createdAt])
   @@index([transactionId])
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+model Withdrawal {
+  id            Int      @id @default(autoincrement())
+  
+  userId        Int
+  user          User     @relation("UserWithdrawals", fields: [userId], references: [id])
+  
+  amount        Decimal  @db.Decimal(12, 2)
+  status        WithdrawalStatus @default(PENDING)
+  
+  // Bank account details for withdrawal
+  bankName      String
+  accountNumber String
+  accountHolder String
+  
+  // Admin notes and processing details
+  notes         String?
+  processedBy   Int?     // Admin user ID who processed
+  processedAt   DateTime?
+  rejectionReason String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enabled Boolean @default(true)
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
