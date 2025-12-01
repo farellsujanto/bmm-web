@@ -162,8 +162,12 @@ export default function OrderDetailsPage() {
     }).format(dateObj);
   };
 
-  const formatCurrency = (amount: number | { toNumber: () => number }) => {
-    const numAmount = typeof amount === 'number' ? amount : amount.toNumber();
+  const formatCurrency = (amount: number | string | { toString: () => string }) => {
+    const numAmount = typeof amount === 'number' 
+      ? amount 
+      : typeof amount === 'string' 
+        ? parseFloat(amount) 
+        : parseFloat(amount.toString());
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -270,11 +274,13 @@ console.log(order);
               <h1 className="text-4xl font-bold text-white mb-2">
                 Pesanan #{order.orderNumber}
               </h1>
-              <p className="text-gray-400">{formatDate(order.createdAt)}</p>
-            </div>
-            <div className={`${statusInfo.bg} ${statusInfo.text} ${statusInfo.border} border px-6 py-3 rounded-2xl font-bold text-lg flex items-center space-x-2`}>
-              <span className="text-2xl">{statusInfo.icon}</span>
-              <span>{statusInfo.label}</span>
+              <p className="text-gray-400 mb-4">{formatDate(order.createdAt)}</p>
+              
+              {/* Status Badge */}
+              <div className={`inline-flex items-center space-x-2 ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border} border px-4 py-2 rounded-xl font-bold`}>
+                <span className="text-xl">{statusInfo.icon}</span>
+                <span>{statusInfo.label}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -282,6 +288,123 @@ console.log(order);
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-12">
+        {/* Order Status Timeline - Full Width */}
+        <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 rounded-3xl p-8 shadow-2xl border border-gray-800 mb-8">
+          <h2 className="text-2xl font-bold text-white mb-6 flex items-center justify-center">
+            <svg className="w-8 h-8 mr-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Status Pesanan
+          </h2>
+          
+          {/* Order Progress Steps */}
+          <div className="relative max-w-5xl mx-auto">
+            {/* Progress Line */}
+            <div className="absolute top-6 left-0 right-0 h-1 bg-gray-700">
+              <div 
+                className="h-full bg-gradient-to-r from-yellow-500 via-blue-500 via-cyan-500 via-purple-500 to-green-500 transition-all duration-500"
+                style={{ 
+                  width: `${
+                    order.status === 'PENDING_PAYMENT' ? '0%' :
+                    order.status === 'PROCESSING' ? '25%' :
+                    order.status === 'READY_TO_SHIP' ? '50%' :
+                    order.status === 'SHIPPED' ? '75%' :
+                    order.status === 'DELIVERED' ? '100%' :
+                    order.status === 'CANCELLED' ? '0%' :
+                    order.status === 'REFUNDED' ? '0%' : '0%'
+                  }` 
+                }}
+              />
+            </div>
+
+            {/* Status Steps */}
+            <div className="relative flex justify-between">
+              {/* Pending Payment */}
+              <div className="flex flex-col items-center" style={{ width: '20%' }}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 ${
+                  order.status !== 'PENDING_PAYMENT' && order.status !== 'CANCELLED' && order.status !== 'REFUNDED'
+                    ? 'bg-yellow-600 text-white' 
+                    : order.status === 'PENDING_PAYMENT'
+                      ? 'bg-yellow-600 text-white animate-pulse'
+                      : 'bg-gray-700 text-gray-400'
+                }`}>
+                  {order.status !== 'PENDING_PAYMENT' && order.status !== 'CANCELLED' && order.status !== 'REFUNDED' ? '✓' : '⏳'}
+                </div>
+                <div className="mt-3 text-center">
+                  <p className="text-sm font-semibold text-gray-300">Menunggu</p>
+                  <p className="text-xs text-gray-500 mt-1">Pembayaran</p>
+                </div>
+              </div>
+
+              {/* Processing */}
+              <div className="flex flex-col items-center" style={{ width: '20%' }}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 ${
+                  order.status === 'READY_TO_SHIP' || order.status === 'SHIPPED' || order.status === 'DELIVERED'
+                    ? 'bg-blue-600 text-white' 
+                    : order.status === 'PROCESSING'
+                      ? 'bg-blue-600 text-white animate-pulse'
+                      : 'bg-gray-700 text-gray-400'
+                }`}>
+                  {order.status === 'READY_TO_SHIP' || order.status === 'SHIPPED' || order.status === 'DELIVERED' ? '✓' : '⚙️'}
+                </div>
+                <div className="mt-3 text-center">
+                  <p className="text-sm font-semibold text-gray-300">Diproses</p>
+                  <p className="text-xs text-gray-500 mt-1">Admin</p>
+                </div>
+              </div>
+
+              {/* Ready to Ship */}
+              <div className="flex flex-col items-center" style={{ width: '20%' }}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 ${
+                  order.status === 'SHIPPED' || order.status === 'DELIVERED'
+                    ? 'bg-cyan-600 text-white' 
+                    : order.status === 'READY_TO_SHIP'
+                      ? 'bg-cyan-600 text-white animate-pulse'
+                      : 'bg-gray-700 text-gray-400'
+                }`}>
+                  {order.status === 'SHIPPED' || order.status === 'DELIVERED' ? '✓' : '📦'}
+                </div>
+                <div className="mt-3 text-center">
+                  <p className="text-sm font-semibold text-gray-300">Siap Kirim</p>
+                  <p className="text-xs text-gray-500 mt-1">Packing</p>
+                </div>
+              </div>
+
+              {/* Shipped */}
+              <div className="flex flex-col items-center" style={{ width: '20%' }}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 ${
+                  order.status === 'DELIVERED'
+                    ? 'bg-purple-600 text-white' 
+                    : order.status === 'SHIPPED'
+                      ? 'bg-purple-600 text-white animate-pulse'
+                      : 'bg-gray-700 text-gray-400'
+                }`}>
+                  {order.status === 'DELIVERED' ? '✓' : '🚚'}
+                </div>
+                <div className="mt-3 text-center">
+                  <p className="text-sm font-semibold text-gray-300">Dikirim</p>
+                  <p className="text-xs text-gray-500 mt-1">Dalam Perjalanan</p>
+                </div>
+              </div>
+
+              {/* Delivered */}
+              <div className="flex flex-col items-center" style={{ width: '20%' }}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 ${
+                  order.status === 'DELIVERED'
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-700 text-gray-400'
+                }`}>
+                  {order.status === 'DELIVERED' ? '✓' : '🏠'}
+                </div>
+                <div className="mt-3 text-center">
+                  <p className="text-sm font-semibold text-gray-300">Selesai</p>
+                  <p className="text-xs text-gray-500 mt-1">Diterima</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Order Items & Details */}
           <div className="lg:col-span-2 space-y-6">
@@ -489,17 +612,50 @@ console.log(order);
                       disabled={isProcessingPayment || !snapReady}
                       className="w-full py-4 text-lg"
                     >
-                      {isProcessingPayment ? '⏳ Memproses...' : `💳 Bayar ${Number(order.amountPaid) > 0 ? 'Sisa' : 'Sekarang'}`}
+                      {isProcessingPayment ? '⏳ Memproses...' : (
+                        Number(order.amountPaid) === 0 
+                          ? `💳 Bayar DP (50%)` 
+                          : `💳 Bayar Pelunasan`
+                      )}
                     </PrimaryButton>
-                    {Number(order.amountPaid) > 0 && (
-                      <p className="text-xs text-center text-yellow-400">
-                        {order.status === 'READY_TO_SHIP' 
-                          ? `🚨 Pesanan siap dikirim! Selesaikan pembayaran sisa ${formatCurrency(order.remainingBalance)} untuk melanjutkan pengiriman`
-                          : `💡 Anda bisa melanjutkan pembayaran sisa ${formatCurrency(order.remainingBalance)}`
-                        }
-                      </p>
-                    )}
+                    <div className="bg-gray-900/50 rounded-lg p-3 text-xs">
+                      {Number(order.amountPaid) === 0 ? (
+                        <>
+                          <p className="text-yellow-400 font-semibold mb-1">
+                            💰 Langkah 1: Bayar DP (Down Payment)
+                          </p>
+                          <p className="text-gray-400">
+                            Bayar DP sebesar {formatCurrency(Number(order.total) * 0.5)} (50% dari total) untuk memproses pesanan Anda
+                          </p>
+                        </>
+                      ) : order.status === 'READY_TO_SHIP' ? (
+                        <>
+                          <p className="text-yellow-400 font-semibold mb-1">
+                            🚨 Pesanan Siap Dikirim!
+                          </p>
+                          <p className="text-gray-400">
+                            Selesaikan pembayaran pelunasan sebesar {formatCurrency(order.remainingBalance)} untuk melanjutkan pengiriman
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-blue-400 font-semibold mb-1">
+                            ✅ DP Sudah Dibayar
+                          </p>
+                          <p className="text-gray-400">
+                            Pesanan sedang diproses. Anda bisa melunasi sisa pembayaran sebesar {formatCurrency(order.remainingBalance)} kapan saja
+                          </p>
+                        </>
+                      )}
+                    </div>
                   </>
+                )}
+
+                {Number(order.remainingBalance) === 0 && order.status !== 'SHIPPED' && order.status !== 'DELIVERED' && (
+                  <div className="bg-green-900/20 border border-green-700 rounded-lg p-4 text-center">
+                    <p className="text-green-400 font-bold mb-1">✅ Pembayaran Lunas</p>
+                    <p className="text-xs text-gray-400">Pesanan Anda sedang diproses</p>
+                  </div>
                 )}
 
                 {order.status === 'SHIPPED' && (
