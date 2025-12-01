@@ -6,6 +6,12 @@ import {
   mapMidtransPaymentType,
   checkTransactionStatus
 } from '@/src/utils/payment/midtrans.util';
+import {
+  updateUserMissions,
+  updateReferrerMissions,
+  updateUserStatistics,
+  updateReferrerStatistics
+} from '@/src/utils/mission/missionUpdate.util';
 
 /**
  * Handle Midtrans payment notification webhook
@@ -76,6 +82,7 @@ export async function POST(request: NextRequest) {
     // Start a transaction to update order and create payment log
     const result = await prisma.$transaction(async (tx) => {
       let paymentLog = null;
+      let isFullyPaid = false;
 
       // Update order status and payment tracking
       let updateData: any = {
@@ -105,9 +112,65 @@ export async function POST(request: NextRequest) {
         updateData.amountPaid = newAmountPaid;
         updateData.remainingBalance = Math.max(0, newRemainingBalance);
 
+        // Check if order is fully paid
+        const wasNotFullyPaid = Number(order.remainingBalance) > 0;
+        isFullyPaid = newRemainingBalance <= 0;
+
         // If fully paid, update status to PROCESSING if not already in a later stage
-        if (newRemainingBalance <= 0 && order.status === 'PENDING_PAYMENT') {
+        if (isFullyPaid && order.status === 'PENDING_PAYMENT') {
           updateData.status = 'PROCESSING';
+        }
+
+        // If this payment completes the order (not a partial payment that was already completed)
+        if (isFullyPaid && wasNotFullyPaid) {
+          // Update user statistics
+          await updateUserStatistics(tx, order.userId, Number(order.total));
+
+          // Update user missions based on order
+          await updateUserMissions(tx, order.userId, Number(order.total));
+
+          // If there's a referrer, update their statistics and missions
+          if (order.referrerId) {
+            const commissionAmount = Number(order.affiliateCommission);
+            
+            if (commissionAmount > 0) {
+              // Update referrer's earnings statistics
+              await updateReferrerStatistics(tx, order.referrerId, commissionAmount);
+
+              // Update referrer's missions
+              await updateReferrerMissions(tx, order.referrerId, commissionAmount);
+
+              // Increment referrer's totalReferrals if this is the user's first completed order
+              const userPreviousOrders = await tx.order.count({
+                where: {
+                  userId: order.userId,
+                  status: {
+                    in: ['PROCESSING', 'READY_TO_SHIP', 'SHIPPED', 'DELIVERED']
+                  },
+                  id: {
+                    not: order.id // Exclude current order
+                  }
+                }
+              });
+
+              // If this is the user's first completed order, increment referrer's total referrals
+              if (userPreviousOrders === 0) {
+                const referrerStats = await tx.userStatistics.findUnique({
+                  where: { userId: order.referrerId }
+                });
+
+                if (referrerStats) {
+                  await tx.userStatistics.update({
+                    where: { userId: order.referrerId },
+                    data: {
+                      totalReferrals: referrerStats.totalReferrals + 1,
+                      updatedAt: new Date()
+                    }
+                  });
+                }
+              }
+            }
+          }
         }
       }
 
@@ -116,10 +179,10 @@ export async function POST(request: NextRequest) {
         data: updateData,
       });
 
-      return { order: updatedOrder, paymentLog };
+      return { order: updatedOrder, paymentLog, isFullyPaid };
     });
 
-    console.log(`Order ${orderId} updated: ${transactionStatus} -> ${newOrderStatus}`);
+    console.log(`Order ${orderId} updated: ${transactionStatus} -> ${newOrderStatus}${result.isFullyPaid ? ' (Fully Paid - Missions & Statistics Updated)' : ''}`);
 
     return NextResponse.json(
       {

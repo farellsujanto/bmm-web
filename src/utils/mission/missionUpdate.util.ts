@@ -1,0 +1,362 @@
+import { MissionType, RewardType } from '@/generated/prisma/browser';
+
+/**
+ * Update missions progress for a user after an order is fully paid
+ * @param tx - Prisma transaction client
+ * @param userId - User ID
+ * @param orderTotal - Total order amount
+ */
+export async function updateUserMissions(
+  tx: any,
+  userId: number,
+  orderTotal: number
+) {
+  // Get user's current statistics
+  const userStats = await tx.userStatistics.findUnique({
+    where: { userId }
+  });
+
+  if (!userStats) {
+    console.error(`User statistics not found for user ${userId}`);
+    return;
+  }
+
+  // Get all active missions
+  const missions = await tx.mission.findMany({
+    where: {
+      isActive: true,
+      enabled: true
+    },
+    orderBy: {
+      sortOrder: 'asc'
+    }
+  });
+
+  // Process each mission
+  for (const mission of missions) {
+    // Get or create user mission progress
+    let userMission = await tx.userMission.findUnique({
+      where: {
+        userId_missionId: {
+          userId,
+          missionId: mission.id
+        }
+      }
+    });
+
+    if (!userMission) {
+      userMission = await tx.userMission.create({
+        data: {
+          userId,
+          missionId: mission.id,
+          currentProgress: 0,
+          achieved: false
+        }
+      });
+    }
+
+    // Skip if already achieved
+    if (userMission.achieved) {
+      continue;
+    }
+
+    // Calculate new progress based on mission type
+    let newProgress = Number(userMission.currentProgress);
+
+    switch (mission.type) {
+      case MissionType.ORDER_COUNT:
+        // Increment by 1 for each order
+        newProgress += 1;
+        break;
+
+      case MissionType.ORDER_VALUE:
+        // Increment by order total
+        newProgress += orderTotal;
+        break;
+
+      case MissionType.REFERRAL_COUNT:
+        // This is updated separately when referred users place orders
+        // Use current total referrals
+        newProgress = userStats.totalReferrals;
+        break;
+
+      case MissionType.REFERRAL_EARNINGS:
+        // This is updated separately when commission is earned
+        // Use current total earnings
+        newProgress = Number(userStats.totalReferralEarnings);
+        break;
+    }
+
+    // Check if mission is achieved
+    const targetValue = Number(mission.targetValue);
+    const achieved = newProgress >= targetValue;
+
+    // Update user mission
+    const updatedUserMission = await tx.userMission.update({
+      where: {
+        userId_missionId: {
+          userId,
+          missionId: mission.id
+        }
+      },
+      data: {
+        currentProgress: newProgress,
+        achieved,
+        achievedAt: achieved && !userMission.achieved ? new Date() : userMission.achievedAt,
+        updatedAt: new Date()
+      }
+    });
+
+    // If mission just achieved, apply rewards
+    if (achieved && !userMission.achieved) {
+      await applyMissionReward(tx, userId, mission);
+    }
+  }
+}
+
+/**
+ * Apply mission reward to user
+ * @param tx - Prisma transaction client
+ * @param userId - User ID
+ * @param mission - Mission that was achieved
+ */
+async function applyMissionReward(
+  tx: any,
+  userId: number,
+  mission: any
+) {
+  const user = await tx.user.findUnique({
+    where: { id: userId }
+  });
+
+  if (!user) {
+    console.error(`User not found: ${userId}`);
+    return;
+  }
+
+  const rewardValue = Number(mission.rewardValue);
+
+  // Apply reward based on reward type
+  switch (mission.rewardType) {
+    case RewardType.REFERRAL_PERCENTAGE:
+      // Increase referral percentage
+      const newReferralPercentage = Number(user.maxReferralPercentage) + rewardValue;
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          maxReferralPercentage: newReferralPercentage,
+          updatedAt: new Date()
+        }
+      });
+      console.log(`User ${userId} referral percentage increased to ${newReferralPercentage}%`);
+      break;
+
+    case RewardType.GLOBAL_DISCOUNT:
+      // Increase global discount percentage
+      const newDiscountPercentage = Number(user.globalDiscountPercentage) + rewardValue;
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          globalDiscountPercentage: newDiscountPercentage,
+          updatedAt: new Date()
+        }
+      });
+      console.log(`User ${userId} global discount increased to ${newDiscountPercentage}%`);
+      break;
+
+    case RewardType.BOTH:
+      // Increase both referral and discount percentages
+      const newReferralPct = Number(user.maxReferralPercentage) + rewardValue;
+      const newDiscountPct = Number(user.globalDiscountPercentage) + rewardValue;
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          maxReferralPercentage: newReferralPct,
+          globalDiscountPercentage: newDiscountPct,
+          updatedAt: new Date()
+        }
+      });
+      console.log(`User ${userId} referral and discount both increased by ${rewardValue}%`);
+      break;
+  }
+}
+
+/**
+ * Update referrer's missions when a referred user places an order
+ * @param tx - Prisma transaction client
+ * @param referrerId - Referrer user ID
+ * @param commissionEarned - Commission amount earned from this order
+ */
+export async function updateReferrerMissions(
+  tx: any,
+  referrerId: number,
+  commissionEarned: number
+) {
+  // Get referrer's statistics
+  const referrerStats = await tx.userStatistics.findUnique({
+    where: { userId: referrerId }
+  });
+
+  if (!referrerStats) {
+    console.error(`Referrer statistics not found for user ${referrerId}`);
+    return;
+  }
+
+  // Get all active missions
+  const missions = await tx.mission.findMany({
+    where: {
+      isActive: true,
+      enabled: true,
+      type: {
+        in: [MissionType.REFERRAL_COUNT, MissionType.REFERRAL_EARNINGS]
+      }
+    }
+  });
+
+  // Process referral-related missions
+  for (const mission of missions) {
+    let userMission = await tx.userMission.findUnique({
+      where: {
+        userId_missionId: {
+          userId: referrerId,
+          missionId: mission.id
+        }
+      }
+    });
+
+    if (!userMission) {
+      userMission = await tx.userMission.create({
+        data: {
+          userId: referrerId,
+          missionId: mission.id,
+          currentProgress: 0,
+          achieved: false
+        }
+      });
+    }
+
+    // Skip if already achieved
+    if (userMission.achieved) {
+      continue;
+    }
+
+    let newProgress = Number(userMission.currentProgress);
+
+    switch (mission.type) {
+      case MissionType.REFERRAL_COUNT:
+        // Use current total referrals from statistics
+        newProgress = referrerStats.totalReferrals;
+        break;
+
+      case MissionType.REFERRAL_EARNINGS:
+        // Use current total earnings from statistics
+        newProgress = Number(referrerStats.totalReferralEarnings);
+        break;
+    }
+
+    // Check if mission is achieved
+    const targetValue = Number(mission.targetValue);
+    const achieved = newProgress >= targetValue;
+
+    // Update user mission
+    await tx.userMission.update({
+      where: {
+        userId_missionId: {
+          userId: referrerId,
+          missionId: mission.id
+        }
+      },
+      data: {
+        currentProgress: newProgress,
+        achieved,
+        achievedAt: achieved && !userMission.achieved ? new Date() : userMission.achievedAt,
+        updatedAt: new Date()
+      }
+    });
+
+    // If mission just achieved, apply rewards
+    if (achieved && !userMission.achieved) {
+      await applyMissionReward(tx, referrerId, mission);
+    }
+  }
+}
+
+/**
+ * Update user statistics after order is fully paid
+ * @param tx - Prisma transaction client
+ * @param userId - User ID
+ * @param orderTotal - Total order amount
+ */
+export async function updateUserStatistics(
+  tx: any,
+  userId: number,
+  orderTotal: number
+) {
+  // Get or create user statistics
+  let userStats = await tx.userStatistics.findUnique({
+    where: { userId }
+  });
+
+  if (!userStats) {
+    userStats = await tx.userStatistics.create({
+      data: {
+        userId,
+        totalOrders: 0,
+        totalSpent: 0,
+        totalReferrals: 0,
+        totalReferralEarnings: 0
+      }
+    });
+  }
+
+  // Update statistics
+  await tx.userStatistics.update({
+    where: { userId },
+    data: {
+      totalOrders: userStats.totalOrders + 1,
+      totalSpent: Number(userStats.totalSpent) + orderTotal,
+      updatedAt: new Date()
+    }
+  });
+}
+
+/**
+ * Update referrer statistics and pay commission
+ * @param tx - Prisma transaction client
+ * @param referrerId - Referrer user ID
+ * @param commissionAmount - Commission amount to pay
+ */
+export async function updateReferrerStatistics(
+  tx: any,
+  referrerId: number,
+  commissionAmount: number
+) {
+  // Get or create referrer statistics
+  let referrerStats = await tx.userStatistics.findUnique({
+    where: { userId: referrerId }
+  });
+
+  if (!referrerStats) {
+    referrerStats = await tx.userStatistics.create({
+      data: {
+        userId: referrerId,
+        totalOrders: 0,
+        totalSpent: 0,
+        totalReferrals: 0,
+        totalReferralEarnings: 0
+      }
+    });
+  }
+
+  // Update referrer's statistics
+  // Increment total referrals count (this represents unique referred users who have ordered)
+  // Note: totalReferrals is typically incremented when a referred user makes their first order
+  // For this, we'll update the earnings
+  await tx.userStatistics.update({
+    where: { userId: referrerId },
+    data: {
+      totalReferralEarnings: Number(referrerStats.totalReferralEarnings) + commissionAmount,
+      updatedAt: new Date()
+    }
+  });
+}
