@@ -7,65 +7,45 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui';
 import Script from 'next/script';
+import type { Order, OrderProduct, PaymentLog } from '@/generated/prisma/browser';
 
-interface OrderProduct {
-  id: number;
-  productId: number;
-  name: string;
-  sku: string;
-  price: number;
-  discount: number;
-  affiliatePercent: number;
-  quantity: number;
-  subtotal: number;
-  product: {
-    id: number;
-    name: string;
-    slug: string;
-    images: Array<{
-      url: string;
-      alt?: string;
-    }>;
-    brand: {
+type OrderWithRelations = Order & {
+  orderProducts: (OrderProduct & {
+    product: {
+      id: number;
       name: string;
+      slug: string;
+      images: Array<{
+        url: string;
+        alt?: string;
+      }>;
+      brand: {
+        name: string;
+      };
     };
-  };
-}
-
-interface Order {
-  id: number;
-  orderNumber: string;
-  status: string;
-  subtotal: number;
-  discount: number;
-  discountPercentage: number;
-  total: number;
-  affiliateCommission: number;
-  shippingAddress?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-  orderProducts: OrderProduct[];
+  })[];
   user: {
-    name?: string;
+    name?: string | null;
     phoneNumber: string;
-    address?: string;
-    governmentId?: string;
+    address?: string | null;
+    governmentId?: string | null;
   };
   companyOrder?: {
     name: string;
-    taxId: string;
-    address?: string;
-    phoneNumber?: string;
+    taxId: string | null;
+    address?: string | null;
+    phoneNumber?: string | null;
   } | null;
   paymentLogs: Array<{
     id: number;
-    method: string;
+    paymentMethod: string;
+    paymentProvider: string;
     amount: number;
-    transactionId?: string;
+    transactionId?: string | null;
+    paidAt: string;
     createdAt: string;
   }>;
-}
+};
 
 // Declare global snap type for TypeScript
 declare global {
@@ -80,7 +60,7 @@ export default function OrderDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<OrderWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [snapReady, setSnapReady] = useState(false);
@@ -104,7 +84,7 @@ export default function OrderDetailsPage() {
       const response = await apiRequest.get(`/v1/orders/${params.id}`);
       
       if (response.success) {
-        setOrder(response.data as Order);
+        setOrder(response.data as OrderWithRelations);
       } else {
         alert(response.message || 'Gagal memuat detail pesanan');
         router.push('/activity');
@@ -132,6 +112,13 @@ export default function OrderDetailsPage() {
         text: 'text-blue-400', 
         label: 'Diproses', 
         border: 'border-blue-700',
+        icon: '⚙️'
+      },
+      READY_TO_SHIP: { 
+        bg: 'bg-cyan-900/50', 
+        text: 'text-cyan-400', 
+        label: 'Siap Dikirim', 
+        border: 'border-cyan-700',
         icon: '📦'
       },
       SHIPPED: { 
@@ -167,20 +154,21 @@ export default function OrderDetailsPage() {
     return statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING_PAYMENT;
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     return new Intl.DateTimeFormat('id-ID', {
       dateStyle: 'long',
       timeStyle: 'short'
-    }).format(date);
+    }).format(dateObj);
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | { toNumber: () => number }) => {
+    const numAmount = typeof amount === 'number' ? amount : amount.toNumber();
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0
-    }).format(amount);
+    }).format(numAmount);
   };
 
   const handlePayment = async () => {
@@ -247,7 +235,7 @@ export default function OrderDetailsPage() {
   if (!order) {
     return null;
   }
-
+console.log(order);
   const statusInfo = getStatusInfo(order.status);
 
   return (
@@ -334,18 +322,18 @@ export default function OrderDetailsPage() {
                         </p>
                         <div className="flex items-center justify-between">
                           <div>
-                            {orderProduct.discount > 0 ? (
+                            {Number(orderProduct.discount) > 0 ? (
                               <>
                                 <div className="flex items-center gap-2">
                                   <p className="text-sm text-gray-500 line-through">
                                     {formatCurrency(orderProduct.price)}
                                   </p>
                                   <span className="text-xs bg-green-900/50 text-green-400 border border-green-700 px-2 py-0.5 rounded font-semibold">
-                                    -{orderProduct.discount}%
+                                    -{Number(orderProduct.discount)}%
                                   </span>
                                 </div>
                                 <p className="text-gray-400 text-sm">
-                                  {formatCurrency(orderProduct.price * (1 - orderProduct.discount / 100))} × {orderProduct.quantity}
+                                  {formatCurrency(Number(orderProduct.price) * (1 - Number(orderProduct.discount) / 100))} × {orderProduct.quantity}
                                 </p>
                               </>
                             ) : (
@@ -448,31 +436,70 @@ export default function OrderDetailsPage() {
                   <span className="font-semibold">{formatCurrency(order.subtotal)}</span>
                 </div>
 
-                {order.discount > 0 && (
+                {Number(order.discount) > 0 && (
                   <div className="flex justify-between text-green-400">
-                    <span>Diskon {order.discountPercentage > 0 ? `(${order.discountPercentage}%)` : ''}</span>
+                    <span>Diskon {Number(order.discountPercentage) > 0 ? `(${Number(order.discountPercentage)}%)` : ''}</span>
                     <span className="font-semibold">-{formatCurrency(order.discount)}</span>
                   </div>
                 )}
 
                 <div className="border-t border-gray-800 pt-4">
-                  <div className="flex justify-between text-white text-xl font-bold">
+                  <div className="flex justify-between text-white text-xl font-bold mb-4">
                     <span>Total</span>
                     <span>{formatCurrency(order.total)}</span>
                   </div>
+
+                  {/* Payment Progress */}
+                  {Number(order.amountPaid) > 0 && (
+                    <>
+                      <div className="flex justify-between text-blue-400 mb-2">
+                        <span>Sudah Dibayar</span>
+                        <span className="font-semibold">{formatCurrency(order.amountPaid)}</span>
+                      </div>
+                      {Number(order.remainingBalance) > 0 && (
+                        <div className="flex justify-between text-yellow-400">
+                          <span>Sisa Pembayaran</span>
+                          <span className="font-bold">{formatCurrency(order.remainingBalance)}</span>
+                        </div>
+                      )}
+                      
+                      {/* Progress Bar */}
+                      <div className="mt-4">
+                        <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden">
+                          <div 
+                            className="bg-gradient-to-r from-blue-600 to-green-500 h-full transition-all duration-500"
+                            style={{ width: `${(Number(order.amountPaid) / Number(order.total)) * 100}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2 text-center">
+                          {((Number(order.amountPaid) / Number(order.total)) * 100).toFixed(1)}% terbayar
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                {order.status === 'PENDING_PAYMENT' && (
-                  <PrimaryButton
-                    onClick={handlePayment}
-                    disabled={isProcessingPayment || !snapReady}
-                    className="w-full py-4 text-lg"
-                  >
-                    {isProcessingPayment ? '⏳ Memproses...' : '💳 Bayar Sekarang'}
-                  </PrimaryButton>
+                {(order.status === 'PENDING_PAYMENT' || order.status === 'READY_TO_SHIP') && Number(order.remainingBalance) > 0 && (
+                  <>
+                    <PrimaryButton
+                      onClick={handlePayment}
+                      disabled={isProcessingPayment || !snapReady}
+                      className="w-full py-4 text-lg"
+                    >
+                      {isProcessingPayment ? '⏳ Memproses...' : `💳 Bayar ${Number(order.amountPaid) > 0 ? 'Sisa' : 'Sekarang'}`}
+                    </PrimaryButton>
+                    {Number(order.amountPaid) > 0 && (
+                      <p className="text-xs text-center text-yellow-400">
+                        {order.status === 'READY_TO_SHIP' 
+                          ? `🚨 Pesanan siap dikirim! Selesaikan pembayaran sisa ${formatCurrency(order.remainingBalance)} untuk melanjutkan pengiriman`
+                          : `💡 Anda bisa melanjutkan pembayaran sisa ${formatCurrency(order.remainingBalance)}`
+                        }
+                      </p>
+                    )}
+                  </>
                 )}
 
                 {order.status === 'SHIPPED' && (
@@ -509,7 +536,9 @@ export default function OrderDetailsPage() {
                     {order.paymentLogs.map((log) => (
                       <div key={log.id} className="bg-gray-900/50 rounded-lg p-3">
                         <div className="flex justify-between items-start mb-1">
-                          <span className="text-sm text-gray-400">{log.method.replace('_', ' ')}</span>
+                          <span className="text-sm text-gray-400">
+                            {log.paymentMethod?.replace(/_/g, ' ') || 'N/A'} - {log.paymentProvider || 'N/A'}
+                          </span>
                           <span className="text-xs px-2 py-1 rounded bg-green-900/50 text-green-400">
                             BERHASIL
                           </span>
@@ -521,7 +550,7 @@ export default function OrderDetailsPage() {
                           </p>
                         )}
                         <p className="text-xs text-gray-500 mt-1">
-                          {formatDate(log.createdAt)}
+                          {formatDate(log.paidAt || log.createdAt)}
                         </p>
                       </div>
                     ))}

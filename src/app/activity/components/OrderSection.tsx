@@ -14,6 +14,7 @@ export default function OrderSection({ orders = [], isSnippet = false }: OrderSe
     const statusConfig = {
       PENDING_PAYMENT: { bg: 'bg-yellow-900/50', text: 'text-yellow-400', label: 'Menunggu Pembayaran', border: 'border-yellow-700' },
       PROCESSING: { bg: 'bg-blue-900/50', text: 'text-blue-400', label: 'Diproses', border: 'border-blue-700' },
+      READY_TO_SHIP: { bg: 'bg-cyan-900/50', text: 'text-cyan-400', label: 'Siap Dikirim', border: 'border-cyan-700' },
       SHIPPED: { bg: 'bg-purple-900/50', text: 'text-purple-400', label: 'Dalam Pengiriman', border: 'border-purple-700' },
       DELIVERED: { bg: 'bg-green-900/50', text: 'text-green-400', label: 'Terkirim', border: 'border-green-700' },
       CANCELLED: { bg: 'bg-red-900/50', text: 'text-red-400', label: 'Dibatalkan', border: 'border-red-700' },

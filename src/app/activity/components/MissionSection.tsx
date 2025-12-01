@@ -1,23 +1,16 @@
 'use client';
 
-interface Mission {
-  id: number;
-  title: string;
-  description: string;
-  type: string;
-  targetValue: number;
-  rewardType: string;
-  rewardValue: string;
-  icon: string;
+import type { Mission } from '@/generated/prisma/browser';
+
+type MissionWithProgress = Mission & {
   currentProgress: number;
   progressPercentage: number;
   isCompleted: boolean;
   completedAt?: Date;
-  createdAt: Date;
-}
+};
 
 interface MissionSectionProps {
-  missions?: Mission[];
+  missions?: MissionWithProgress[];
   isSnippet?: boolean;
 }
 
@@ -72,7 +65,7 @@ export default function MissionSection({ missions = [], isSnippet = false }: Mis
                     )}
                   </div>
                   <p className="text-sm text-gray-300 mb-2">
-                    {mission.description} ({mission.currentProgress}/{mission.targetValue})
+                    {mission.description} ({mission.currentProgress}/{Number(mission.targetValue)})
                   </p>
                   {mission.isCompleted ? (
                     <span className="text-xs text-red-400 font-semibold">

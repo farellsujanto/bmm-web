@@ -215,7 +215,7 @@ export function verifySignature(
 export function mapMidtransStatusToOrderStatus(
   transactionStatus: string,
   fraudStatus?: string
-): 'PENDING_PAYMENT' | 'CONFIRMED' | 'CANCELLED' | 'REFUNDED' {
+): 'PENDING_PAYMENT' | 'PROCESSING' | 'CANCELLED' | 'REFUNDED' {
   // Pending status
   if (transactionStatus === 'pending') {
     return 'PENDING_PAYMENT';
@@ -224,13 +224,13 @@ export function mapMidtransStatusToOrderStatus(
   // Success status
   if (transactionStatus === 'capture') {
     if (fraudStatus === 'accept') {
-      return 'CONFIRMED';
+      return 'PROCESSING';
     }
     return 'PENDING_PAYMENT'; // Wait for fraud check
   }
 
   if (transactionStatus === 'settlement') {
-    return 'CONFIRMED';
+    return 'PROCESSING';
   }
 
   // Failed/Cancelled status

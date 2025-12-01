@@ -105,9 +105,9 @@ export async function POST(request: NextRequest) {
         updateData.amountPaid = newAmountPaid;
         updateData.remainingBalance = Math.max(0, newRemainingBalance);
 
-        // If fully paid, update status to CONFIRMED if not already in a later stage
+        // If fully paid, update status to PROCESSING if not already in a later stage
         if (newRemainingBalance <= 0 && order.status === 'PENDING_PAYMENT') {
-          updateData.status = 'CONFIRMED';
+          updateData.status = 'PROCESSING';
         }
       }
 
