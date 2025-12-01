@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui';
+import Script from 'next/script';
 
 interface OrderProduct {
   id: number;
@@ -61,9 +62,18 @@ interface Order {
     id: number;
     method: string;
     amount: number;
-    status: string;
+    transactionId?: string;
     createdAt: string;
   }>;
+}
+
+// Declare global snap type for TypeScript
+declare global {
+  interface Window {
+    snap?: {
+      pay: (token: string, options?: any) => void;
+    };
+  }
 }
 
 export default function OrderDetailsPage() {
@@ -72,6 +82,8 @@ export default function OrderDetailsPage() {
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [snapReady, setSnapReady] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -171,9 +183,54 @@ export default function OrderDetailsPage() {
     }).format(amount);
   };
 
-  const handlePayment = () => {
-    // TODO: Implement payment flow
-    alert('Fitur pembayaran akan segera tersedia!');
+  const handlePayment = async () => {
+    if (!order || !snapReady) {
+      alert('Payment gateway belum siap. Silakan refresh halaman.');
+      return;
+    }
+
+    try {
+      setIsProcessingPayment(true);
+
+      // Request payment token from backend
+      const response = await apiRequest.post(`/v1/orders/${params.id}/payment`, {});
+
+      if (response.success && response.data) {
+        const { token } = response.data as any;
+
+        // Open Midtrans Snap payment popup
+        window.snap?.pay(token, {
+          onSuccess: function(result: any) {
+            console.log('Payment success:', result);
+            alert('Pembayaran berhasil! Halaman akan dimuat ulang.');
+            // Refresh the page to show updated order status
+            window.location.reload();
+          },
+          onPending: function(result: any) {
+            console.log('Payment pending:', result);
+            alert('Pembayaran sedang diproses. Kami akan memberitahu Anda jika pembayaran berhasil.');
+            // Refresh to show pending status
+            window.location.reload();
+          },
+          onError: function(result: any) {
+            console.error('Payment error:', result);
+            alert('Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
+            setIsProcessingPayment(false);
+          },
+          onClose: function() {
+            console.log('Payment popup closed');
+            setIsProcessingPayment(false);
+          }
+        });
+      } else {
+        alert(response.message || 'Gagal membuat token pembayaran');
+        setIsProcessingPayment(false);
+      }
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      alert(error.message || 'Terjadi kesalahan saat memproses pembayaran');
+      setIsProcessingPayment(false);
+    }
   };
 
   if (authLoading || loading) {
@@ -194,7 +251,17 @@ export default function OrderDetailsPage() {
   const statusInfo = getStatusInfo(order.status);
 
   return (
-    <div className="min-h-screen bg-black">
+    <>
+      {/* Load Midtrans Snap script */}
+      <Script
+        src={process.env.NEXT_PUBLIC_MIDTRANS_SNAP_URL || 'https://app.sandbox.midtrans.com/snap/snap.js'}
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        strategy="lazyOnload"
+        onLoad={() => setSnapReady(true)}
+        onError={() => console.error('Failed to load Midtrans Snap')}
+      />
+
+      <div className="min-h-screen bg-black">
       {/* Hero Header */}
       <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-black to-red-900 pt-24 pb-16">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
@@ -401,9 +468,10 @@ export default function OrderDetailsPage() {
                 {order.status === 'PENDING_PAYMENT' && (
                   <PrimaryButton
                     onClick={handlePayment}
+                    disabled={isProcessingPayment || !snapReady}
                     className="w-full py-4 text-lg"
                   >
-                    💳 Bayar Sekarang
+                    {isProcessingPayment ? '⏳ Memproses...' : '💳 Bayar Sekarang'}
                   </PrimaryButton>
                 )}
 
@@ -441,16 +509,17 @@ export default function OrderDetailsPage() {
                     {order.paymentLogs.map((log) => (
                       <div key={log.id} className="bg-gray-900/50 rounded-lg p-3">
                         <div className="flex justify-between items-start mb-1">
-                          <span className="text-sm text-gray-400">{log.method}</span>
-                          <span className={`text-xs px-2 py-1 rounded ${
-                            log.status === 'SUCCESS' ? 'bg-green-900/50 text-green-400' :
-                            log.status === 'PENDING' ? 'bg-yellow-900/50 text-yellow-400' :
-                            'bg-red-900/50 text-red-400'
-                          }`}>
-                            {log.status}
+                          <span className="text-sm text-gray-400">{log.method.replace('_', ' ')}</span>
+                          <span className="text-xs px-2 py-1 rounded bg-green-900/50 text-green-400">
+                            BERHASIL
                           </span>
                         </div>
                         <p className="text-white font-semibold">{formatCurrency(log.amount)}</p>
+                        {log.transactionId && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            ID: {log.transactionId}
+                          </p>
+                        )}
                         <p className="text-xs text-gray-500 mt-1">
                           {formatDate(log.createdAt)}
                         </p>
@@ -464,5 +533,6 @@ export default function OrderDetailsPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

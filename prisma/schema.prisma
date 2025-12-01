@@ -375,6 +375,10 @@ enum PaymentMethod {
   OTHER
 }
 
+enum PaymentProvider {
+  MIDTRANS
+}
+
 model PaymentLog {
   id            Int      @id @default(autoincrement())
   
@@ -383,11 +387,13 @@ model PaymentLog {
   
   amount        Decimal  @db.Decimal(12, 2)
   paymentMethod PaymentMethod
+  paymentProvider PaymentProvider
+
   
-  transactionId String?  // External transaction reference
+  transactionId String?  // External transaction reference (e.g., Midtrans transaction_id)
   notes         String?
   
-  paidAt        DateTime?
+  paidAt        DateTime @default(now())
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -395,4 +401,5 @@ model PaymentLog {
   
   @@index([orderId])
   @@index([createdAt])
+  @@index([transactionId])
 }
