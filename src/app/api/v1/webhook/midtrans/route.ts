@@ -53,10 +53,19 @@ export async function POST(request: NextRequest) {
     // Get additional transaction details from Midtrans API
     const transactionData = await checkTransactionStatus(orderId);
 
+    // Extract the actual order number from the transaction ID
+    // Format: {orderNumber}-DP or {orderNumber}-FULL or {orderNumber}-CLEARANCE-{timestamp}
+    let actualOrderNumber = orderId;
+    if (orderId.includes('-DP') || orderId.includes('-FULL')) {
+      actualOrderNumber = orderId.split('-')[0];
+    } else if (orderId.includes('-CLEARANCE-')) {
+      actualOrderNumber = orderId.substring(0, orderId.indexOf('-CLEARANCE-'));
+    }
+
     // Find the order
     const order = await prisma.order.findFirst({
       where: {
-        orderNumber: orderId,
+        orderNumber: actualOrderNumber,
         enabled: true,
       },
       include: {
@@ -66,7 +75,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!order) {
-      console.error('Order not found:', orderId);
+      console.error('Order not found for transaction:', orderId, 'Extracted order number:', actualOrderNumber);
       return NextResponse.json(
         { success: false, message: 'Order not found' },
         { status: 404 }
@@ -104,7 +113,7 @@ export async function POST(request: NextRequest) {
             paymentProvider: 'MIDTRANS',
             paymentMethod: mappedPaymentMethod,
             transactionId: transactionId,
-            notes: `Midtrans payment: ${transactionStatus} (${fraudStatus || 'N/A'})`,
+            notes: `Midtrans payment: ${transactionStatus} (${fraudStatus || 'N/A'}) - Transaction ID: ${orderId}`,
             paidAt: settlementTime ? new Date(settlementTime) : new Date(transactionTime),
           }
         });
@@ -116,9 +125,23 @@ export async function POST(request: NextRequest) {
         const wasNotFullyPaid = Number(order.remainingBalance) > 0;
         isFullyPaid = newRemainingBalance <= 0;
 
-        // If fully paid, update status to PROCESSING if not already in a later stage
-        if (isFullyPaid && order.status === 'PENDING_PAYMENT') {
-          updateData.status = 'PROCESSING';
+        // Update order status based on payment completion
+        if (isFullyPaid) {
+          // If fully paid and status is READY_TO_SHIP, move to PROCESSING (ready to ship)
+          if (order.status === 'READY_TO_SHIP') {
+            // Keep READY_TO_SHIP status since order is ready
+            updateData.status = 'READY_TO_SHIP';
+          } else if (order.status === 'PENDING_PAYMENT') {
+            // If fully paid from pending payment, move to PROCESSING
+            updateData.status = 'PROCESSING';
+          }
+        } else {
+          // Partial payment (DP) received
+          if (order.status === 'PENDING_PAYMENT') {
+            // After DP payment, keep in PENDING_PAYMENT or move to PROCESSING
+            // depending on whether it's ready to be processed
+            updateData.status = 'PROCESSING';
+          }
         }
 
         // If this payment completes the order (not a partial payment that was already completed)
@@ -182,14 +205,15 @@ export async function POST(request: NextRequest) {
       return { order: updatedOrder, paymentLog, isFullyPaid };
     });
 
-    console.log(`Order ${orderId} updated: ${transactionStatus} -> ${newOrderStatus}${result.isFullyPaid ? ' (Fully Paid - Missions & Statistics Updated)' : ''}`);
+    console.log(`Order ${actualOrderNumber} updated (Transaction: ${orderId}): ${transactionStatus} -> ${newOrderStatus}${result.isFullyPaid ? ' (Fully Paid - Missions & Statistics Updated)' : ''}`);
 
     return NextResponse.json(
       {
         success: true,
         message: 'Notification processed successfully',
         data: {
-          orderId: orderId,
+          orderId: actualOrderNumber,
+          transactionId: orderId,
           orderStatus: newOrderStatus,
           transactionStatus: transactionStatus,
         }

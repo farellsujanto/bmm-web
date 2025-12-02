@@ -49,7 +49,8 @@ async function createPaymentTokenHandler(
     }
 
     // Check if order is in a payable status
-    if (order.status !== 'PENDING_PAYMENT') {
+    // Allow payment for PENDING_PAYMENT (DP/full payment) and READY_TO_SHIP (clearance)
+    if (order.status !== 'PENDING_PAYMENT' && order.status !== 'READY_TO_SHIP' && order.status !== 'PROCESSING') {
       return NextResponse.json(
         { 
           success: false, 
@@ -60,13 +61,47 @@ async function createPaymentTokenHandler(
     }
 
     // Calculate amount to be paid (remaining balance)
-    const amountToPay = Number(order.remainingBalance);
+    const remainingBalance = Number(order.remainingBalance);
+    const totalAmount = Number(order.total);
+    const amountPaid = Number(order.amountPaid);
 
-    if (amountToPay <= 0) {
+    if (remainingBalance <= 0) {
       return NextResponse.json(
         { success: false, message: 'Order is already fully paid' },
         { status: 400 }
       );
+    }
+
+    // Determine payment type and amount
+    let amountToPay: number;
+    let paymentType: 'DP' | 'FULL' | 'CLEARANCE';
+    let transactionId: string;
+
+    if (amountPaid === 0) {
+      // First payment - check if DP is required
+      const requiresDP = order.orderProducts.some(op => {
+        return Number(op.downpaymentPercentage) > 0 && Number(op.downpaymentPercentage) < 100;
+      });
+
+      if (requiresDP) {
+        // Calculate DP amount (use highest DP percentage from products)
+        const maxDPPercentage = Math.max(
+          ...order.orderProducts.map(op => Number(op.downpaymentPercentage))
+        );
+        amountToPay = Math.ceil(totalAmount * (maxDPPercentage / 100));
+        paymentType = 'DP';
+        transactionId = `${orderNumber}-DP`;
+      } else {
+        // Full payment required
+        amountToPay = remainingBalance;
+        paymentType = 'FULL';
+        transactionId = `${orderNumber}-FULL`;
+      }
+    } else {
+      // Subsequent payment - clearance
+      amountToPay = remainingBalance;
+      paymentType = 'CLEARANCE';
+      transactionId = `${orderNumber}-CLEARANCE-${Date.now()}`;
     }
 
     // Prepare customer details
@@ -75,27 +110,52 @@ async function createPaymentTokenHandler(
       phone: order.user.phoneNumber,
     };
 
-    // Prepare item details
-    const itemDetails = order.orderProducts.map((op) => ({
-      id: op.product.sku,
-      price: Math.ceil(Number(op.subtotal) / op.quantity),
-      quantity: op.quantity,
-      name: op.name,
-    }));
-
-    // Add discount as a separate item if applicable
-    if (Number(order.discount) > 0) {
+    // Prepare item details based on payment type
+    const itemDetails: any[] = [];
+    
+    if (paymentType === 'DP') {
+      // For DP, create a single line item
+      const dpPercentage = (amountToPay / totalAmount) * 100;
       itemDetails.push({
-        id: 'DISCOUNT',
-        price: -Math.ceil(Number(order.discount)),
+        id: orderNumber,
+        price: Math.ceil(amountToPay),
         quantity: 1,
-        name: `Discount ${order.discountPercentage}%`,
+        name: `Down Payment (${dpPercentage.toFixed(0)}%) - Order ${orderNumber}`,
       });
+    } else if (paymentType === 'CLEARANCE') {
+      // For clearance, create a single line item
+      itemDetails.push({
+        id: orderNumber,
+        price: Math.ceil(amountToPay),
+        quantity: 1,
+        name: `Remaining Payment - Order ${orderNumber}`,
+      });
+    } else {
+      // For full payment, list all products
+      order.orderProducts.forEach((op) => {
+        const priceAfterDiscount = Number(op.price) * (1 - Number(op.discount) / 100);
+        itemDetails.push({
+          id: op.product.sku,
+          price: Math.ceil(priceAfterDiscount),
+          quantity: op.quantity,
+          name: op.name,
+        });
+      });
+
+      // Add order-level discount as a separate item if applicable
+      if (Number(order.discount) > 0) {
+        itemDetails.push({
+          id: 'DISCOUNT',
+          price: -Math.ceil(Number(order.discount)),
+          quantity: 1,
+          name: `Discount ${order.discountPercentage}%`,
+        });
+      }
     }
 
-    // Create Midtrans Snap token
+    // Create Midtrans Snap token with unique transaction ID
     const snapResponse = await createSnapToken({
-      orderId: orderNumber,
+      orderId: transactionId,
       amount: amountToPay,
       customerDetails,
       itemDetails,
@@ -109,7 +169,12 @@ async function createPaymentTokenHandler(
           token: snapResponse.token,
           redirectUrl: snapResponse.redirect_url,
           orderNumber: orderNumber,
+          transactionId: transactionId,
           amount: amountToPay,
+          paymentType: paymentType,
+          totalAmount: totalAmount,
+          amountPaid: amountPaid,
+          remainingBalance: remainingBalance,
         }
       },
       { status: 200 }
