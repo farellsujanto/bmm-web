@@ -21,6 +21,9 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    console.log('=== MIDTRANS WEBHOOK RECEIVED ===');
+    console.log('Webhook body:', JSON.stringify(body, null, 2));
+
     const {
       order_id: orderId,
       status_code: statusCode,
@@ -33,6 +36,13 @@ export async function POST(request: NextRequest) {
       transaction_time: transactionTime,
       settlement_time: settlementTime,
     } = body;
+
+    console.log('Processing transaction:', {
+      orderId,
+      transactionStatus,
+      grossAmount,
+      transactionId
+    });
 
     // Verify signature
     const isValid = verifySignature(
@@ -55,12 +65,21 @@ export async function POST(request: NextRequest) {
 
     // Extract the actual order number from the transaction ID
     // Format: {orderNumber}-DP or {orderNumber}-FULL or {orderNumber}-CLEARANCE-{timestamp}
+    // Also handle retry formats: {orderNumber}-DP-{timestamp}, {orderNumber}-FULL-{timestamp}
     let actualOrderNumber = orderId;
-    if (orderId.includes('-DP') || orderId.includes('-FULL')) {
-      actualOrderNumber = orderId.split('-')[0];
-    } else if (orderId.includes('-CLEARANCE-')) {
+    
+    if (orderId.includes('-CLEARANCE-')) {
+      // Extract order number before -CLEARANCE-
       actualOrderNumber = orderId.substring(0, orderId.indexOf('-CLEARANCE-'));
+    } else if (orderId.includes('-DP')) {
+      // Handle both -DP and -DP-{timestamp}
+      actualOrderNumber = orderId.substring(0, orderId.indexOf('-DP'));
+    } else if (orderId.includes('-FULL')) {
+      // Handle both -FULL and -FULL-{timestamp}
+      actualOrderNumber = orderId.substring(0, orderId.indexOf('-FULL'));
     }
+
+    console.log('Extracted order number:', actualOrderNumber, 'from transaction:', orderId);
 
     // Find the order
     const order = await prisma.order.findFirst({
@@ -82,11 +101,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('Order found:', {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      amountPaid: order.amountPaid,
+      remainingBalance: order.remainingBalance,
+      total: order.total
+    });
+
     // Map Midtrans status to order status
     const newOrderStatus = mapMidtransStatusToOrderStatus(transactionStatus, fraudStatus);
     
     // Map payment type
     const mappedPaymentMethod = mapMidtransPaymentType(paymentType);
+
+    // Check if this is a cancellation/expiration and order already has payment
+    // If DP has been paid, ignore cancellation webhooks from failed clearance attempts
+    const hasPreviousPayment = Number(order.amountPaid) > 0;
+    const isCancellation = transactionStatus === 'cancel' || transactionStatus === 'expire' || transactionStatus === 'deny' || transactionStatus === 'failure';
+    
+    if (hasPreviousPayment && isCancellation) {
+      console.log('Ignoring cancellation webhook - order has existing payment:', {
+        orderId: actualOrderNumber,
+        transactionId: orderId,
+        transactionStatus,
+        amountPaid: order.amountPaid
+      });
+      
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Cancellation ignored - order has existing payment',
+          data: {
+            orderId: actualOrderNumber,
+            transactionId: orderId,
+            orderStatus: order.status,
+            transactionStatus: transactionStatus,
+          }
+        },
+        { status: 200 }
+      );
+    }
 
     // Start a transaction to update order and create payment log
     const result = await prisma.$transaction(async (tx) => {
@@ -101,9 +157,35 @@ export async function POST(request: NextRequest) {
 
       // If payment is successful, create payment log and update amounts
       if (transactionStatus === 'settlement' || transactionStatus === 'capture') {
+        console.log('Processing successful payment:', {
+          transactionStatus,
+          grossAmount,
+          currentAmountPaid: order.amountPaid,
+          currentRemainingBalance: order.remainingBalance
+        });
+
         const paidAmount = parseFloat(grossAmount);
         const newAmountPaid = Number(order.amountPaid) + paidAmount;
         const newRemainingBalance = Number(order.total) - newAmountPaid;
+
+        console.log('Calculated new amounts:', {
+          paidAmount,
+          newAmountPaid,
+          newRemainingBalance
+        });
+
+        // Check if this transaction has already been recorded
+        const existingPaymentLog = await tx.paymentLog.findFirst({
+          where: {
+            orderId: order.id,
+            transactionId: transactionId,
+          }
+        });
+
+        if (existingPaymentLog) {
+          console.log('Payment already recorded, skipping duplicate:', transactionId);
+          return { order, paymentLog: existingPaymentLog, isFullyPaid: newRemainingBalance <= 0 };
+        }
 
         // Create payment log for successful payment
         paymentLog = await tx.paymentLog.create({
@@ -117,6 +199,8 @@ export async function POST(request: NextRequest) {
             paidAt: settlementTime ? new Date(settlementTime) : new Date(transactionTime),
           }
         });
+
+        console.log('Payment log created:', paymentLog.id);
 
         updateData.amountPaid = newAmountPaid;
         updateData.remainingBalance = Math.max(0, newRemainingBalance);
