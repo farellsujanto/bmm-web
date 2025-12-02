@@ -107,7 +107,13 @@ export async function POST(request: NextRequest) {
       status: order.status,
       amountPaid: order.amountPaid,
       remainingBalance: order.remainingBalance,
-      total: order.total
+      total: order.total,
+      existingPaymentLogs: order.paymentLogs.map(log => ({
+        id: log.id,
+        amount: log.amount,
+        transactionId: log.transactionId,
+        paidAt: log.paidAt
+      }))
     });
 
     // Map Midtrans status to order status
@@ -149,11 +155,25 @@ export async function POST(request: NextRequest) {
       let paymentLog = null;
       let isFullyPaid = false;
 
+      console.log('Starting transaction processing for order:', {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        currentStatus: order.status,
+        transactionStatus,
+        fraudStatus
+      });
+
       // Update order status and payment tracking
       let updateData: any = {
         status: newOrderStatus,
         updatedAt: new Date(),
       };
+
+      console.log('Mapped new order status:', {
+        transactionStatus,
+        fraudStatus,
+        newOrderStatus
+      });
 
       // If payment is successful, create payment log and update amounts
       if (transactionStatus === 'settlement' || transactionStatus === 'capture') {
@@ -175,6 +195,13 @@ export async function POST(request: NextRequest) {
         });
 
         // Check if this transaction has already been recorded
+        console.log('Checking for duplicate payment log:', {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          transactionId: transactionId,
+          midtransOrderId: orderId
+        });
+
         const existingPaymentLog = await tx.paymentLog.findFirst({
           where: {
             orderId: order.id,
@@ -183,9 +210,17 @@ export async function POST(request: NextRequest) {
         });
 
         if (existingPaymentLog) {
-          console.log('Payment already recorded, skipping duplicate:', transactionId);
+          console.log('Payment already recorded, skipping duplicate:', {
+            transactionId,
+            existingLogId: existingPaymentLog.id,
+            existingAmount: existingPaymentLog.amount
+          });
           return { order, paymentLog: existingPaymentLog, isFullyPaid: newRemainingBalance <= 0 };
         }
+
+        console.log('No duplicate found, creating new payment log');
+
+        console.log('No duplicate found, creating new payment log');
 
         // Create payment log for successful payment
         paymentLog = await tx.paymentLog.create({
@@ -200,7 +235,12 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        console.log('Payment log created:', paymentLog.id);
+        console.log('Payment log created successfully:', {
+          paymentLogId: paymentLog.id,
+          amount: paymentLog.amount,
+          transactionId: paymentLog.transactionId,
+          orderId: order.orderNumber
+        });
 
         updateData.amountPaid = newAmountPaid;
         updateData.remainingBalance = Math.max(0, newRemainingBalance);
@@ -238,7 +278,15 @@ export async function POST(request: NextRequest) {
 
           // If there's a referrer, update their statistics and missions
           if (order.referrerId) {
-            const commissionAmount = Number(order.affiliateCommission);
+            const commissionAmount = Number(order.affiliateCommission) || 0;
+            
+            console.log('Processing referrer commission:', {
+              orderId: order.id,
+              orderNumber: order.orderNumber,
+              referrerId: order.referrerId,
+              affiliateCommission: order.affiliateCommission,
+              commissionAmount
+            });
             
             if (commissionAmount > 0) {
               // Update referrer's earnings statistics
@@ -281,15 +329,47 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      console.log('Updating order with data:', {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        updateData
+      });
+
       const updatedOrder = await tx.order.update({
         where: { id: order.id },
         data: updateData,
       });
 
+      console.log('Order updated successfully:', {
+        orderId: updatedOrder.id,
+        orderNumber: updatedOrder.orderNumber,
+        newStatus: updatedOrder.status,
+        newAmountPaid: updatedOrder.amountPaid,
+        newRemainingBalance: updatedOrder.remainingBalance,
+        isFullyPaid
+      });
+
       return { order: updatedOrder, paymentLog, isFullyPaid };
+    }, {
+      maxWait: 10000, // 10 seconds
+      timeout: 30000, // 30 seconds
     });
 
     console.log(`Order ${actualOrderNumber} updated (Transaction: ${orderId}): ${transactionStatus} -> ${newOrderStatus}${result.isFullyPaid ? ' (Fully Paid - Missions & Statistics Updated)' : ''}`);
+
+    // Log final summary
+    console.log('=== WEBHOOK PROCESSING COMPLETE ===');
+    console.log('Summary:', {
+      orderNumber: actualOrderNumber,
+      midtransTransactionId: orderId,
+      transactionStatus,
+      orderStatus: result.order.status,
+      paymentLogCreated: !!result.paymentLog,
+      paymentLogId: result.paymentLog?.id,
+      amountPaid: result.order.amountPaid,
+      remainingBalance: result.order.remainingBalance,
+      isFullyPaid: result.isFullyPaid
+    });
 
     return NextResponse.json(
       {

@@ -333,6 +333,14 @@ export async function updateReferrerStatistics(
   referrerId: number,
   commissionAmount: number
 ) {
+  // Validate commission amount
+  const validCommissionAmount = Number(commissionAmount) || 0;
+  
+  if (validCommissionAmount <= 0) {
+    console.warn(`Invalid commission amount for referrer ${referrerId}: ${commissionAmount}`);
+    return;
+  }
+
   // Get or create referrer statistics
   let referrerStats = await tx.userStatistics.findUnique({
     where: { userId: referrerId }
@@ -352,12 +360,28 @@ export async function updateReferrerStatistics(
     });
   }
 
+  // Safely parse existing values
+  const currentEarnings = Number(referrerStats.totalReferralEarnings) || 0;
+  const currentBalance = Number(referrerStats.availableBalance) || 0;
+
+  // Calculate new values
+  const newEarnings = currentEarnings + validCommissionAmount;
+  const newBalance = currentBalance + validCommissionAmount;
+
+  console.log(`Updating referrer ${referrerId} statistics:`, {
+    commissionAmount: validCommissionAmount,
+    currentEarnings,
+    newEarnings,
+    currentBalance,
+    newBalance
+  });
+
   // Update referrer's statistics and credit their balance
   await tx.userStatistics.update({
     where: { userId: referrerId },
     data: {
-      totalReferralEarnings: Number(referrerStats.totalReferralEarnings) + commissionAmount,
-      availableBalance: Number(referrerStats.availableBalance) + commissionAmount,
+      totalReferralEarnings: newEarnings,
+      availableBalance: newBalance,
       updatedAt: new Date()
     }
   });
