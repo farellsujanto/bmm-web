@@ -256,6 +256,7 @@ export default function OrderDetailsPage() {
     return null;
   }
 console.log(order);
+console.log("SNAP", isProcessingPayment, snapReady)
   const statusInfo = getStatusInfo(order.status);
 
   return (
