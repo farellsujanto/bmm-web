@@ -635,19 +635,7 @@ console.log(order);
                       </div>
 
                       {/* Payment Status Badge */}
-                      {Number(order.remainingBalance) === 0 ? (
-                        <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border-2 border-green-500 rounded-xl p-4 text-center">
-                          <div className="flex items-center justify-center mb-2">
-                            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-                              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          </div>
-                          <p className="text-green-400 font-bold text-lg">✅ Pembayaran Lunas</p>
-                          <p className="text-xs text-gray-400 mt-1">Pesanan Anda sedang diproses</p>
-                        </div>
-                      ) : (
+                      {Number(order.remainingBalance) > 0 && (
                         <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border-2 border-yellow-500 rounded-xl p-4">
                           <div className="flex items-center mb-2">
                             <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
