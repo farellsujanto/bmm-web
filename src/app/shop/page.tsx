@@ -223,7 +223,7 @@ export default function ShopPage() {
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
           {filteredProducts.map((product) => (
             <ProductCard 
               key={product.id} 
@@ -243,11 +243,11 @@ export default function ShopPage() {
           {filteredProducts.length > 0 && (
             <button
               onClick={() => setRequestModalOpen(true)}
-              className="group relative bg-linear-to-br from-red-600 to-red-700 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 p-8 flex flex-col items-center justify-center text-white min-h-[400px]"
+              className="group relative bg-gradient-to-br from-red-600 to-red-700 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 p-4 sm:p-6 flex flex-col items-center justify-center text-white min-h-[280px] sm:min-h-[320px]"
             >
               <div className="text-center">
                 <svg 
-                  className="w-20 h-20 mx-auto mb-4 transform group-hover:scale-110 transition-transform duration-300" 
+                  className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-3 transform group-hover:scale-110 transition-transform duration-300" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -259,11 +259,11 @@ export default function ShopPage() {
                     d="M12 4v16m8-8H4" 
                   />
                 </svg>
-                <h3 className="text-2xl font-bold mb-3">Tidak Menemukan Produk?</h3>
-                <p className="text-red-100 mb-4 text-sm">
+                <h3 className="text-sm sm:text-lg font-bold mb-1.5 sm:mb-2">Tidak Menemukan Produk?</h3>
+                <p className="text-red-100 mb-2 sm:mb-3 text-xs">
                   Ajukan permintaan produk yang Anda butuhkan
                 </p>
-                <span className="inline-block px-6 py-3 bg-white text-red-600 rounded-full font-semibold group-hover:bg-red-50 transition-colors duration-300">
+                <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-white text-red-600 rounded-full text-xs sm:text-sm font-semibold group-hover:bg-red-50 transition-colors duration-300">
                   Klik untuk Ajukan
                 </span>
               </div>

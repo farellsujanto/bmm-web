@@ -77,9 +77,9 @@ export default function ProductCard({
   };
   
   return (
-    <div className={`group relative bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 ${!inCart ? 'transform hover:-translate-y-2' : ''}`}>
+    <div className={`group relative bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${!inCart ? 'transform hover:-translate-y-1' : ''}`}>
       {/* Product Image */}
-      <div className="relative h-64 bg-gray-200 overflow-hidden">
+      <div className="relative h-48 sm:h-52 bg-gray-200 overflow-hidden">
         {image ? (
           <Image
             src={image}
@@ -96,73 +96,73 @@ export default function ProductCard({
             }}
           />
         )}
-        <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+        <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-0.5 rounded-full text-xs font-semibold">
           {category}
         </div>
         {discount && discount > 0 && (
-          <div className="absolute top-16 right-4 bg-green-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+          <div className="absolute top-10 right-2 bg-green-600 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-md">
             -{discount}%
           </div>
         )}
         {isPreOrder && (
-          <div className="absolute top-4 left-4 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+          <div className="absolute top-2 left-2 bg-yellow-500 text-black px-2 py-0.5 rounded-full text-xs font-bold">
             Pre-Order: {formatPreOrderTime()}
           </div>
         )}
       </div>
 
       {/* Product Info */}
-      <div className="p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-red-600 transition-colors">
+      <div className="p-3 sm:p-4">
+        <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-red-600 transition-colors">
           {name}
         </h3>
-        <p className="text-sm text-gray-600 mb-3">{brand}</p>
+        <p className="text-xs text-gray-600 mb-2">{brand}</p>
         {discount && discount > 0 ? (
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-1">
-              <p className="text-lg text-gray-400 line-through">
+          <div className="mb-3">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <p className="text-xs sm:text-sm text-gray-400 line-through">
                 Rp {price.toLocaleString('id-ID')}
               </p>
-              <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded font-bold">
+              <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">
                 -{discount}%
               </span>
             </div>
-            <p className="text-2xl font-bold text-red-600">
+            <p className="text-base sm:text-lg font-bold text-red-600">
               Rp {(price * (1 - discount / 100)).toLocaleString('id-ID')}
             </p>
           </div>
         ) : (
-          <p className="text-2xl font-bold text-red-600 mb-4">
+          <p className="text-base sm:text-lg font-bold text-red-600 mb-3">
             Rp {price.toLocaleString('id-ID')}
           </p>
         )}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Link
             href={`/shop/${slug}`}
-            className="block text-center py-3 rounded-lg font-semibold transition-colors duration-300 bg-black text-white hover:bg-red-600"
+            className="block text-center py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-300 bg-black text-white hover:bg-red-600"
           >
             Lihat Detail
           </Link>
           {!inCart ? (
             <button
               onClick={handleAddToCart}
-              className="w-full py-3 rounded-lg font-semibold transition-colors duration-300 bg-red-600 text-white hover:bg-red-700"
+              className="w-full py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-300 bg-red-600 text-white hover:bg-red-700"
             >
               Tambah ke Keranjang
             </button>
           ) : (
-            <div className="flex flex-col items-center justify-between bg-gray-100 rounded-lg p-3">
+            <div className="flex flex-col items-center justify-between bg-gray-100 rounded-lg p-2">
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleDecreaseQuantity}
-                  className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-colors font-bold shadow-md"
+                  className="w-7 h-7 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-colors font-bold shadow-sm"
                 >
                   -
                 </button>
-                <span className="w-10 text-center font-bold text-gray-900">{currentQuantity}</span>
+                <span className="w-8 text-center text-sm font-bold text-gray-900">{currentQuantity}</span>
                 <button
                   onClick={handleIncreaseQuantity}
-                  className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-colors font-bold shadow-md"
+                  className="w-7 h-7 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-colors font-bold shadow-sm"
                 >
                   +
                 </button>
