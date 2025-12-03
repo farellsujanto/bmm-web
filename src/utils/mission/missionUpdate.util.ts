@@ -240,18 +240,16 @@ export async function updateReferrerMissions(
       continue;
     }
 
+    // Calculate new progress based on mission type
     let newProgress = Number(userMission.currentProgress);
-
-    switch (mission.type) {
-      case MissionType.REFERRAL_COUNT:
-        // Use current total referrals from statistics
-        newProgress = referrerStats.totalReferrals;
-        break;
-
-      case MissionType.REFERRAL_EARNINGS:
-        // Use current total earnings from statistics
-        newProgress = Number(referrerStats.totalReferralEarnings);
-        break;
+    
+    if (mission.type === MissionType.REFERRAL_COUNT) {
+      // REFERRAL_COUNT tracks unique referred users (totalReferrals)
+      // This is updated when new users sign up, not when they place orders
+      newProgress = referrerStats.totalReferrals;
+    } else if (mission.type === MissionType.REFERRAL_EARNINGS) {
+      // REFERRAL_EARNINGS tracks total commission earned
+      newProgress = Number(referrerStats.totalReferralEarnings) + commissionEarned;
     }
 
     // Check if mission is achieved
@@ -259,7 +257,7 @@ export async function updateReferrerMissions(
     const achieved = newProgress >= targetValue;
 
     // Update user mission
-    await tx.userMission.update({
+    const updatedUserMission = await tx.userMission.update({
       where: {
         userId_missionId: {
           userId: referrerId,
@@ -301,9 +299,10 @@ export async function updateUserStatistics(
     userStats = await tx.userStatistics.create({
       data: {
         userId,
-        totalOrders: 0,
-        totalSpent: 0,
+        totalOrders: 1,
+        totalSpent: orderTotal,
         totalReferrals: 0,
+        totalReferralOrders: 0,
         totalReferralEarnings: 0,
         availableBalance: 0,
         totalWithdrawn: 0
@@ -353,6 +352,7 @@ export async function updateReferrerStatistics(
         totalOrders: 0,
         totalSpent: 0,
         totalReferrals: 0,
+        totalReferralOrders: 0,
         totalReferralEarnings: 0,
         availableBalance: 0,
         totalWithdrawn: 0
@@ -377,11 +377,13 @@ export async function updateReferrerStatistics(
   });
 
   // Update referrer's statistics and credit their balance
+  // Also increment totalReferralOrders (count of completed orders from referred users)
   await tx.userStatistics.update({
     where: { userId: referrerId },
     data: {
       totalReferralEarnings: newEarnings,
       availableBalance: newBalance,
+      totalReferralOrders: { increment: 1 },
       updatedAt: new Date()
     }
   });

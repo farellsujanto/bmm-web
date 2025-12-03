@@ -170,6 +170,7 @@ export async function POST(request: NextRequest) {
               totalOrders: 0,
               totalSpent: 0,
               totalReferrals: 0,
+              totalReferralOrders: 0,
               totalReferralEarnings: 0
             }
           }

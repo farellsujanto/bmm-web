@@ -37,6 +37,8 @@ async function getProfileHandler(request: NextRequest, user: JwtData) {
             totalOrders: true,
             totalSpent: true,
             totalReferrals: true,
+            totalReferralOrders: true,
+            totalWithdrawn: true,
             totalReferralEarnings: true
           }
         }

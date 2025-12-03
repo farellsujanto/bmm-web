@@ -318,7 +318,7 @@ export async function POST(request: NextRequest) {
                   await tx.userStatistics.update({
                     where: { userId: order.referrerId },
                     data: {
-                      totalReferrals: referrerStats.totalReferrals + 1,
+                      totalReferralOrders: referrerStats.totalReferralOrders + 1,
                       updatedAt: new Date()
                     }
                   });

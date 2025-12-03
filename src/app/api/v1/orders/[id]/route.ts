@@ -73,11 +73,13 @@ async function getOrderHandler(
       );
     }
 
+    // Check DP Payment 
+
     // Check and update order status from Midtrans if order is pending payment
-    console.log('Current order status:', order.status);
-    if (order.status === 'PENDING_PAYMENT') {
+    console.log('Current order status:', order.status, orderNumber);
+    if (order.status === 'PROCESSING') {
       try {
-        const transactionData = await checkTransactionStatus(orderNumber);
+        const transactionData = await checkTransactionStatus(orderNumber + '-CLEARANCE-1764774927582');
         
         if (transactionData) {
           const newStatus = mapMidtransStatusToOrderStatus(
@@ -145,6 +147,7 @@ async function getOrderHandler(
                   }
 
                   // If this payment completes the order
+                  console.log('Is fully paid:', isFullyPaid, 'Was not fully paid before:', wasNotFullyPaid);
                   if (isFullyPaid && wasNotFullyPaid) {
                     // Update user statistics
                     await updateUserStatistics(tx, currentOrder.userId, Number(currentOrder.total));
@@ -186,7 +189,7 @@ async function getOrderHandler(
                             await tx.userStatistics.update({
                               where: { userId: currentOrder.referrerId },
                               data: {
-                                totalReferrals: referrerStats.totalReferrals + 1,
+                                totalReferralOrders: referrerStats.totalReferralOrders + 1,
                                 updatedAt: new Date()
                               }
                             });
