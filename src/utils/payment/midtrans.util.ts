@@ -100,6 +100,26 @@ function getAuthorizationHeader(): string {
 }
 
 /**
+ * Cancel a pending transaction
+ * @param orderId - Transaction ID to cancel
+ */
+export async function cancelTransaction(orderId: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${getMidtransApiUrl()}/${orderId}/cancel`, {
+      method: 'POST',
+      headers: {
+        'Authorization': getAuthorizationHeader(),
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return response.ok;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
  * Create Midtrans Snap payment token
  * @param params - Payment parameters including order ID, amount, customer details, and items
  * @returns Snap token and redirect URL
@@ -152,9 +172,9 @@ export async function createSnapToken(params: CreateSnapTokenParams): Promise<Mi
  * @param orderId - Order ID to check
  * @returns Transaction data from Midtrans
  */
-export async function checkTransactionStatus(orderId: string): Promise<TransactionData | null> {
+export async function checkTransactionStatus(orderId: string): Promise<TransactionData | undefined> {
   if (!orderId) {
-    return null;
+    return undefined;
   }
 
   const midtransUrl = `${getMidtransApiUrl()}/${orderId}/status`;
@@ -169,7 +189,7 @@ export async function checkTransactionStatus(orderId: string): Promise<Transacti
 
   if (!response.ok) {
     if (response.status === 404) {
-      return null; // Transaction not found
+      return undefined; // Transaction not found
     }
     throw new Error(`Failed to check transaction status: ${response.status}`);
   }

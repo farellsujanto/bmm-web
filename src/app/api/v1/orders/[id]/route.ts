@@ -3,13 +3,7 @@ import { requireAuth } from '@/src/utils/security/apiGuard.util';
 import { JwtData } from '@/src/utils/security/models/jwt.model';
 import prisma from '@/src/utils/database/prismaOrm.util';
 import { createSignedUrls } from '@/src/utils/storage/supabaseStorage.util';
-import { checkTransactionStatus, mapMidtransStatusToOrderStatus, mapMidtransPaymentType } from '@/src/utils/payment/midtrans.util';
-import {
-  updateUserMissions,
-  updateReferrerMissions,
-  updateUserStatistics,
-  updateReferrerStatistics
-} from '@/src/utils/mission/missionUpdate.util';
+import { processPayment } from '@/src/utils/payment/paymentProcessor.util';
 
 /**
  * Get order by order number
@@ -73,151 +67,40 @@ async function getOrderHandler(
       );
     }
 
-    // Check DP Payment 
-
-    // Check and update order status from Midtrans if order is pending payment
-    console.log('Current order status:', order.status, orderNumber);
-    if (order.status === 'PROCESSING') {
-      try {
-        const transactionData = await checkTransactionStatus(orderNumber + '-CLEARANCE-1764774927582');
-        
-        if (transactionData) {
-          const newStatus = mapMidtransStatusToOrderStatus(
-            transactionData.transaction_status,
-            transactionData.fraud_status
-          );
-          console.log(transactionData);
-          console.log('Mapped new order status:', newStatus);
-          
-          // If status has changed, update the order in database
-          if (newStatus !== order.status) {
-            // Store order in non-null variable for TypeScript
-            const currentOrder = order;
-            
-            // Use transaction to ensure all updates are atomic
-            const result = await prisma.$transaction(async (tx) => {
-              const updateData: any = {
-                status: newStatus,
-                updatedAt: new Date()
-              };
-
-              let isFullyPaid = false;
-
-              // If payment is successful, update payment tracking
-              if (transactionData.transaction_status === 'settlement' || 
-                  transactionData.transaction_status === 'capture') {
-                const paidAmount = parseFloat(transactionData.gross_amount);
-                const newAmountPaid = Number(currentOrder.amountPaid) + paidAmount;
-                const newRemainingBalance = Number(currentOrder.total) - newAmountPaid;
-
-                // Check if payment log already exists for this transaction
-                const existingLog = await tx.paymentLog.findFirst({
-                  where: {
-                    orderId: currentOrder.id,
-                    transactionId: transactionData.transaction_id
-                  }
-                });
-
-                // Create payment log if it doesn't exist
-                if (!existingLog) {
-                  await tx.paymentLog.create({
-                    data: {
-                      orderId: currentOrder.id,
-                      amount: paidAmount,
-                      paymentProvider: 'MIDTRANS',
-                      paymentMethod: mapMidtransPaymentType(transactionData.payment_type),
-                      transactionId: transactionData.transaction_id,
-                      notes: `Midtrans payment: ${transactionData.transaction_status} (${transactionData.fraud_status || 'N/A'})`,
-                      paidAt: transactionData.settlement_time 
-                        ? new Date(transactionData.settlement_time) 
-                        : new Date(transactionData.transaction_time)
-                    }
-                  });
-
-                  updateData.amountPaid = newAmountPaid;
-                  updateData.remainingBalance = newRemainingBalance;
-
-                  // Check if order is fully paid
-                  const wasNotFullyPaid = Number(currentOrder.remainingBalance) > 0;
-                  isFullyPaid = newRemainingBalance <= 0;
-
-                  // If fully paid, update status to PROCESSING if not already in a later stage
-                  if (isFullyPaid && currentOrder.status === 'PENDING_PAYMENT') {
-                    updateData.status = 'PROCESSING';
-                  }
-
-                  // If this payment completes the order
-                  console.log('Is fully paid:', isFullyPaid, 'Was not fully paid before:', wasNotFullyPaid);
-                  if (isFullyPaid && wasNotFullyPaid) {
-                    // Update user statistics
-                    await updateUserStatistics(tx, currentOrder.userId, Number(currentOrder.total));
-
-                    // Update user missions based on order
-                    await updateUserMissions(tx, currentOrder.userId, Number(currentOrder.total));
-
-                    // If there's a referrer, update their statistics and missions
-                    if (currentOrder.referrerId) {
-                      const commissionAmount = Number(currentOrder.affiliateCommission);
-                      
-                      if (commissionAmount > 0) {
-                        // Update referrer's earnings statistics
-                        await updateReferrerStatistics(tx, currentOrder.referrerId, commissionAmount);
-
-                        // Update referrer's missions
-                        await updateReferrerMissions(tx, currentOrder.referrerId, commissionAmount);
-
-                      }
-                    }
-                  }
-                }
+    // Sync payment status from Midtrans
+    const result = await processPayment({
+      order,
+      orderInclude: {
+        orderProducts: {
+          include: {
+            product: {
+              include: {
+                images: {
+                  orderBy: { sortOrder: 'asc' },
+                  take: 1
+                },
+                brand: true,
+                category: true
               }
-
-              // Update the order
-              const updatedOrder = await tx.order.update({
-                where: { id: currentOrder.id },
-                data: updateData,
-                include: {
-                  orderProducts: {
-                    include: {
-                      product: {
-                        include: {
-                          images: {
-                            orderBy: { sortOrder: 'asc' },
-                            take: 1
-                          },
-                          brand: true,
-                          category: true
-                        }
-                      }
-                    }
-                  },
-                  user: {
-                    select: {
-                      name: true,
-                      phoneNumber: true,
-                      address: true,
-                      governmentId: true
-                    }
-                  },
-                  companyOrder: true,
-                  paymentLogs: {
-                    orderBy: { createdAt: 'desc' }
-                  }
-                }
-              });
-
-              return updatedOrder;
-            });
-
-            // Use the updated order for the response
-            order = result as any;
+            }
           }
+        },
+        user: {
+          select: {
+            name: true,
+            phoneNumber: true,
+            address: true,
+            governmentId: true
+          }
+        },
+        companyOrder: true,
+        paymentLogs: {
+          orderBy: { createdAt: 'desc' }
         }
-      } catch (error) {
-        // Log error but continue with existing order data
-        console.error('Failed to check Midtrans transaction status:', error);
       }
-    }
+    });
+
+    order = result.order;
 
     // Generate signed URLs for product images
     if (!order) {

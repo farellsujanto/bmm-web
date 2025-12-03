@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/src/utils/security/apiGuard.util';
 import { JwtData } from '@/src/utils/security/models/jwt.model';
 import prisma from '@/src/utils/database/prismaOrm.util';
-import { createSnapToken, checkTransactionStatus } from '@/src/utils/payment/midtrans.util';
+import { createSnapToken, checkTransactionStatus, cancelTransaction } from '@/src/utils/payment/midtrans.util';
 
 /**
  * Create Midtrans payment token for an order
@@ -110,58 +110,29 @@ async function createPaymentTokenHandler(
       // Subsequent payment - clearance
       amountToPay = remainingBalance;
       paymentType = 'CLEARANCE';
-      transactionId = `${orderNumber}-CLEARANCE-${Date.now()}`;
+      transactionId = `${orderNumber}-CLR`;
     }
 
-    // Check if there's an existing active transaction for this payment
-    // If the transaction exists and is still pending, we can reuse the token
-    
+    // Check existing transaction status and cancel if pending
     try {
       const existingTransaction = await checkTransactionStatus(transactionId);
-      
       if (existingTransaction) {
         const status = existingTransaction.transaction_status;
         
-        // If transaction is still pending/active, user can continue with it
-        if (status === 'pending' || status === 'authorize') {
-          console.log(`Reusing existing pending transaction: ${transactionId}`);
-          // Transaction still active, but we need to create a new token
-          // Midtrans doesn't allow reusing tokens, so we'll create a new one with a slight variation
-          if (paymentType === 'CLEARANCE') {
-            // Add a retry suffix for clearance payments
-            transactionId = `${orderNumber}-CLEARANCE-${Date.now()}`;
-          } else {
-            // For DP/FULL, add a retry counter
-            transactionId = `${transactionId}-${Date.now()}`;
-          }
-        }
-        
-        // If transaction is completed (settlement/capture), don't create a new one
         if (status === 'settlement' || status === 'capture') {
           return NextResponse.json(
-            { 
-              success: false, 
-              message: 'Payment for this stage has already been completed. Please refresh the page.' 
-            },
+            { success: false, message: 'Payment already completed' },
             { status: 400 }
           );
         }
         
-        // If transaction failed/expired, we can create a new one with the same ID pattern
-        if (status === 'deny' || status === 'cancel' || status === 'expire' || status === 'failure') {
-          console.log(`Previous transaction ${transactionId} failed/expired, creating new one`);
-          // Add timestamp to create a new unique transaction
-          if (paymentType === 'DP') {
-            transactionId = `${orderNumber}-DP-${Date.now()}`;
-          } else if (paymentType === 'FULL') {
-            transactionId = `${orderNumber}-FULL-${Date.now()}`;
-          }
-          // CLEARANCE already has timestamp
+        // For pending/authorize, cancel it before creating new token
+        if (status === 'pending' || status === 'authorize') {
+          await cancelTransaction(transactionId);
         }
       }
     } catch (error) {
-      // Transaction doesn't exist yet, which is fine - we'll create a new one
-      console.log(`No existing transaction found for ${transactionId}, creating new one`);
+      // Transaction doesn't exist, continue with creation
     }
 
     // Prepare customer details
@@ -174,7 +145,6 @@ async function createPaymentTokenHandler(
     const itemDetails: any[] = [];
     
     if (paymentType === 'DP') {
-      // For DP, create a single line item
       const dpPercentage = (amountToPay / totalAmount) * 100;
       itemDetails.push({
         id: orderNumber,
@@ -183,7 +153,6 @@ async function createPaymentTokenHandler(
         name: `Down Payment (${dpPercentage.toFixed(0)}%) - Order ${orderNumber}`,
       });
     } else if (paymentType === 'CLEARANCE') {
-      // For clearance, create a single line item
       itemDetails.push({
         id: orderNumber,
         price: Math.ceil(amountToPay),
@@ -191,9 +160,8 @@ async function createPaymentTokenHandler(
         name: `Remaining Payment - Order ${orderNumber}`,
       });
     } else {
-      // For full payment, list all products with their prices after product discount
+      // Full payment - list all products
       order.orderProducts.forEach((op) => {
-        // Price already includes product discount (stored in database as priceAfterDiscount)
         const priceAfterProductDiscount = Number(op.price) * (1 - Number(op.discount) / 100);
         itemDetails.push({
           id: op.product.sku,
@@ -203,8 +171,7 @@ async function createPaymentTokenHandler(
         });
       });
 
-      // Add global discount as a separate line item if applicable
-      // This discount is applied to the subtotal (which already includes product discounts)
+      // Add global discount if applicable
       if (Number(order.discount) > 0) {
         itemDetails.push({
           id: 'GLOBAL_DISCOUNT',
@@ -215,22 +182,13 @@ async function createPaymentTokenHandler(
       }
     }
 
-    // Create Midtrans Snap token with unique transaction ID
-    console.log('Creating Midtrans token:', {
-      transactionId,
-      amount: amountToPay,
-      paymentType,
-      orderNumber
-    });
-
+    // Create Midtrans Snap token
     const snapResponse = await createSnapToken({
       orderId: transactionId,
       amount: amountToPay,
       customerDetails,
       itemDetails,
     });
-
-    console.log('Midtrans token created successfully:', transactionId);
 
     return NextResponse.json(
       {
@@ -251,12 +209,7 @@ async function createPaymentTokenHandler(
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('Create payment token error:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      orderNumber: (await context.params).id
-    });
+    console.error('Payment token creation failed:', error.message);
     
     return NextResponse.json(
       {
