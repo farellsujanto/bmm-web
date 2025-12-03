@@ -191,24 +191,26 @@ async function createPaymentTokenHandler(
         name: `Remaining Payment - Order ${orderNumber}`,
       });
     } else {
-      // For full payment, list all products
+      // For full payment, list all products with their prices after product discount
       order.orderProducts.forEach((op) => {
-        const priceAfterDiscount = Number(op.price) * (1 - Number(op.discount) / 100);
+        // Price already includes product discount (stored in database as priceAfterDiscount)
+        const priceAfterProductDiscount = Number(op.price) * (1 - Number(op.discount) / 100);
         itemDetails.push({
           id: op.product.sku,
-          price: Math.ceil(priceAfterDiscount),
+          price: Math.ceil(priceAfterProductDiscount),
           quantity: op.quantity,
           name: op.name,
         });
       });
 
-      // Add order-level discount as a separate item if applicable
+      // Add global discount as a separate line item if applicable
+      // This discount is applied to the subtotal (which already includes product discounts)
       if (Number(order.discount) > 0) {
         itemDetails.push({
-          id: 'DISCOUNT',
+          id: 'GLOBAL_DISCOUNT',
           price: -Math.ceil(Number(order.discount)),
           quantity: 1,
-          name: `Discount ${order.discountPercentage}%`,
+          name: `Global Discount (${Number(order.discountPercentage).toFixed(1)}%)`,
         });
       }
     }

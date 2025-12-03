@@ -19,13 +19,14 @@ export default function CheckoutPage() {
     const [useCompany, setUseCompany] = useState(false);
     const [orderCompleted, setOrderCompleted] = useState(false);
 
-    // Calculate subtotal (after product discounts, this is what totalPrice already includes)
+    // Calculate subtotal (after product discounts are already applied in totalPrice)
+    // totalPrice from cart already includes product-level discounts
     const subtotal = totalPrice;
     
-    // Calculate global discount on subtotal
+    // Calculate global discount (applied to subtotal which already has product discounts)
     const discountPercentage = user?.globalDiscountPercentage ? Number(user.globalDiscountPercentage) : 0;
-    const discountAmount = (subtotal * discountPercentage) / 100;
-    const finalPrice = subtotal - discountAmount;
+    const globalDiscountAmount = (subtotal * discountPercentage) / 100;
+    const finalPrice = subtotal - globalDiscountAmount;
 
     const [customerInfo, setCustomerInfo] = useState<Partial<User>>({
         name: '',
@@ -130,7 +131,7 @@ export default function CheckoutPage() {
                 })),
                 subtotal: subtotal,
                 discountPercentage,
-                discountAmount,
+                discountAmount: globalDiscountAmount,
                 finalPrice,
             };
 
@@ -417,13 +418,16 @@ export default function CheckoutPage() {
 
                                 <div className="space-y-4 mb-6">
                                     <div className="flex justify-between text-gray-600">
-                                        <span>Subtotal ({totalItems} item)</span>
+                                        <div>
+                                            <span>Subtotal ({totalItems} item)</span>
+                                            <p className="text-xs text-gray-500 mt-0.5">Setelah diskon produk</p>
+                                        </div>
                                         <span>Rp {subtotal.toLocaleString('id-ID')}</span>
                                     </div>
                                     {discountPercentage > 0 && (
                                         <div className="flex justify-between text-green-600">
                                             <span>Diskon Global ({discountPercentage}%)</span>
-                                            <span>- Rp {discountAmount.toLocaleString('id-ID')}</span>
+                                            <span>- Rp {globalDiscountAmount.toLocaleString('id-ID')}</span>
                                         </div>
                                     )}
                                     <div className="flex justify-between text-gray-600">
@@ -439,7 +443,7 @@ export default function CheckoutPage() {
                                         </div>
                                         {discountPercentage > 0 && (
                                             <p className="text-xs text-green-600 mt-1 text-right">
-                                                Hemat Rp {discountAmount.toLocaleString('id-ID')}
+                                                Hemat Rp {globalDiscountAmount.toLocaleString('id-ID')} dari diskon global
                                             </p>
                                         )}
                                     </div>

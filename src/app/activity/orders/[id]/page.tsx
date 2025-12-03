@@ -574,13 +574,16 @@ console.log("SNAP", isProcessingPayment, snapReady)
 
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-gray-300">
-                  <span>Subtotal</span>
+                  <div>
+                    <span>Subtotal</span>
+                    <p className="text-xs text-gray-500 mt-0.5">Setelah diskon produk</p>
+                  </div>
                   <span className="font-semibold">{formatCurrency(order.subtotal)}</span>
                 </div>
 
                 {Number(order.discount) > 0 && (
                   <div className="flex justify-between text-green-400">
-                    <span>Diskon {Number(order.discountPercentage) > 0 ? `(${Number(order.discountPercentage)}%)` : ''}</span>
+                    <span>Diskon Global ({Number(order.discountPercentage).toFixed(1)}%)</span>
                     <span className="font-semibold">-{formatCurrency(order.discount)}</span>
                   </div>
                 )}

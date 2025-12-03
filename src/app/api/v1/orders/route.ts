@@ -135,13 +135,16 @@ async function createOrderHandler(request: NextRequest, user: JwtData) {
       referrerId = currentUser.referrerId;
       const maxReferralPercent = currentUser.referrer.maxReferralPercentage.toNumber();
       
-      // Calculate commission based on subtotal (before global discount)
+      // Calculate commission based on price after global discount
       calculatedItems.forEach(calcItem => {
         const product = products.find(p => p.id === calcItem.productId)!;
         const affiliatePercent = product.affiliatePercent 
           ? Math.min(product.affiliatePercent.toNumber(), maxReferralPercent)
           : maxReferralPercent;
-        const commission = (calcItem.subtotal * affiliatePercent) / 100;
+        
+        // Apply global discount to item subtotal before calculating commission
+        const itemSubtotalAfterDiscount = calcItem.subtotal * (1 - userGlobalDiscountPercent / 100);
+        const commission = (itemSubtotalAfterDiscount * affiliatePercent) / 100;
         referralCommission = referralCommission.add(commission);
       });
     }
