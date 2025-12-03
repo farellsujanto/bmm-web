@@ -176,7 +176,7 @@ export default function CategoriesPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{category.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap font-medium">{category.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-500">{category.slug}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{category.slug}</td>
                 <td className="px-6 py-4 whitespace-nowrap space-x-2">
                   <button
                     onClick={() => handleEdit(category)}
@@ -197,7 +197,7 @@ export default function CategoriesPage() {
         </table>
 
         {categories.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-gray-700">
             No categories found. Create your first category!
           </div>
         )}

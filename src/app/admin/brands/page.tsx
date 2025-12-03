@@ -113,43 +113,60 @@ export default function BrandsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {brands.map((brand) => (
-          <div key={brand.id} className="bg-white rounded-lg shadow-lg p-6">
-            {brand.logoUrl && (
-              <div className="mb-4 h-24 flex items-center justify-center">
-                <img
-                  src={brand.logoUrl}
-                  alt={brand.name}
-                  className="max-h-full max-w-full object-contain"
-                />
-              </div>
-            )}
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{brand.name}</h3>
-            <p className="text-sm text-gray-500 mb-4">{brand.slug}</p>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handleEdit(brand)}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Logo</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {brands.map((brand) => (
+              <tr
+                key={brand.id}
+                className="hover:bg-gray-50"
               >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(brand.id)}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+                <td className="px-6 py-4 whitespace-nowrap">{brand.id}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {brand.logoUrl && (
+                    <img
+                      src={brand.logoUrl}
+                      alt={brand.name}
+                      className="h-8 w-auto object-contain"
+                    />
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap font-medium">{brand.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{brand.slug}</td>
+                <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                  <button
+                    onClick={() => handleEdit(brand)}
+                    className="text-blue-600 hover:text-blue-900"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(brand.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      {brands.length === 0 && (
-        <div className="text-center py-12 text-gray-500 bg-white rounded-lg shadow">
-          No brands found. Create your first brand!
-        </div>
-      )}
+        {brands.length === 0 && (
+          <div className="text-center py-12 text-gray-700">
+            No brands found. Create your first brand!
+          </div>
+        )}
+      </div>
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
