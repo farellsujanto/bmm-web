@@ -9,6 +9,7 @@ import { apiRequest } from '@/src/utils/api/apiRequest';
 import { Category, Product, ProductImage } from '@/generated/prisma/browser';
 import { useCart } from '@/src/contexts/CartContext';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useAlert } from '@/src/contexts/AlertContext';
 import { PrimaryInput } from '@/src/components/ui/Input';
 import ShopStructuredData from './components/ShopStructuredData';
 
@@ -23,6 +24,7 @@ const STORAGE_KEY = 'bmm_product_requests';
 export default function ShopPage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const { showAlert } = useAlert();
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<ProductWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,28 +114,28 @@ export default function ShopPage() {
   const handleSubmitRequest = async () => {
     // Check if user is logged in
     if (!isAuthenticated) {
-      alert('Silakan login terlebih dahulu untuk mengirim permintaan produk');
+      showAlert({ message: 'Silakan login terlebih dahulu untuk mengirim permintaan produk' });
       router.push('/login');
       return;
     }
 
     const validProducts = requestProducts.filter(p => p.name.trim() !== '');
     if (validProducts.length === 0) {
-      alert('Harap masukkan setidaknya satu nama produk');
+      showAlert({ message: 'Harap masukkan setidaknya satu nama produk' });
       return;
     }
 
     setIsSubmittingRequest(true);
     try {
       await apiRequest.post('/v1/item-requests', { products: validProducts });
-      alert('Permintaan produk berhasil dikirim!');
+      showAlert({ message: 'Permintaan produk berhasil dikirim!' });
       setRequestModalOpen(false);
       const resetProducts = [{ name: '', description: '', quantity: 1 }];
       setRequestProducts(resetProducts);
       saveRequestsToStorage(resetProducts);
     } catch (error) {
       console.error('Failed to submit request:', error);
-      alert('Gagal mengirim permintaan. Silakan coba lagi.');
+      showAlert({ message: 'Gagal mengirim permintaan. Silakan coba lagi.' });
     } finally {
       setIsSubmittingRequest(false);
     }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiRequest } from '@/src/utils/api/apiRequest';
+import { useAlert } from '@/src/contexts/AlertContext';
 import type { ProductModel, BrandModel, CategoryModel, ProductImageModel } from '@/generated/prisma/models';
 import { PrimaryButton, SecondaryButton, TertiaryButton, DangerButton, PrimaryInput, PrimarySelect, PrimaryTextArea } from '@/src/components/ui';
 
@@ -18,6 +19,7 @@ type ProductWithRelations = ProductModel & {
 };
 
 export default function ProductsPage() {
+  const { showAlert, showConfirm } = useAlert();
   const [products, setProducts] = useState<ProductWithRelations[]>([]);
   const [brands, setBrands] = useState<BrandModel[]>([]);
   const [categories, setCategories] = useState<CategoryModel[]>([]);
@@ -66,7 +68,7 @@ export default function ProductsPage() {
       setCategories(categoriesRes.data);
     } catch (error) {
       console.error('Failed to load data:', error);
-      alert('Failed to load data');
+      showAlert({ message: 'Failed to load data' });
     } finally {
       setLoading(false);
     }
@@ -98,7 +100,7 @@ export default function ProductsPage() {
         });
 
         await apiRequest.put(`/v1/admin/products/${editingProduct.id}`, formDataToSend);
-        alert('Product updated successfully');
+        showAlert({ message: 'Product updated successfully' });
       } else {
         // For creation, just append image files
         imageFiles.forEach((file) => {
@@ -106,26 +108,27 @@ export default function ProductsPage() {
         });
 
         await apiRequest.post('/v1/admin/products', formDataToSend);
-        alert('Product created successfully');
+        showAlert({ message: 'Product created successfully' });
       }
 
       setShowModal(false);
       resetForm();
       loadData();
     } catch (error: any) {
-      alert(error.message || 'Failed to save product');
+      showAlert({ message: error.message || 'Failed to save product' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    const confirmed = await showConfirm({ message: 'Are you sure you want to delete this product?' });
+    if (!confirmed) return;
 
     try {
       await apiRequest.delete(`/v1/admin/products/${id}`);
-      alert('Product deleted successfully');
+      showAlert({ message: 'Product deleted successfully' });
       loadData();
     } catch (error) {
-      alert('Failed to delete product');
+      showAlert({ message: 'Failed to delete product' });
     }
   };
 
@@ -213,7 +216,7 @@ export default function ProductsPage() {
       await apiRequest.post('/v1/admin/products/reorder', { items });
     } catch (error) {
       console.error('Failed to reorder products:', error);
-      alert('Failed to save new order');
+      showAlert({ message: 'Failed to save new order' });
       loadData(); // Reload on error
     } finally {
       setDraggedItem(null);
@@ -235,7 +238,7 @@ export default function ProductsPage() {
       }]);
       setImageFiles([...imageFiles, file]);
     } catch (error: any) {
-      alert(error.message || 'Failed to handle image');
+      showAlert({ message: error.message || 'Failed to handle image' });
     } finally {
       setUploadingImage(false);
     }

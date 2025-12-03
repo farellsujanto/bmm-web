@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { apiRequest } from '@/src/utils/api/apiRequest';
+import { useAlert } from '@/src/contexts/AlertContext';
 import type { BrandModel } from '@/generated/prisma/models';
 import { PrimaryButton, TertiaryButton, PrimaryInput } from '@/src/components/ui';
 
 export default function BrandsPage() {
+  const { showAlert, showConfirm } = useAlert();
   const [brands, setBrands] = useState<BrandModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -27,7 +29,7 @@ export default function BrandsPage() {
       setBrands(response.data);
     } catch (error) {
       console.error('Failed to load brands:', error);
-      alert('Failed to load brands');
+      showAlert({ message: 'Failed to load brands' });
     } finally {
       setLoading(false);
     }
@@ -39,29 +41,30 @@ export default function BrandsPage() {
     try {
       if (editingBrand) {
         await apiRequest.put(`/v1/admin/brands/${editingBrand.id}`, formData);
-        alert('Brand updated successfully');
+        showAlert({ message: 'Brand updated successfully' });
       } else {
         await apiRequest.post('/v1/admin/brands', formData);
-        alert('Brand created successfully');
+        showAlert({ message: 'Brand created successfully' });
       }
 
       setShowModal(false);
       resetForm();
       loadBrands();
     } catch (error: any) {
-      alert(error.message || 'Failed to save brand');
+      showAlert({ message: error.message || 'Failed to save brand' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this brand?')) return;
+    const confirmed = await showConfirm({ message: 'Are you sure you want to delete this brand?' });
+    if (!confirmed) return;
 
     try {
       await apiRequest.delete(`/v1/admin/brands/${id}`);
-      alert('Brand deleted successfully');
+      showAlert({ message: 'Brand deleted successfully' });
       loadBrands();
     } catch (error) {
-      alert('Failed to delete brand');
+      showAlert({ message: 'Failed to delete brand' });
     }
   };
 

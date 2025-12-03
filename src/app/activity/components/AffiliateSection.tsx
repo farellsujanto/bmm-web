@@ -1,11 +1,14 @@
 'use client';
 
+import { useAlert } from '@/src/contexts/AlertContext';
+
 interface AffiliateSectionProps {
   affiliateData?: any;
   userData?: any;
 }
 
 export default function AffiliateSection({ affiliateData, userData }: AffiliateSectionProps) {
+  const { showAlert } = useAlert();
   const referralCode = affiliateData?.referralCode || userData?.referralCode || 'BMM2025XYZ';
   const referralLink = affiliateData?.referralLink || `https://bmmparts.co.id/ref/${referralCode}`;
   const commissionRate = affiliateData?.commissionRate || userData?.maxReferralPercentage || '2.5';
@@ -15,7 +18,7 @@ export default function AffiliateSection({ affiliateData, userData }: AffiliateS
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralLink);
-    alert('Link referral berhasil disalin!');
+    showAlert({ message: 'Link referral berhasil disalin!' });
   };
 
   return (

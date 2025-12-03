@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { apiRequest } from '@/src/utils/api/apiRequest';
+import { useAlert } from '@/src/contexts/AlertContext';
 import type { CategoryModel } from '@/generated/prisma/models';
 import { PrimaryButton, TertiaryButton, PrimaryInput } from '@/src/components/ui';
 
 export default function CategoriesPage() {
+  const { showAlert, showConfirm } = useAlert();
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -27,7 +29,7 @@ export default function CategoriesPage() {
       setCategories(response.data);
     } catch (error) {
       console.error('Failed to load categories:', error);
-      alert('Failed to load categories');
+      showAlert({ message: 'Failed to load categories' });
     } finally {
       setLoading(false);
     }
@@ -39,29 +41,30 @@ export default function CategoriesPage() {
     try {
       if (editingCategory) {
         await apiRequest.put(`/v1/admin/categories/${editingCategory.id}`, formData);
-        alert('Category updated successfully');
+        showAlert({ message: 'Category updated successfully' });
       } else {
         await apiRequest.post('/v1/admin/categories', formData);
-        alert('Category created successfully');
+        showAlert({ message: 'Category created successfully' });
       }
 
       setShowModal(false);
       resetForm();
       loadCategories();
     } catch (error: any) {
-      alert(error.message || 'Failed to save category');
+      showAlert({ message: error.message || 'Failed to save category' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+    const confirmed = await showConfirm({ message: 'Are you sure you want to delete this category?' });
+    if (!confirmed) return;
 
     try {
       await apiRequest.delete(`/v1/admin/categories/${id}`);
-      alert('Category deleted successfully');
+      showAlert({ message: 'Category deleted successfully' });
       loadCategories();
     } catch (error) {
-      alert('Failed to delete category');
+      showAlert({ message: 'Failed to delete category' });
     }
   };
 
@@ -119,7 +122,7 @@ export default function CategoriesPage() {
       await apiRequest.post('/v1/admin/categories/reorder', { items });
     } catch (error) {
       console.error('Failed to reorder categories:', error);
-      alert('Failed to save new order');
+      showAlert({ message: 'Failed to save new order' });
       loadCategories(); // Reload on error
     } finally {
       setDraggedItem(null);

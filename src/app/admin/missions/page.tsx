@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { apiRequest } from '@/src/utils/api/apiRequest';
+import { useAlert } from '@/src/contexts/AlertContext';
 import type { MissionModel } from '@/generated/prisma/models';
 import { MissionType, RewardType } from '@/generated/prisma/browser';
 import { PrimaryButton, TertiaryButton, PrimaryInput, PrimarySelect, PrimaryTextArea } from '@/src/components/ui';
 
 export default function MissionsPage() {
+  const { showAlert, showConfirm } = useAlert();
   const [missions, setMissions] = useState<MissionModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -44,7 +46,7 @@ export default function MissionsPage() {
       setMissions(response.data);
     } catch (error) {
       console.error('Failed to load missions:', error);
-      alert('Failed to load missions');
+      showAlert({ message: 'Failed to load missions' });
     } finally {
       setLoading(false);
     }
@@ -56,29 +58,30 @@ export default function MissionsPage() {
     try {
       if (editingMission) {
         await apiRequest.put(`/v1/admin/missions/${editingMission.id}`, formData);
-        alert('Mission updated successfully');
+        showAlert({ message: 'Mission updated successfully' });
       } else {
         await apiRequest.post('/v1/admin/missions', formData);
-        alert('Mission created successfully');
+        showAlert({ message: 'Mission created successfully' });
       }
 
       setShowModal(false);
       resetForm();
       loadMissions();
     } catch (error: any) {
-      alert(error.message || 'Failed to save mission');
+      showAlert({ message: error.message || 'Failed to save mission' });
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this mission?')) return;
+    const confirmed = await showConfirm({ message: 'Are you sure you want to delete this mission?' });
+    if (!confirmed) return;
 
     try {
       await apiRequest.delete(`/v1/admin/missions/${id}`);
-      alert('Mission deleted successfully');
+      showAlert({ message: 'Mission deleted successfully' });
       loadMissions();
     } catch (error) {
-      alert('Failed to delete mission');
+      showAlert({ message: 'Failed to delete mission' });
     }
   };
 

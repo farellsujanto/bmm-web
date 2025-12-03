@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { useAlert } from '@/src/contexts/AlertContext';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui';
 import Script from 'next/script';
@@ -60,6 +61,7 @@ export default function OrderDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
+  const { showAlert } = useAlert();
   const [order, setOrder] = useState<OrderWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -93,12 +95,12 @@ export default function OrderDetailsPage() {
       if (response.success) {
         setOrder(response.data as OrderWithRelations);
       } else {
-        alert(response.message || 'Gagal memuat detail pesanan');
+        showAlert({ message: response.message || 'Gagal memuat detail pesanan' });
         router.push('/activity');
       }
     } catch (error: any) {
       console.error('Error fetching order details:', error);
-      alert(error.message || 'Terjadi kesalahan saat memuat detail pesanan');
+      showAlert({ message: error.message || 'Terjadi kesalahan saat memuat detail pesanan' });
       router.push('/activity');
     } finally {
       setLoading(false);
@@ -184,7 +186,7 @@ export default function OrderDetailsPage() {
 
   const handlePayment = async () => {
     if (!order || !snapReady) {
-      alert('Payment gateway belum siap. Silakan refresh halaman.');
+      showAlert({ message: 'Payment gateway belum siap. Silakan refresh halaman.' });
       return;
     }
 
@@ -210,19 +212,19 @@ export default function OrderDetailsPage() {
         window.snap?.pay(token, {
           onSuccess: function(result: any) {
             console.log('Payment success:', result);
-            alert(`Pembayaran ${paymentType === 'DP' ? 'DP' : paymentType === 'CLEARANCE' ? 'pelunasan' : ''} berhasil! Halaman akan dimuat ulang.`);
+            showAlert({ message: `Pembayaran ${paymentType === 'DP' ? 'DP' : paymentType === 'CLEARANCE' ? 'pelunasan' : ''} berhasil! Halaman akan dimuat ulang.` });
             // Refresh the page to show updated order status
             window.location.reload();
           },
           onPending: function(result: any) {
             console.log('Payment pending:', result);
-            alert('Pembayaran sedang diproses. Kami akan memberitahu Anda jika pembayaran berhasil.');
+            showAlert({ message: 'Pembayaran sedang diproses. Kami akan memberitahu Anda jika pembayaran berhasil.' });
             // Refresh to show pending status
             window.location.reload();
           },
           onError: function(result: any) {
             console.error('Payment error:', result);
-            alert('Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
+            showAlert({ message: 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.' });
             setIsProcessingPayment(false);
           },
           onClose: function() {
@@ -231,12 +233,12 @@ export default function OrderDetailsPage() {
           }
         });
       } else {
-        alert(response.message || 'Gagal membuat token pembayaran');
+        showAlert({ message: response.message || 'Gagal membuat token pembayaran' });
         setIsProcessingPayment(false);
       }
     } catch (error: any) {
       console.error('Payment error:', error);
-      alert(error.message || 'Terjadi kesalahan saat memproses pembayaran');
+      showAlert({ message: error.message || 'Terjadi kesalahan saat memproses pembayaran' });
       setIsProcessingPayment(false);
     }
   };
@@ -864,7 +866,7 @@ console.log("SNAP", isProcessingPayment, snapReady)
 
                 {order.status === 'SHIPPED' && (
                   <PrimaryButton
-                    onClick={() => alert('Fitur lacak paket akan segera tersedia!')}
+                    onClick={() => showAlert({ message: 'Fitur lacak paket akan segera tersedia!' })}
                     className="w-full py-4 text-lg"
                   >
                     📦 Lacak Paket

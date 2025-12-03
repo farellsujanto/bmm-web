@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useCart } from '@/src/contexts/CartContext';
+import { useAlert } from '@/src/contexts/AlertContext';
 import { PrimaryButton, SecondaryButton, PrimaryInput, PrimaryTextArea } from '@/src/components/ui';
 import type { User, Company } from '@/generated/prisma/browser';
 import { apiRequest } from '@/src/utils/api/apiRequest';
@@ -13,6 +14,7 @@ export default function CheckoutPage() {
     const router = useRouter();
     const { isAuthenticated, user, isLoading } = useAuth();
     const { items, totalPrice, totalItems, clearCart } = useCart();
+    const { showAlert } = useAlert();
     const [isProcessing, setIsProcessing] = useState(false);
     const [useCompany, setUseCompany] = useState(false);
     const [orderCompleted, setOrderCompleted] = useState(false);
@@ -92,21 +94,21 @@ export default function CheckoutPage() {
     const handlePayment = async () => {
         // Validate required fields
         if (!customerInfo.name?.trim()) {
-            alert('Nama harus diisi');
+            showAlert({ message: 'Nama harus diisi' });
             return;
         }
         if (!customerInfo.address?.trim()) {
-            alert('Alamat harus diisi');
+            showAlert({ message: 'Alamat harus diisi' });
             return;
         }
 
         if (useCompany) {
             if (!companyInfo.name?.trim()) {
-                alert('Nama perusahaan harus diisi');
+                showAlert({ message: 'Nama perusahaan harus diisi' });
                 return;
             }
             if (!companyInfo.taxId?.trim()) {
-                alert('NPWP perusahaan harus diisi');
+                showAlert({ message: 'NPWP perusahaan harus diisi' });
                 return;
             }
         }
@@ -142,11 +144,11 @@ export default function CheckoutPage() {
                 // Redirect to order details page using order number
                 router.push(`/activity/orders/${(response.data as any).orderNumber}`);
             } else {
-                alert(response.message || 'Gagal membuat pesanan');
+                showAlert({ message: response.message || 'Gagal membuat pesanan' });
             }
         } catch (error: any) {
             console.error('Order creation error:', error);
-            alert(error.message || 'Terjadi kesalahan saat membuat pesanan');
+            showAlert({ message: error.message || 'Terjadi kesalahan saat membuat pesanan' });
         } finally {
             setIsProcessing(false);
         }

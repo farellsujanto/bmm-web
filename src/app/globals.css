@@ -41,6 +41,17 @@ body {
   }
 }
 
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-fade-in {
   animation: fadeIn 1s ease-in;
 }
@@ -51,6 +62,10 @@ body {
 
 .animate-fade-in-delay-2 {
   animation: fadeIn 1s ease-in 0.6s both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
 }
 
 /* Custom scrollbar */

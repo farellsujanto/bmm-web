@@ -4,6 +4,7 @@ import "./globals.css";
 import ConditionalLayout from "./components/ConditionalLayout";
 import { AuthProvider } from "@/src/contexts/AuthContext";
 import { CartProvider } from "@/src/contexts/CartContext";
+import { AlertProvider } from "@/src/contexts/AlertContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,7 +26,9 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <AuthProvider>
           <CartProvider>
-            <ConditionalLayout>{children}</ConditionalLayout>
+            <AlertProvider>
+              <ConditionalLayout>{children}</ConditionalLayout>
+            </AlertProvider>
           </CartProvider>
         </AuthProvider>
       </body>
