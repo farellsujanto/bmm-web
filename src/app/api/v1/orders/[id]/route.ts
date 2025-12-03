@@ -166,35 +166,6 @@ async function getOrderHandler(
                         // Update referrer's missions
                         await updateReferrerMissions(tx, currentOrder.referrerId, commissionAmount);
 
-                        // Increment referrer's totalReferrals if this is the user's first completed order
-                        const userPreviousOrders = await tx.order.count({
-                          where: {
-                            userId: currentOrder.userId,
-                            status: {
-                              in: ['PROCESSING', 'READY_TO_SHIP', 'SHIPPED', 'DELIVERED']
-                            },
-                            id: {
-                              not: currentOrder.id
-                            }
-                          }
-                        });
-
-                        // If this is the user's first completed order, increment referrer's total referrals
-                        if (userPreviousOrders === 0) {
-                          const referrerStats = await tx.userStatistics.findUnique({
-                            where: { userId: currentOrder.referrerId }
-                          });
-
-                          if (referrerStats) {
-                            await tx.userStatistics.update({
-                              where: { userId: currentOrder.referrerId },
-                              data: {
-                                totalReferralOrders: referrerStats.totalReferralOrders + 1,
-                                updatedAt: new Date()
-                              }
-                            });
-                          }
-                        }
                       }
                     }
                   }

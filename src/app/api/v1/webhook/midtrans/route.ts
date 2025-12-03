@@ -307,23 +307,6 @@ export async function POST(request: NextRequest) {
                   }
                 }
               });
-
-              // If this is the user's first completed order, increment referrer's total referrals
-              if (userPreviousOrders === 0) {
-                const referrerStats = await tx.userStatistics.findUnique({
-                  where: { userId: order.referrerId }
-                });
-
-                if (referrerStats) {
-                  await tx.userStatistics.update({
-                    where: { userId: order.referrerId },
-                    data: {
-                      totalReferralOrders: referrerStats.totalReferralOrders + 1,
-                      updatedAt: new Date()
-                    }
-                  });
-                }
-              }
             }
           }
         }
