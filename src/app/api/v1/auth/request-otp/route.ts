@@ -3,6 +3,7 @@ import { validateRequiredHeaders, generateOtp, createOtpExpiry } from '../../../
 import { sendWhatsAppOtp } from '../../../../../utils/messaging/whatsapputil';
 import prisma from '@/src/utils/database/prismaOrm.util';
 import { formatPhoneNumber, maskPhoneNumber } from '@/src/utils/formatter/stringFormatter.util';
+import { generateBrowserFingerprint, checkBrowserLimit, incrementBrowserLimit } from '../../../../../utils/rateLimit/browserRateLimit.util';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +16,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, message: validation.error },
         { status: 401 }
+      );
+    }
+
+    // Check browser-based rate limit (4 requests per day)
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip');
+    const userAgent = request.headers.get('user-agent');
+    const browserFingerprint = generateBrowserFingerprint(ip, userAgent);
+    
+    const browserLimit = checkBrowserLimit(browserFingerprint, 4);
+    console.log('Browser limit status:', browserLimit);
+    if (!browserLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Batas permintaan harian tercapai. Silakan coba lagi besok',
+          remaining: 0,
+          resetDate: browserLimit.resetDate
+        },
+        { status: 429 }
       );
     }
 
@@ -121,12 +141,15 @@ export async function POST(request: NextRequest) {
     // Send OTP via WhatsApp
     try {
       if (process.env.NODE_ENV !== 'development') {
-        await sendWhatsAppOtp(validatedPhoneNumber, otp);
+        await sendWhatsAppOtp(otp, validatedPhoneNumber);
       }
     } catch (error) {
       console.error('Failed to send WhatsApp OTP:', error);
       // Continue anyway - OTP is stored in DB
     }
+
+    // Increment browser request count after successful OTP send
+    incrementBrowserLimit(browserFingerprint);
 
     return NextResponse.json(
       {
@@ -136,7 +159,8 @@ export async function POST(request: NextRequest) {
           expiresAt: expiresAt.toISOString(),
           maskedPhone: maskPhoneNumber(validatedPhoneNumber),
           resendCount: resendCount,
-          maxResends: 2
+          maxResends: 2,
+          dailyRequestsRemaining: browserLimit.remaining - 1
         }
       },
       { status: 200 }

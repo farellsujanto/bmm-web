@@ -37,4 +37,5 @@ export async function sendWhatsAppOtp(otp: string, phoneNumber: string) {
         }),
     });
     console.log('WhatsApp API response status:', result.status);
+    return result;
 }
