@@ -228,7 +228,27 @@ export default function TermsPage() {
 
             {/* Section 14 */}
             <div className="mb-10">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">14. Pemisahan</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">14. Program Referral</h2>
+              <p className="text-gray-600 leading-relaxed mb-4">
+                BMM Parts menyediakan program referral bagi pengguna yang ingin merekomendasikan 
+                layanan kami kepada orang lain. Ketentuan program referral:
+              </p>
+              <ul className="list-disc list-inside text-gray-600 space-y-2 ml-4">
+                <li>Komisi referral akan diberikan sesuai dengan persentase yang telah ditentukan</li>
+                <li>Komisi referral yang diterima akan dipotong pajak sesuai dengan ketentuan PPh (Pajak Penghasilan) yang berlaku</li>
+                <li>Pemotongan pajak mengikuti peraturan perpajakan Republik Indonesia</li>
+                <li>Bukti pemotongan pajak akan diberikan sesuai dengan ketentuan yang berlaku</li>
+                <li>Pengguna bertanggung jawab atas kewajiban perpajakan yang timbul dari komisi referral</li>
+              </ul>
+              <p className="text-gray-600 leading-relaxed mt-4">
+                BMM Parts berhak untuk mengubah ketentuan program referral termasuk persentase komisi 
+                dan mekanisme pembayaran sesuai dengan kebijakan perusahaan dan peraturan yang berlaku.
+              </p>
+            </div>
+
+            {/* Section 15 */}
+            <div className="mb-10">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">15. Pemisahan</h2>
               <p className="text-gray-600 leading-relaxed">
                 Jika ada ketentuan dalam syarat dan ketentuan ini yang dianggap tidak sah atau tidak dapat 
                 dilaksanakan, ketentuan tersebut akan dihapus dan sisanya akan tetap berlaku.
