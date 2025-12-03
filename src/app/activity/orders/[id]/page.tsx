@@ -257,8 +257,7 @@ export default function OrderDetailsPage() {
   if (!order) {
     return null;
   }
-console.log(order);
-console.log("SNAP", isProcessingPayment, snapReady)
+
   const statusInfo = getStatusInfo(order.status);
 
   return (

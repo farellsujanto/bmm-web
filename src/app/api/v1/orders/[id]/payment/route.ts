@@ -84,7 +84,7 @@ async function createPaymentTokenHandler(
     // Determine payment type and amount
     let amountToPay: number;
     let paymentType: 'DP' | 'FULL' | 'CLEARANCE';
-    let transactionId: string;
+    let paymentTypeSuffix: string;
 
     if (amountPaid === 0) {
       // First payment - check if DP is required
@@ -99,41 +99,58 @@ async function createPaymentTokenHandler(
         );
         amountToPay = Math.ceil(totalAmount * (maxDPPercentage / 100));
         paymentType = 'DP';
-        transactionId = `${orderNumber}-DP`;
+        paymentTypeSuffix = 'DP';
       } else {
         // Full payment required
         amountToPay = remainingBalance;
         paymentType = 'FULL';
-        transactionId = `${orderNumber}-FULL`;
+        paymentTypeSuffix = 'FULL';
       }
     } else {
       // Subsequent payment - clearance
       amountToPay = remainingBalance;
       paymentType = 'CLEARANCE';
-      transactionId = `${orderNumber}-CLR`;
+      paymentTypeSuffix = 'CLR';
     }
 
-    // Check existing transaction status and cancel if pending
-    try {
-      const existingTransaction = await checkTransactionStatus(transactionId);
-      if (existingTransaction) {
-        const status = existingTransaction.transaction_status;
-        
-        if (status === 'settlement' || status === 'capture') {
-          return NextResponse.json(
-            { success: false, message: 'Payment already completed' },
-            { status: 400 }
-          );
+    // Check existing currentPaymentId and cancel if pending
+    if (order.currentPaymentId) {
+      try {
+        const existingTransaction = await checkTransactionStatus(order.currentPaymentId);
+        if (existingTransaction) {
+          const status = existingTransaction.transaction_status;
+          
+          if (status === 'settlement' || status === 'capture') {
+            return NextResponse.json(
+              { success: false, message: 'Payment already completed' },
+              { status: 400 }
+            );
+          }
+          
+          // For pending/authorize, cancel it before creating new token
+          if (status === 'pending' || status === 'authorize') {
+            console.log(`Cancelling existing pending transaction: ${order.currentPaymentId}`);
+            const cancelled = await cancelTransaction(order.currentPaymentId);
+            console.log('Cancellation result:', cancelled);
+            if (!cancelled) {
+              return NextResponse.json(
+                { success: false, message: 'Unable to cancel previous payment. Please try again later.' },
+                { status: 400 }
+              );
+            }
+            // Wait a bit for Midtrans to process the cancellation
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
-        
-        // For pending/authorize, cancel it before creating new token
-        if (status === 'pending' || status === 'authorize') {
-          await cancelTransaction(transactionId);
-        }
+      } catch (error) {
+        // Transaction doesn't exist, continue with creation
+        console.log('Existing transaction not found, continuing with new payment');
       }
-    } catch (error) {
-      // Transaction doesn't exist, continue with creation
     }
+
+    // Generate new transaction ID with timestamp
+    const timestamp = Date.now();
+    const transactionId = `${orderNumber}-${paymentTypeSuffix}-${timestamp}`;
 
     // Prepare customer details
     const customerDetails = {
@@ -183,31 +200,90 @@ async function createPaymentTokenHandler(
     }
 
     // Create Midtrans Snap token
-    const snapResponse = await createSnapToken({
-      orderId: transactionId,
-      amount: amountToPay,
-      customerDetails,
-      itemDetails,
-    });
+    try {
+      const snapResponse = await createSnapToken({
+        orderId: transactionId,
+        amount: amountToPay,
+        customerDetails,
+        itemDetails,
+      });
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Payment token created successfully',
-        data: {
-          token: snapResponse.token,
-          redirectUrl: snapResponse.redirect_url,
-          orderNumber: orderNumber,
-          transactionId: transactionId,
-          amount: amountToPay,
-          paymentType: paymentType,
-          totalAmount: totalAmount,
-          amountPaid: amountPaid,
-          remainingBalance: remainingBalance,
+      // Update order with new currentPaymentId
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { currentPaymentId: transactionId }
+      });
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Payment token created successfully',
+          data: {
+            token: snapResponse.token,
+            redirectUrl: snapResponse.redirect_url,
+            orderNumber: orderNumber,
+            transactionId: transactionId,
+            amount: amountToPay,
+            paymentType: paymentType,
+            totalAmount: totalAmount,
+            amountPaid: amountPaid,
+            remainingBalance: remainingBalance,
+          }
+        },
+        { status: 200 }
+      );
+    } catch (snapError: any) {
+      // If order_id already used, try to cancel and retry once
+      if (snapError.message?.includes('sudah digunakan') || snapError.message?.includes('already used')) {
+        try {
+          await cancelTransaction(transactionId);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const retryResponse = await createSnapToken({
+            orderId: transactionId,
+            amount: amountToPay,
+            customerDetails,
+            itemDetails,
+          });
+
+          // Update order with new currentPaymentId
+          await prisma.order.update({
+            where: { id: order.id },
+            data: { currentPaymentId: transactionId }
+          });
+
+          return NextResponse.json(
+            {
+              success: true,
+              message: 'Payment token created successfully',
+              data: {
+                token: retryResponse.token,
+                redirectUrl: retryResponse.redirect_url,
+                orderNumber: orderNumber,
+                transactionId: transactionId,
+                amount: amountToPay,
+                paymentType: paymentType,
+                totalAmount: totalAmount,
+                amountPaid: amountPaid,
+                remainingBalance: remainingBalance,
+              }
+            },
+            { status: 200 }
+          );
+        } catch (retryError) {
+          // Retry failed, return user-friendly message
+          return NextResponse.json(
+            {
+              success: false,
+              message: 'A payment is already in progress. Please wait a moment and try again.',
+            },
+            { status: 409 }
+          );
         }
-      },
-      { status: 200 }
-    );
+      }
+      
+      throw snapError;
+    }
   } catch (error: any) {
     console.error('Payment token creation failed:', error.message);
     

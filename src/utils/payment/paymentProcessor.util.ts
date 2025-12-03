@@ -1,4 +1,3 @@
-import { Prisma } from '@/generated/prisma/client';
 import {
   mapMidtransPaymentType,
   mapMidtransStatusToOrderStatus,
@@ -10,6 +9,7 @@ import {
   updateUserStatistics,
   updateReferrerStatistics
 } from '../mission/missionUpdate.util';
+import prisma from '../database/prismaOrm.util';
 
 interface TransactionData {
   transaction_status: string;
@@ -49,7 +49,6 @@ export async function processPayment(params: ProcessPaymentParams): Promise<Proc
 
   // If no transaction data provided, fetch it from Midtrans
   let transactionData = providedTransactionData;
-  let transactionIdToCheck: string | null = null;
 
   if (!transactionData) {
     // Only sync for orders that can be updated
@@ -57,20 +56,13 @@ export async function processPayment(params: ProcessPaymentParams): Promise<Proc
       return { order, paymentLog: null, isFullyPaid: false, updated: false };
     }
 
-    // Determine which transaction to check based on payment state
-    if (Number(order.amountPaid) === 0) {
-      // No payment yet, check DP or FULL
-      const requiresDP = order.orderProducts.some((op: any) => 
-        Number(op.downpaymentPercentage) > 0 && Number(op.downpaymentPercentage) < 100
-      );
-      transactionIdToCheck = requiresDP ? `${order.orderNumber}-DP` : `${order.orderNumber}-FULL`;
-    } else {
-      // DP paid, check clearance
-      transactionIdToCheck = `${order.orderNumber}-CLR`;
+    // Check currentPaymentId if exists
+    if (!order.currentPaymentId) {
+      return { order, paymentLog: null, isFullyPaid: false, updated: false };
     }
 
     try {
-      transactionData = await checkTransactionStatus(transactionIdToCheck);
+      transactionData = await checkTransactionStatus(order.currentPaymentId);
       
       if (!transactionData) {
         return { order, paymentLog: null, isFullyPaid: false, updated: false };
@@ -85,9 +77,6 @@ export async function processPayment(params: ProcessPaymentParams): Promise<Proc
       return { order, paymentLog: null, isFullyPaid: false, updated: false };
     }
   }
-
-  // Import prisma dynamically to avoid circular dependency
-  const prisma = (await import('../database/prismaOrm.util')).default;
 
   // Process payment in transaction
   const result = await prisma.$transaction(async (tx) => {
@@ -154,6 +143,9 @@ export async function processPayment(params: ProcessPaymentParams): Promise<Proc
       } else if (order.status === 'PENDING_PAYMENT') {
         updateData.status = 'PROCESSING';
       }
+
+      // Clear currentPaymentId after successful payment
+      updateData.currentPaymentId = null;
 
       // Update missions and statistics when order is fully paid
       if (isFullyPaid && wasNotFullyPaid) {
