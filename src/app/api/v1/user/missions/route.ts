@@ -51,15 +51,34 @@ async function getMissionsHandler(request: NextRequest, user: JwtData) {
       };
     });
 
-    // Sort: incomplete first (oldest first), then completed (newest first)
+    // Sort: incomplete first (prioritized by remaining target and reward type), then completed (newest first)
+    const rewardTypePriority = {
+      'BOTH': 1,
+      'REFERRAL_PERCENTAGE': 2,
+      'GLOBAL_DISCOUNT': 3
+    };
+
     formattedMissions.sort((a, b) => {
+      // Incomplete missions always come before completed missions
       if (a.isCompleted !== b.isCompleted) {
         return a.isCompleted ? 1 : -1; // Incomplete missions first
       }
+      
       if (!a.isCompleted) {
-        // For incomplete, oldest mission first (based on creation date)
-        return a.createdAt.getTime() - b.createdAt.getTime();
+        // For incomplete missions, prioritize by smallest target remaining
+        const remainingA = a.targetValue - a.currentProgress;
+        const remainingB = b.targetValue - b.currentProgress;
+        
+        if (remainingA !== remainingB) {
+          return remainingA - remainingB; // Smaller remaining comes first
+        }
+        
+        // If same remaining, prioritize by reward type
+        const priorityA = rewardTypePriority[a.rewardType as keyof typeof rewardTypePriority] || 999;
+        const priorityB = rewardTypePriority[b.rewardType as keyof typeof rewardTypePriority] || 999;
+        return priorityA - priorityB;
       }
+      
       // For completed, newest completion first
       return (b.completedAt?.getTime() || 0) - (a.completedAt?.getTime() || 0);
     });
