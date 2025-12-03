@@ -191,23 +191,6 @@ export async function POST(request: NextRequest) {
         });
         console.log('Updated referrer statistics for user:', referrerId);
       }
-
-      // Initialize missions for new user
-      const missions = await prisma.mission.findMany({
-        where: { isActive: true }
-      });
-      console.log('Initializing missions:', missions);
-      
-      if (missions.length > 0) {
-        await prisma.userMission.createMany({
-          data: missions.map(mission => ({
-            userId: user!.id,
-            missionId: mission.id,
-            achieved: false,
-            currentProgress: 0
-          }))
-        });
-      }
     }
 
     // Delete used OTP
