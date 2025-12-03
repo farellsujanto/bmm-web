@@ -7,7 +7,7 @@ interface AffiliateSectionProps {
 
 export default function AffiliateSection({ affiliateData, userData }: AffiliateSectionProps) {
   const referralCode = affiliateData?.referralCode || userData?.referralCode || 'BMM2025XYZ';
-  const referralLink = affiliateData?.referralLink || `https://bmmtbd.com/ref/${referralCode}`;
+  const referralLink = affiliateData?.referralLink || `https://bmmparts.co.id/ref/${referralCode}`;
   const commissionRate = affiliateData?.commissionRate || userData?.maxReferralPercentage || '2.5';
   const totalReferrals = affiliateData?.totalReferrals || 0;
   const totalEarnings = affiliateData?.totalEarnings ? parseFloat(affiliateData.totalEarnings) : 0;

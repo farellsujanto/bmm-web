@@ -32,7 +32,7 @@ async function getAffiliateHandler(request: NextRequest, user: JwtData) {
 
     // TODO: Get referred users and their orders when Order model is implemented
     // For now, just return the basic stats
-    const referralLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://bmmtbd.com'}/ref/${userData.referralCode}`;
+    const referralLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://bmmparts.co.id.com'}/ref/${userData.referralCode}`;
 
     return NextResponse.json(
       {
