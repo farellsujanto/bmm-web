@@ -24,7 +24,6 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<ProductWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<ProductWithRelations[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   
@@ -79,8 +78,6 @@ export default function ProductDetailPage() {
       affiliatePercent: product.affiliatePercent ? Number(product.affiliatePercent) : undefined,
       isPreOrder: product.isPreOrder || false,
     });
-    
-    setQuantity(1);
   };
 
   const handleIncreaseQuantity = () => {

@@ -83,10 +83,10 @@ export default function ShopPage() {
     const matchesCategory = selectedCategory === 'Semua' || product.category.name === selectedCategory;
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = searchQuery === '' || 
-      product.name.toLowerCase().includes(searchLower) ||
-      product.description?.toLowerCase().includes(searchLower) ||
-      product.category.name.toLowerCase().includes(searchLower) ||
-      product.brand.name.toLowerCase().includes(searchLower);
+      product.name?.toLowerCase()?.includes(searchLower) ||
+      product.description?.toLowerCase()?.includes(searchLower) ||
+      product.category.name.toLowerCase()?.includes(searchLower) ||
+      product.brand?.name?.toLowerCase()?.includes(searchLower);
     return matchesCategory && matchesSearch;
   });
 

@@ -9,11 +9,12 @@ interface AffiliateSectionProps {
 
 export default function AffiliateSection({ affiliateData, userData }: AffiliateSectionProps) {
   const { showAlert } = useAlert();
-  const referralCode = affiliateData?.referralCode || userData?.referralCode || 'BMM2025XYZ';
+  const referralCode = affiliateData?.referralCode || userData?.referralCode || '';
   const referralLink = affiliateData?.referralLink || `https://bmmparts.co.id/ref/${referralCode}`;
   const commissionRate = affiliateData?.commissionRate || userData?.maxReferralPercentage || '2.5';
   const totalReferrals = affiliateData?.totalReferrals || 0;
   const totalEarnings = affiliateData?.totalEarnings ? parseFloat(affiliateData.totalEarnings) : 0;
+  const withdrawableIncome = affiliateData?.withdrawableIncome ? parseFloat(affiliateData.withdrawableIncome) : 0;
   const affiliatedOrders = affiliateData?.affiliatedOrders || [];
   
   const copyToClipboard = () => {
@@ -42,8 +43,8 @@ export default function AffiliateSection({ affiliateData, userData }: AffiliateS
             <p className="text-2xl sm:text-3xl font-bold text-white">{totalReferrals}</p>
           </div>
           <div className="bg-black/40 rounded-2xl p-3 sm:p-4 backdrop-blur-sm">
-            <p className="text-red-300 text-xs sm:text-sm mb-1">Komisi Bulan Ini</p>
-            <p className="text-2xl sm:text-3xl font-bold text-white">Rp {(totalEarnings / 1000).toFixed(1)}K</p>
+            <p className="text-red-300 text-xs sm:text-sm mb-1">Komisi Yang Bisa Ditarik</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white">Rp {(withdrawableIncome / 1000).toFixed(1)}K</p>
           </div>
           <div className="bg-black/40 rounded-2xl p-3 sm:p-4 backdrop-blur-sm">
             <p className="text-red-300 text-xs sm:text-sm mb-1">Total Earnings</p>

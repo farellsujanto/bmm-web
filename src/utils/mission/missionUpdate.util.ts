@@ -92,7 +92,7 @@ export async function updateUserMissions(
     const achieved = newProgress >= targetValue;
 
     // Update user mission
-    const updatedUserMission = await tx.userMission.update({
+    await tx.userMission.update({
       where: {
         userId_missionId: {
           userId,
@@ -257,7 +257,7 @@ export async function updateReferrerMissions(
     const achieved = newProgress >= targetValue;
 
     // Update user mission
-    const updatedUserMission = await tx.userMission.update({
+    await tx.userMission.update({
       where: {
         userId_missionId: {
           userId: referrerId,
