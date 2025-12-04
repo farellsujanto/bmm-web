@@ -32,8 +32,8 @@ export async function updateUserMissions(
     }
   });
 
-  // Process each mission
-  for (const mission of missions) {
+  // Process each mission in parallel
+  await Promise.all(missions.map(async (mission: any) => {
     // Get or create user mission progress
     let userMission = await tx.userMission.findUnique({
       where: {
@@ -57,61 +57,86 @@ export async function updateUserMissions(
 
     // Skip if already achieved
     if (userMission.achieved) {
-      continue;
+      return;
     }
 
-    // Calculate new progress based on mission type
-    let newProgress = Number(userMission.currentProgress);
+    // Calculate progress increment or absolute value based on mission type
+    let incrementValue = 0;
+    let absoluteValue: number | null = null;
 
     switch (mission.type) {
       case MissionType.ORDER_COUNT:
         // Increment by 1 for each order
-        newProgress += 1;
+        incrementValue = 1;
         break;
 
       case MissionType.ORDER_VALUE:
         // Increment by order total
-        newProgress += orderTotal;
+        incrementValue = orderTotal;
         break;
 
       case MissionType.REFERRAL_COUNT:
         // This is updated separately when referred users place orders
-        // Use current total referrals
-        newProgress = userStats.totalReferrals;
+        // Use current total referrals (absolute value)
+        absoluteValue = userStats.totalReferrals;
         break;
 
       case MissionType.REFERRAL_EARNINGS:
         // This is updated separately when commission is earned
-        // Use current total earnings
-        newProgress = Number(userStats.totalReferralEarnings);
+        // Use current total earnings (absolute value)
+        absoluteValue = Number(userStats.totalReferralEarnings);
         break;
     }
+
+    // Calculate new progress
+    const newProgress = absoluteValue !== null 
+      ? absoluteValue 
+      : Number(userMission.currentProgress) + incrementValue;
 
     // Check if mission is achieved
     const targetValue = Number(mission.targetValue);
     const achieved = newProgress >= targetValue;
 
-    // Update user mission
-    await tx.userMission.update({
-      where: {
-        userId_missionId: {
-          userId,
-          missionId: mission.id
+    // Update user mission using increment where applicable
+    if (absoluteValue !== null) {
+      // Use absolute value for referral-based missions
+      await tx.userMission.update({
+        where: {
+          userId_missionId: {
+            userId,
+            missionId: mission.id
+          }
+        },
+        data: {
+          currentProgress: newProgress,
+          achieved,
+          achievedAt: achieved && !userMission.achieved ? new Date() : userMission.achievedAt,
+          updatedAt: new Date()
         }
-      },
-      data: {
-        currentProgress: newProgress,
-        achieved,
-        achievedAt: achieved && !userMission.achieved ? new Date() : userMission.achievedAt,
-        updatedAt: new Date()
-      }
-    });
+      });
+    } else {
+      // Use increment for order-based missions
+      await tx.userMission.update({
+        where: {
+          userId_missionId: {
+            userId,
+            missionId: mission.id
+          }
+        },
+        data: {
+          currentProgress: { increment: incrementValue },
+          achieved,
+          achievedAt: achieved && !userMission.achieved ? new Date() : userMission.achievedAt,
+          updatedAt: new Date()
+        }
+      });
+    }
 
     // If mission just achieved, apply rewards
     if (achieved && !userMission.achieved) {
       await applyMissionReward(tx, userId, mission);
     }
-  }
+  }));
 }
 
 /**
@@ -213,8 +238,8 @@ export async function updateReferrerMissions(
     }
   });
 
-  // Process referral-related missions
-  for (const mission of missions) {
+  // Process referral-related missions in parallel
+  await Promise.all(missions.map(async (mission: any) => {
     let userMission = await tx.userMission.findUnique({
       where: {
         userId_missionId: {
@@ -237,7 +262,7 @@ export async function updateReferrerMissions(
 
     // Skip if already achieved
     if (userMission.achieved) {
-      continue;
+      return;
     }
 
     // Calculate new progress based on mission type
@@ -276,7 +301,7 @@ export async function updateReferrerMissions(
     if (achieved && !userMission.achieved) {
       await applyMissionReward(tx, referrerId, mission);
     }
-  }
+  }));
 }
 
 /**

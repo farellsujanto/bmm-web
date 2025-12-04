@@ -3,6 +3,7 @@ import { validateRequiredHeaders, isOtpExpired, createAccessToken, createRefresh
 import prisma from '@/src/utils/database/prismaOrm.util';
 import { formatPhoneNumber } from '@/src/utils/formatter/stringFormatter.util';
 import { generateReferralCode } from '@/src/utils/referral/referralUtil';
+import { updateReferrerMissions } from '@/src/utils/mission/missionUpdate.util';
 
 export async function POST(request: NextRequest) {
   try {
@@ -119,11 +120,10 @@ export async function POST(request: NextRequest) {
     }
 
     // OTP is valid - find or create user
-    console.log('OTP verified for phone number:', validatedPhoneNumber);
     let user = await prisma.user.findFirst({
       where: { phoneNumber: validatedPhoneNumber }
     });
-    console.log('User found:', user);
+
     let isNewUser = false;
     if (!user) {
       // Generate unique referral code
@@ -179,17 +179,23 @@ export async function POST(request: NextRequest) {
       
       isNewUser = true;
 
-      // Update referrer's statistics if applicable
+      // Update referrer's statistics and missions if applicable
       if (referrerId) {
-        await prisma.userStatistics.update({
-          where: { userId: referrerId },
-          data: {
-            totalReferrals: {
-              increment: 1
+        await prisma.$transaction(async (tx) => {
+          // Update referrer's statistics
+          await tx.userStatistics.update({
+            where: { userId: referrerId },
+            data: {
+              totalReferrals: {
+                increment: 1
+              }
             }
-          }
+          });
+          
+          // Update referrer's REFERRAL_COUNT missions (pass 0 for commission since this is just a signup)
+          await updateReferrerMissions(tx, referrerId, 0);
         });
-        console.log('Updated referrer statistics for user:', referrerId);
+        console.log('Updated referrer statistics and missions for user:', referrerId);
       }
     }
 
