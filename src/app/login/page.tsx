@@ -73,6 +73,10 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle forbidden errors (401/403) with specific message
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(data.message || 'Akses ditolak. Silakan refresh halaman dan coba lagi.');
+        }
         throw new Error(data.message || 'Failed to send OTP');
       }
 
