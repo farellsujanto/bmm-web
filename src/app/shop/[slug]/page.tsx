@@ -119,5 +119,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductDetailPage({ params }: Props) {
-  return <ProductDetailClient />;
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+  
+  return <ProductDetailClient initialProduct={product} />;
 }

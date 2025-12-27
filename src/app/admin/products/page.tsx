@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { useAlert } from '@/src/contexts/AlertContext';
 import type { ProductModel, BrandModel, CategoryModel, ProductImageModel } from '@/generated/prisma/models';
@@ -566,9 +567,11 @@ export default function ProductsPage() {
                         }`}
                       >
                         <span className="text-gray-500 font-mono text-sm">☰</span>
-                        <img
+                        <Image
                           src={image.url}
                           alt={image.alt || `Product image ${index + 1}`}
+                          width={64}
+                          height={64}
                           className="w-16 h-16 object-cover rounded"
                         />
                         <input

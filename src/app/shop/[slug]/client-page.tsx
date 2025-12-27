@@ -16,12 +16,16 @@ type ProductWithRelations = Product & {
   images: ProductImage[];
 };
 
-export default function ProductDetailPage() {
+type Props = {
+  initialProduct: ProductWithRelations | null;
+};
+
+export default function ProductDetailPage({ initialProduct }: Props) {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
   
-  const [product, setProduct] = useState<ProductWithRelations | null>(null);
+  const [product, setProduct] = useState<ProductWithRelations | null>(initialProduct);
   const [loading, setLoading] = useState(true);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState<ProductWithRelations[]>([]);
@@ -37,26 +41,21 @@ export default function ProductDetailPage() {
     try {
       setLoading(true);
       
-      // Fetch product by slug
-      const productsRes = await apiRequest.get<ProductWithRelations[]>('/v1/products');
-      const foundProduct = productsRes.data.find(p => p.slug === slug);
-      
-      if (!foundProduct) {
+      // If no initial product, redirect
+      if (!initialProduct) {
         router.push('/shop');
         return;
       }
       
-      setProduct(foundProduct);
-      
-      // Load related products from same category
-      const related = productsRes.data
-        .filter(p => p.categoryId === foundProduct.categoryId && p.id !== foundProduct.id)
-        .slice(0, 4);
-      setRelatedProducts(related);
+      // Load related products from same category using dedicated API
+      const relatedRes = await apiRequest.get<ProductWithRelations[]>(
+        `/v1/products/related?categoryId=${initialProduct.categoryId}&productId=${initialProduct.id}&limit=4`
+      );
+      setRelatedProducts(relatedRes.data);
       
     } catch (error) {
-      console.error('Failed to load product:', error);
-      router.push('/shop');
+      console.error('Failed to load related products:', error);
+      // Don't redirect on error, just log it
     } finally {
       setLoading(false);
     }
@@ -312,7 +311,7 @@ export default function ProductDetailPage() {
                 {product.affiliatePercent && Number(product.affiliatePercent) > 0 && (
                   <div className="mt-6 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg">
                     <p className="text-yellow-800 font-semibold text-sm">
-                      🎁 Dapatkan komisi {Number(product.affiliatePercent)}% dengan merekomendasikan produk ini!
+                      🎁 Dapatkan komisi {Number(product.affiliatePercent)}% untuk setiap produk ini terjual!
                     </p>
                   </div>
                 )}

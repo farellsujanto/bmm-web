@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { useAlert } from '@/src/contexts/AlertContext';
 import type { BrandModel } from '@/generated/prisma/models';
@@ -133,9 +134,11 @@ export default function BrandsPage() {
                 <td className="px-6 py-4 whitespace-nowrap">{brand.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {brand.logoUrl && (
-                    <img
+                    <Image
                       src={brand.logoUrl}
                       alt={brand.name}
+                      width={100}
+                      height={32}
                       className="h-8 w-auto object-contain"
                     />
                   )}
