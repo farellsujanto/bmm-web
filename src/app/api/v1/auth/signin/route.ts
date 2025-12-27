@@ -163,7 +163,8 @@ export async function POST(request: NextRequest) {
           role: 'CUSTOMER',
           referralCode: newReferralCode,
           referrerId: referrerId,
-          maxReferralPercentage: 5,
+          // Default values
+          maxReferralPercentage: 3,
           globalDiscountPercentage: 0,
           statistics: {
             create: {
