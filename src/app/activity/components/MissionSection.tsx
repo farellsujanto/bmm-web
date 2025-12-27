@@ -22,6 +22,20 @@ export default function MissionSection({ missions = [], isSnippet = false }: Mis
   const displayMissions = isSnippet && closestMission ? [closestMission] : missions;
   const completedCount = missions.filter(m => m.isCompleted).length;
 
+  const getRewardText = (mission: MissionWithProgress) => {
+    const value = Number(mission.rewardValue);
+    switch (mission.rewardType) {
+      case 'REFERRAL_PERCENTAGE':
+        return `+${value}% Komisi Referral`;
+      case 'GLOBAL_DISCOUNT':
+        return `+${value}% Diskon Global`;
+      case 'BOTH':
+        return `+${value}% Komisi & Diskon`;
+      default:
+        return 'Hadiah';
+    }
+  };
+
   return (
     <div className="bg-gradient-to-br from-gray-900 via-black to-gray-800 rounded-3xl p-8 shadow-2xl border border-gray-800 hover:border-red-600 transition-all duration-500">
       <div className="flex items-center justify-between mb-6">
@@ -67,6 +81,22 @@ export default function MissionSection({ missions = [], isSnippet = false }: Mis
                   <p className="text-sm text-gray-300 mb-2">
                     {mission.description} ({mission.currentProgress}/{Number(mission.targetValue)})
                   </p>
+                  
+                  {/* Reward Badge */}
+                  <div className="mb-3">
+                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                      mission.isCompleted 
+                        ? 'bg-green-900/50 text-green-400 border border-green-700/50' 
+                        : 'bg-yellow-900/50 text-yellow-400 border border-yellow-700/50'
+                    }`}>
+                      <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {mission.isCompleted ? '🎁 Diraih: ' : '🎯 Hadiah: '}
+                      {getRewardText(mission)}
+                    </div>
+                  </div>
+
                   {mission.isCompleted ? (
                     <span className="text-xs text-red-400 font-semibold">
                       Selesai {mission.completedAt ? new Date(mission.completedAt).toLocaleDateString('id-ID') : ''}
