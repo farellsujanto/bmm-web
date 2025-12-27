@@ -86,6 +86,25 @@ export default function OrderDetailsPage() {
     }
   }, [isAuthenticated, params.id]);
 
+  // Poll for Midtrans Snap availability every 2 seconds
+  useEffect(() => {
+    if (snapReady) return;
+
+    const checkSnapReady = () => {
+      if (window.snap) {
+        setSnapReady(true);
+      }
+    };
+
+    // Check immediately
+    checkSnapReady();
+
+    // Then check every 2 seconds
+    const interval = setInterval(checkSnapReady, 2000);
+
+    return () => clearInterval(interval);
+  }, [snapReady]);
+
   const fetchOrderDetails = async () => {
     try {
       setLoading(true);
