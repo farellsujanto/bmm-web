@@ -1,0 +1,5 @@
+name,description,shortDescription,dataSheetUrl,price,discount,stock,isActive,affiliatePercent,isPreOrder,preOrderReadyEarliest,preOrderReadyLatest,brandId,categoryId,imageFolder
+iPhone 15 Pro,The iPhone 15 Pro features a titanium design and the powerful A17 Pro chip.,Premium smartphone with advanced camera system,https://apple.com/iphone-15-pro/specs,15000000,0,100,true,5,false,,,1,1,iPhone15Pro
+MacBook Air M3,Ultra-thin laptop powered by the M3 chip with all-day battery life.,Lightweight laptop for everyday computing,https://apple.com/macbook-air/specs,18000000,10,50,true,5,false,,,1,2,MacBookAir
+Samsung Galaxy S24,Flagship Android phone with AI-powered features and stunning display.,Powerful Android smartphone,https://samsung.com/galaxy-s24/specs,12000000,5,75,true,5,false,,,2,1,GalaxyS24
+Pre-order Item,This is a pre-order item example.,Pre-order test product,,5000000,0,0,true,3,true,7,14,1,3,PreOrderItem

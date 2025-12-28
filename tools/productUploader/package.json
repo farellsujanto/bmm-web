@@ -1,0 +1,19 @@
+{
+  "name": "product-uploader",
+  "version": "1.0.0",
+  "description": "Bulk product uploader tool for BMMTBD",
+  "main": "productUploader.js",
+  "type": "module",
+  "scripts": {
+    "upload": "node productUploader.js"
+  },
+  "keywords": ["product", "uploader", "csv"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "csv-parse": "^5.5.6",
+    "dotenv": "^16.4.5",
+    "form-data": "^4.0.1",
+    "node-fetch": "^3.3.2"
+  }
+}

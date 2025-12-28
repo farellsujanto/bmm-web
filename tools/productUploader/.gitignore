@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.csv
+!example.csv
+images/
+!images/.gitkeep
