@@ -73,7 +73,7 @@ export default function ProductCard({
     } else if (preOrderReadyEarliest) {
       return `${preOrderReadyEarliest} minggu`;
     }
-    return 'Pre-Order';
+    return 'PO';
   };
   
   return (
@@ -105,18 +105,18 @@ export default function ProductCard({
           </div>
         )}
         {isPreOrder && (
-          <div className="absolute top-2 left-2 bg-yellow-500 text-black px-2 py-0.5 rounded-full text-xs font-bold">
-            Pre-Order: {formatPreOrderTime()}
+          <div className="absolute bottom-2 left-2 bg-yellow-500 text-black px-2 py-1 rounded text-[10px] sm:text-xs font-bold shadow-md whitespace-nowrap">
+            PO: {formatPreOrderTime()}
           </div>
         )}
       </div>
 
       {/* Product Info */}
       <div className="p-3 sm:p-4">
-        <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-red-600 transition-colors">
+        <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-red-600 transition-colors break-words">
           {name}
         </h3>
-        <p className="text-xs text-gray-600 mb-2">{brand}</p>
+        <p className="text-xs text-gray-600 mb-2 truncate">{brand}</p>
         {discount && discount > 0 ? (
           <div className="mb-3">
             <div className="flex items-center gap-1.5 mb-0.5">
