@@ -52,11 +52,30 @@ export default function ShopPage() {
 
   useEffect(() => {
     const searchParam = searchParams.get('search');
+    const categoryParam = searchParams.get('category');
+    
     if (searchParam) {
       setSearchQuery(searchParam);
       setSelectedCategory('Semua');
     }
-  }, [searchParams]);
+    
+    if (categoryParam) {
+      // Normalize category parameter to match category names
+      const normalizeCategory = (str: string) => 
+        str.toLowerCase()
+          .replace(/\s*\/\s*/g, '-')  // Replace / with surrounding spaces with -
+          .replace(/\s+/g, '-')        // Replace spaces with -
+          .replace(/-+/g, '-')         // Replace multiple - with single -
+          .trim();
+      
+      const matchedCategory = categories.find(cat => normalizeCategory(cat.name) === normalizeCategory(categoryParam));
+      
+      if (matchedCategory) {
+        setSelectedCategory(matchedCategory.name);
+        setSearchQuery('');
+      }
+    }
+  }, [searchParams, categories]);
 
   const loadRequestsFromStorage = () => {
     try {
