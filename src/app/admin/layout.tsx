@@ -8,7 +8,9 @@ import { DangerButton } from '@/src/components/ui';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: '📊' },
-  { name: 'Products', href: '/admin/products', icon: '📦' },
+  { name: 'Orders', href: '/admin/orders', icon: '📦' },
+  { name: 'Product Requests', href: '/admin/product-requests', icon: '📝' },
+  { name: 'Products', href: '/admin/products', icon: '🛍️' },
   { name: 'Categories', href: '/admin/categories', icon: '🏷️' },
   { name: 'Brands', href: '/admin/brands', icon: '🏢' },
   { name: 'Missions', href: '/admin/missions', icon: '🎯' },

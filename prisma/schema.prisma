@@ -45,6 +45,7 @@ model User {
   orders      Order[] @relation("UserOrders")
   referredOrders Order[] @relation("UserReferredOrders")
   withdrawals Withdrawal[] @relation("UserWithdrawals")
+  productRequests ProductRequest[] @relation("UserProductRequests")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -444,4 +445,52 @@ model Withdrawal {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+enum ProductRequestStatus {
+  PENDING
+  REVIEWING
+  QUOTED
+  REJECTED
+}
+
+model ProductRequest {
+  id            Int      @id @default(autoincrement())
+  
+  userId        Int
+  user          User     @relation("UserProductRequests", fields: [userId], references: [id])
+  
+  status        ProductRequestStatus @default(PENDING)
+  
+  // Requested products
+  products      ProductRequestItem[]
+  
+  // Admin response
+  adminNotes    String?
+  quotedPrice   Decimal?  @db.Decimal(12, 2)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enabled Boolean @default(true)
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ProductRequestItem {
+  id                Int      @id @default(autoincrement())
+  
+  productRequestId  Int
+  productRequest    ProductRequest @relation(fields: [productRequestId], references: [id], onDelete: Cascade)
+  
+  name              String
+  description       String?
+  quantity          Int      @default(1)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enabled Boolean @default(true)
+  
+  @@index([productRequestId])
 }

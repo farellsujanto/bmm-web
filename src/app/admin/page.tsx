@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 
 interface DashboardStats {
+  totalOrders: number;
+  totalProductRequests: number;
   totalProducts: number;
   totalCategories: number;
   totalBrands: number;
@@ -12,6 +14,8 @@ interface DashboardStats {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
+    totalOrders: 0,
+    totalProductRequests: 0,
     totalProducts: 0,
     totalCategories: 0,
     totalBrands: 0,
@@ -25,7 +29,9 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      const [products, categories, brands, missions] = await Promise.all([
+      const [orders, productRequests, products, categories, brands, missions] = await Promise.all([
+        apiRequest.get('/v1/admin/orders/count'),
+        apiRequest.get('/v1/admin/product-requests/count'),
         apiRequest.get('/v1/admin/products/count'),
         apiRequest.get('/v1/admin/categories/count'),
         apiRequest.get('/v1/admin/brands/count'),
@@ -33,6 +39,8 @@ export default function AdminDashboard() {
       ]);
 
       setStats({
+        totalOrders: (orders.data as number) || 0,
+        totalProductRequests: (productRequests.data as number) || 0,
         totalProducts: (products.data as number) || 0,
         totalCategories: (categories.data as number) || 0,
         totalBrands: (brands.data as number) || 0,
@@ -46,6 +54,8 @@ export default function AdminDashboard() {
   };
 
   const statCards = [
+    { label: 'Total Orders', value: stats.totalOrders, icon: '🛒', color: 'bg-cyan-500' },
+    { label: 'Product Requests', value: stats.totalProductRequests, icon: '📝', color: 'bg-amber-500' },
     { label: 'Total Products', value: stats.totalProducts, icon: '📦', color: 'bg-blue-500' },
     { label: 'Categories', value: stats.totalCategories, icon: '🏷️', color: 'bg-green-500' },
     { label: 'Brands', value: stats.totalBrands, icon: '🏢', color: 'bg-purple-500' },
@@ -61,7 +71,7 @@ export default function AdminDashboard() {
           <div className="text-lg text-gray-600">Loading...</div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {statCards.map((stat) => (
             <div
               key={stat.label}
@@ -83,7 +93,19 @@ export default function AdminDashboard() {
 
       <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <a
+            href="/admin/orders"
+            className="px-6 py-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors text-center"
+          >
+            View Orders
+          </a>
+          <a
+            href="/admin/product-requests"
+            className="px-6 py-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors text-center"
+          >
+            View Product Requests
+          </a>
           <a
             href="/admin/products"
             className="px-6 py-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors text-center"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import ProductCard from '../components/ProductCard';
 import CartSidebar from '../components/CartSidebar';
 import { apiRequest } from '@/src/utils/api/apiRequest';
@@ -23,6 +23,7 @@ const STORAGE_KEY = 'bmm_product_requests';
 
 export default function ShopPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated } = useAuth();
   const { showAlert } = useAlert();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -40,6 +41,14 @@ export default function ShopPage() {
     loadData();
     loadRequestsFromStorage();
   }, []);
+
+  useEffect(() => {
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+      setSelectedCategory('Semua');
+    }
+  }, [searchParams]);
 
   const loadRequestsFromStorage = () => {
     try {

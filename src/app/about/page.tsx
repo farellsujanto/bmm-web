@@ -9,7 +9,7 @@ export default function AboutPage() {
         <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-bold mb-6">Tentang Kami</h1>
           <p className="text-xl md:text-2xl text-gray-200">
-            Memimpin industri suku cadang teknik sejak 2025
+            Memimpin industri suku cadang teknik
           </p>
         </div>
       </section>
@@ -97,7 +97,7 @@ export default function AboutPage() {
                   dan insinyur di seluruh Indonesia.
                 </p>
                 <p>
-                  Selama bertahun-tahun, kami telah membangun kemitraan yang kuat dengan produsen terkemuka di seluruh dunia, 
+                  Kami telah membangun kemitraan yang kuat dengan produsen terkemuka di seluruh dunia, 
                   memastikan bahwa pelanggan kami memiliki akses ke produk terbaik yang tersedia. Komitmen kami 
                   terhadap keunggulan telah memberi kami kepercayaan dari lebih dari 1.000 klien yang puas.
                 </p>
@@ -121,7 +121,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Team/Certifications */}
+      {/* Team/Certifications
       <section className="py-20 px-6 bg-black text-white">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-4">Keunggulan Bersertifikat</h2>
@@ -147,7 +147,7 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 }

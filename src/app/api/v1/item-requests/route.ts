@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/src/utils/security/apiGuard.util';
+import { JwtData } from '@/src/utils/security/models/jwt.model';
 import prisma from '@/src/utils/database/prismaOrm.util';
 
 interface RequestProduct {
@@ -7,7 +9,7 @@ interface RequestProduct {
   quantity: number;
 }
 
-export async function POST(request: NextRequest) {
+async function createProductRequestHandler(request: NextRequest, user: JwtData) {
   try {
     const body = await request.json();
     const { products } = body as { products: RequestProduct[] };
@@ -28,17 +30,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For now, just log the request
-    // TODO: Store in database or send notification
-    console.log('Product request received:', validProducts);
+    // Create product request in database
+    const productRequest = await prisma.productRequest.create({
+      data: {
+        userId: user.id,
+        products: {
+          create: validProducts.map(p => ({
+            name: p.name.trim(),
+            description: p.description?.trim() || null,
+            quantity: p.quantity || 1,
+          })),
+        },
+      },
+      include: {
+        products: true,
+      },
+    });
 
     return NextResponse.json(
       { 
         success: true, 
         message: 'Product request submitted successfully',
-        data: { requestedProducts: validProducts }
+        data: productRequest
       },
-      { status: 200 }
+      { status: 201 }
     );
   } catch (error: any) {
     console.error('Failed to process product request:', error);
@@ -48,3 +63,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = requireAuth(createProductRequestHandler);
