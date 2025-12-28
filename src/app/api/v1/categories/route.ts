@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
+    console.error('Failed to retrieve categories:', error);
     return NextResponse.json(
       { success: false, message: 'Failed to retrieve categories', error: error.message },
       { status: 500 }

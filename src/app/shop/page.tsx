@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ProductCard from '../components/ProductCard';
 import CartSidebar from '../components/CartSidebar';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { Category, Product, ProductImage } from '@/generated/prisma/browser';
-import { useCart } from '@/src/contexts/CartContext';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useAlert } from '@/src/contexts/AlertContext';
 import { PrimaryInput } from '@/src/components/ui/Input';
@@ -29,7 +27,7 @@ type CacheData<T> = {
   timestamp: number;
 };
 
-export default function ShopPage() {
+function ShopContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuth();
@@ -43,7 +41,6 @@ export default function ShopPage() {
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestProducts, setRequestProducts] = useState([{ name: '', description: '', quantity: 1 }]);
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
-  const { items, removeFromCart, updateQuantity, totalItems, totalPrice, clearCart } = useCart();
 
   useEffect(() => {
     loadData();
@@ -472,5 +469,20 @@ export default function ShopPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-red-600 mx-auto mb-4"></div>
+          <p className="text-xl text-gray-600">Memuat produk...</p>
+        </div>
+      </div>
+    }>
+      <ShopContent />
+    </Suspense>
   );
 }

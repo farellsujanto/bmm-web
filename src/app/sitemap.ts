@@ -8,7 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const productsUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const response = await fetch(`${productsUrl}/api/v1/products`, {
-      cache: 'no-store',
+      next: { revalidate: 3600 }, // Revalidate every hour
     });
     
     if (response.ok) {

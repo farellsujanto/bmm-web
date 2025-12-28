@@ -130,6 +130,7 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
+    console.error('Failed to retrieve products:', error);
     return NextResponse.json(
       { success: false, message: 'Failed to retrieve products', error: error.message },
       { status: 500 }
