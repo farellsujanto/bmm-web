@@ -1,5 +1,15 @@
 import { MetadataRoute } from 'next';
 
+// Helper function to escape XML entities
+function escapeXml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://bmmparts.co.id';
 
@@ -69,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const productRoutes = products
     .filter((product) => product.slug && product.isActive)
     .map((product) => ({
-      url: `${baseUrl}/shop/${product.slug}`,
+      url: `${baseUrl}/shop/${encodeURIComponent(product.slug)}`,
       lastModified: new Date(product.updatedAt || product.createdAt || Date.now()),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
