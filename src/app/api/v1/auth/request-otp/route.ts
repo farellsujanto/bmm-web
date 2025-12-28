@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check if 55 seconds have passed since last OTP request
-    if (existingOtp) {
+    // Check if existing OTP hasn't been used yet and is still valid
+    if (existingOtp && existingOtp.otp !== 'XXXXXX') {
       const now = new Date();
       const lastRequestTime = existingOtp.updatedAt;
       const timeSinceLastRequest = (now.getTime() - lastRequestTime.getTime()) / 1000; // in seconds
@@ -117,7 +117,8 @@ export async function POST(request: NextRequest) {
     const expiresAt = createOtpExpiry(1); // 1 minute
 
     // Store or update OTP in database
-    const resendCount = existingOtp ? existingOtp.resendCount + 1 : 0;
+    // Reset resend count if previous OTP was used (XXXXXX), otherwise increment
+    const resendCount = existingOtp && existingOtp.otp !== 'XXXXXX' ? existingOtp.resendCount + 1 : 0;
     await prisma.phoneOtp.upsert({
       where: { phoneNumber: validatedPhoneNumber },
       update: {

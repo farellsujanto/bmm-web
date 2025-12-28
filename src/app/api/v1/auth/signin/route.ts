@@ -66,6 +66,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if OTP has already been used
+    if (phoneOtpRecord.otp === 'XXXXXX') {
+      return NextResponse.json(
+        { success: false, message: 'Kode OTP tidak valid. Silakan minta kode baru.' },
+        { status: 400 }
+      );
+    }
+
     // Check if OTP has expired
     if (isOtpExpired(phoneOtpRecord.expiresAt)) {
       return NextResponse.json(
@@ -200,12 +208,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Delete used OTP
-    console.log('Deleting used OTP for phone number:', validatedPhoneNumber);
-    await prisma.phoneOtp.delete({
-      where: { phoneNumber: validatedPhoneNumber }
+    // Mark OTP as used
+    console.log('Marking OTP as used for phone number:', validatedPhoneNumber);
+    await prisma.phoneOtp.update({
+      where: { phoneNumber: validatedPhoneNumber },
+      data: {
+        otp: 'XXXXXX',
+        wrongAttempts: 0
+      }
     });
-    console.log('Deleted used OTP for phone number:', validatedPhoneNumber);
+    console.log('Marked OTP as used for phone number:', validatedPhoneNumber);
 
     // Generate access token (15 minutes) and refresh token (7 days)
     const accessToken = createAccessToken({
