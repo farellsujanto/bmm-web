@@ -1,120 +1,96 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
+import BrandPageLayout from '../components/BrandPageLayout';
 
 export const metadata: Metadata = {
-  title: 'VIBCO Industrial Vibrators Indonesia | BMM Parts',
-  description: 'Premium VIBCO industrial vibrators for material handling in Indonesia. Electric vibrators, pneumatic vibrators, turbine vibrators for hoppers, bins, chutes, conveyors. Prevent material bridging and blockages. Expert support, genuine VIBCO products.',
-  keywords: 'vibco indonesia, vibco vibrator, industrial vibrator, pneumatic vibrator, electric vibrator, turbine vibrator, hopper vibrator, bin vibrator, material flow, vibco distributor indonesia, vibrator jakarta, concrete vibrator industrial',
+  title: 'VIBCO Vibrator Industri Indonesia | BMM Parts',
+  description: 'Vibrator industri premium VIBCO untuk material handling di Indonesia. Electric vibrator, pneumatic vibrator, turbine vibrator untuk hopper, bin, chute, conveyor. Mencegah material bridging dan blockage. Dukungan ahli, produk VIBCO asli.',
+  keywords: 'vibco indonesia, vibco vibrator, vibrator industri, pneumatic vibrator, electric vibrator, turbine vibrator, hopper vibrator, bin vibrator, material flow, distributor vibco indonesia, vibrator jakarta, vibrator beton industri',
   openGraph: {
-    title: 'VIBCO Industrial Vibrators Indonesia | BMM Parts',
-    description: 'Premium industrial vibrators for material handling and flow control.',
-    url: 'https://bmm-parts.com/brands/vibco',
+    title: 'VIBCO Vibrator Industri Indonesia | BMM Parts',
+    description: 'Vibrator industri premium untuk material handling dan kontrol aliran.',
+    url: 'https://bmmparts.co.id/brands/vibco',
   },
 };
 
 export default function VIBCOBrandPage() {
-  return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            VIBCO Industrial Vibrators Indonesia
-          </h1>
-          <p className="text-xl text-gray-600">
-            Premium vibration solutions for material flow and handling applications
-          </p>
-        </div>
+  const brandData = {
+    hero: {
+      title: 'VIBCO Vibrator Industri Indonesia',
+      subtitle: 'Solusi vibrasi premium untuk aplikasi aliran material dan handling',
+    },
+    about: {
+      title: 'Tentang VIBCO',
+      paragraphs: [
+        'VIBCO Vibrators adalah produsen terkemuka vibrator industri, menyediakan solusi inovatif untuk tantangan aliran material dan handling. Dengan pengalaman puluhan tahun, VIBCO menghadirkan peralatan vibrasi yang handal dan dipercaya di berbagai industri di seluruh dunia.',
+        'BMM Parts adalah distributor resmi VIBCO di Indonesia, menawarkan vibrator VIBCO asli dengan dukungan application engineering, panduan instalasi, dan layanan purna jual yang komprehensif.',
+      ],
+    },
+    products: {
+      title: 'Rangkaian Produk VIBCO',
+      categories: [
+        {
+          title: 'Pneumatic Vibrator',
+          description: 'Ball, piston, dan turbine pneumatic vibrator untuk berbagai aplikasi',
+        },
+        {
+          title: 'Electric Vibrator',
+          description: 'Rotary electric vibrator dengan force dan frekuensi yang dapat disesuaikan',
+        },
+        {
+          title: 'Turbine Vibrator',
+          description: 'High-frequency turbine vibrator untuk material halus',
+        },
+        {
+          title: 'Silent Pneumatic Vibrator',
+          description: 'Low-noise vibrator untuk lingkungan yang sensitif terhadap kebisingan',
+        },
+        {
+          title: 'Bin Activator',
+          description: 'Vibrator skala besar untuk silo dan penyimpanan curah',
+        },
+        {
+          title: 'Kontrol & Aksesoris',
+          description: 'Timer, controller, dan aksesoris mounting',
+        },
+      ],
+    },
+    applications: {
+      title: 'Aplikasi',
+      sections: [
+        {
+          title: 'Aliran Material',
+          items: [
+            'Discharge hopper dan bin',
+            'Peningkatan aliran chute',
+            'Pembersihan conveyor belt',
+            'Sistem discharge silo',
+            'Vibrasi feeder',
+          ],
+        },
+        {
+          title: 'Industri',
+          items: [
+            'Pemrosesan dan packaging makanan',
+            'Kimia dan farmasi',
+            'Pertambangan dan agregat',
+            'Semen dan beton',
+            'Daur ulang dan pengelolaan limbah',
+          ],
+        },
+      ],
+    },
+    cta: {
+      title: 'Selesaikan Masalah Material Flow',
+      description: 'Dapatkan bantuan ahli dalam memilih vibrator yang tepat untuk aplikasi Anda',
+      searchQuery: 'vibco',
+      primaryButtonText: 'Lihat Produk VIBCO',
+      secondaryButtonText: 'Application Engineering',
+      bgColor: 'bg-yellow-500',
+      textColor: 'text-gray-900',
+      buttonColor: 'bg-gray-900',
+      buttonTextColor: 'text-white',
+    },
+  };
 
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">About VIBCO</h2>
-          <div className="prose prose-lg max-w-none">
-            <p className="text-gray-700 mb-4">
-              VIBCO Vibrators is a leading manufacturer of industrial vibrators, providing innovative solutions 
-              for material flow and handling challenges. With decades of experience, VIBCO delivers reliable 
-              vibration equipment trusted across industries worldwide.
-            </p>
-            <p className="text-gray-700 mb-4">
-              BMM Parts is an authorized VIBCO distributor in Indonesia, offering genuine VIBCO vibrators with 
-              application engineering support, installation guidance, and comprehensive after-sales service.
-            </p>
-          </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">VIBCO Product Range</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Pneumatic Vibrators</h3>
-              <p className="text-gray-600">Ball, piston, and turbine pneumatic vibrators for various applications</p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Electric Vibrators</h3>
-              <p className="text-gray-600">Rotary electric vibrators with adjustable force and frequency</p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Turbine Vibrators</h3>
-              <p className="text-gray-600">High-frequency turbine vibrators for fine materials</p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Silent Pneumatic Vibrators</h3>
-              <p className="text-gray-600">Low-noise vibrators for noise-sensitive environments</p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Bin Activators</h3>
-              <p className="text-gray-600">Large-scale vibrators for silos and bulk storage</p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Controls & Accessories</h3>
-              <p className="text-gray-600">Timers, controllers, and mounting accessories</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Applications</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Material Flow</h3>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Hopper and bin discharge</li>
-                <li>Chute flow enhancement</li>
-                <li>Conveyor belt cleaning</li>
-                <li>Silo discharge systems</li>
-                <li>Feeder vibration</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Industries</h3>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Food processing and packaging</li>
-                <li>Chemical and pharmaceutical</li>
-                <li>Mining and aggregates</li>
-                <li>Cement and concrete</li>
-                <li>Recycling and waste management</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-yellow-500 text-gray-900 rounded-lg p-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">Solve Material Flow Problems</h2>
-          <p className="text-xl mb-6">Get expert help selecting the right vibrator for your application</p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link 
-              href="/shop?brand=vibco" 
-              className="bg-gray-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
-            >
-              Browse VIBCO Products
-            </Link>
-            <Link 
-              href="/contact" 
-              className="border-2 border-gray-900 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition"
-            >
-              Application Engineering
-            </Link>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
+  return <BrandPageLayout {...brandData} />;
 }

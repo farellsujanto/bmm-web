@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const discount = Number(product.discount) || 0;
   const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
   const imageUrl = product.images?.[0]?.url || '/images/default-product.jpg';
-  const productUrl = `https://bmm-parts.com/shop/${product.slug}`;
+  const productUrl = `https://bmmparts.co.id/shop/${product.slug}`;
 
   // Create a clean description with brand emphasis
   const brandName = product.brand?.name || 'trusted brand';
@@ -162,7 +162,7 @@ export default async function ProductDetailPage({ params }: Props) {
       },
       offers: {
         '@type': 'Offer',
-        url: `https://bmm-parts.com/shop/${product.slug}`,
+        url: `https://bmmparts.co.id/shop/${product.slug}`,
         priceCurrency: 'IDR',
         price: finalPrice,
         priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],

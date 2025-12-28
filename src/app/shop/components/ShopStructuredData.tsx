@@ -27,7 +27,7 @@ export default function ShopStructuredData({ products }: ShopStructuredDataProps
           },
           "offers": {
             "@type": "Offer",
-            "url": `https://bmm-parts.com/shop/${product.slug}`,
+            "url": `https://bmmparts.co.id/shop/${product.slug}`,
             "priceCurrency": "IDR",
             "price": Number(product.price) || 0,
             "availability": "https://schema.org/InStock",

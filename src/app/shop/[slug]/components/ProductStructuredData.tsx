@@ -25,7 +25,7 @@ export default function ProductStructuredData({ product }: ProductStructuredData
       "sku": product.sku || product.slug,
       "offers": {
         "@type": "Offer",
-        "url": `https://bmm-parts.com/shop/${product.slug}`,
+        "url": `https://bmmparts.co.id/shop/${product.slug}`,
         "priceCurrency": "IDR",
         "price": finalPrice,
         "availability": product.isPreOrder 

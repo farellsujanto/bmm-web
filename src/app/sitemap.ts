@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://bmm-parts.com';
+  const baseUrl = 'https://bmmparts.co.id';
 
   // Fetch all products for dynamic sitemap
   let products: any[] = [];

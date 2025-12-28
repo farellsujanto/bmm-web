@@ -1,120 +1,94 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
+import BrandPageLayout from '../components/BrandPageLayout';
 
 export const metadata: Metadata = {
-  title: 'HIKRobot & Hikvision Industrial Vision Systems Indonesia | BMM Parts',
-  description: 'Authorized HIKRobot and Hikvision distributor in Indonesia. Industrial cameras, machine vision systems, barcode readers, 3D vision, AI inspection systems. Smart factory automation, quality control solutions, technical support.',
-  keywords: 'hikrobot indonesia, hikvision industrial, hikrobot camera, machine vision indonesia, industrial camera, hikvision industrial camera, barcode reader, 3d vision system, ai inspection, vision system indonesia, smart factory, hikrobot distributor, hikvision distributor jakarta',
+  title: 'HIKRobot & Hikvision Sistem Vision Industri Indonesia | BMM Parts',
+  description: 'Distributor resmi HIKRobot dan Hikvision di Indonesia. Kamera industri, sistem machine vision, barcode reader, 3D vision, sistem inspeksi AI. Otomasi smart factory, solusi quality control, dukungan teknis.',
+  keywords: 'hikrobot indonesia, hikvision industrial, kamera hikrobot, machine vision indonesia, kamera industri, hikvision industrial camera, barcode reader, sistem 3d vision, ai inspection, vision system indonesia, smart factory, distributor hikrobot, distributor hikvision jakarta',
   openGraph: {
-    title: 'HIKRobot & Hikvision Industrial Vision Systems | BMM Parts',
-    description: 'Industrial cameras and machine vision systems for automation and quality control.',
-    url: 'https://bmm-parts.com/brands/hikrobot-hikvision',
+    title: 'HIKRobot & Hikvision Sistem Vision Industri | BMM Parts',
+    description: 'Kamera industri dan sistem machine vision untuk otomasi dan quality control.',
+    url: 'https://bmmparts.co.id/brands/hikrobot-hikvision',
   },
 };
 
 export default function HIKRobotHikvisionPage() {
-  return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            HIKRobot & Hikvision Industrial Vision Systems Indonesia
-          </h1>
-          <p className="text-xl text-gray-600">
-            Advanced machine vision and industrial camera solutions for smart manufacturing
-          </p>
-        </div>
+  const brandData = {
+    hero: {
+      title: 'HIKRobot & Hikvision - Sistem Vision Industri Indonesia',
+      subtitle: 'Solusi machine vision dan kamera industri canggih untuk smart manufacturing',
+    },
+    about: {
+      title: 'Tentang HIKRobot & Hikvision Industrial',
+      paragraphs: [
+        'HIKRobot dan Hikvision Industrial adalah penyedia terkemuka solusi machine vision dan otomasi industri. Memanfaatkan teknologi AI dan imaging canggih, mereka menghadirkan sistem vision komprehensif untuk aplikasi quality control, inspeksi, pengukuran, dan identifikasi.',
+        'Sebagai distributor resmi di Indonesia, BMM Parts menawarkan solusi vision HIKRobot dan Hikvision yang lengkap dengan dukungan integrasi teknis, pelatihan, dan layanan purna jual lokal.',
+      ],
+    },
+    products: {
+      title: 'Produk Sistem Vision',
+      categories: [
+        {
+          title: 'Kamera Industri',
+          description: 'Kamera area scan dan line scan resolusi tinggi dengan interface GigE dan USB3',
+        },
+        {
+          title: 'Smart Camera',
+          description: 'Sistem vision all-in-one dengan pemrosesan terintegrasi dan I/O',
+        },
+        {
+          title: 'Sistem 3D Vision',
+          description: 'Kamera 3D untuk pengukuran dimensi dan inspeksi',
+        },
+        {
+          title: 'Barcode Reader',
+          description: 'Industrial code reader untuk barcode 1D/2D dan OCR',
+        },
+        {
+          title: 'Vision Software',
+          description: 'MVS development kit dan software inspeksi VisionMaster',
+        },
+        {
+          title: 'Lensa & Aksesoris',
+          description: 'Lensa industri, lighting, dan aksesoris mounting',
+        },
+      ],
+    },
+    applications: {
+      title: 'Aplikasi',
+      sections: [
+        {
+          title: 'Quality Control',
+          items: [
+            'Deteksi cacat dan inspeksi',
+            'Pengukuran dimensi',
+            'Verifikasi warna',
+            'Inspeksi permukaan',
+            'Verifikasi perakitan',
+          ],
+        },
+        {
+          title: 'Otomasi & Tracking',
+          items: [
+            'Robot guidance dan positioning',
+            'Pembacaan barcode dan OCR',
+            'Package sorting',
+            'Sistem traceability',
+            'Smart logistics',
+          ],
+        },
+      ],
+    },
+    cta: {
+      title: 'Tingkatkan Quality Control Anda',
+      description: 'Temukan bagaimana machine vision dapat mentransformasi proses manufaktur Anda',
+      searchQuery: 'hikrobot',
+      primaryButtonText: 'Lihat Sistem Vision',
+      secondaryButtonText: 'Minta Konsultasi',
+      bgColor: 'bg-indigo-600',
+      buttonTextColor: 'text-indigo-600',
+    },
+  };
 
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">About HIKRobot & Hikvision Industrial</h2>
-          <div className="prose prose-lg max-w-none">
-            <p className="text-gray-700 mb-4">
-              HIKRobot and Hikvision Industrial are leading providers of machine vision and industrial automation 
-              solutions. Leveraging advanced AI and imaging technologies, they deliver comprehensive vision systems 
-              for quality control, inspection, measurement, and identification applications.
-            </p>
-            <p className="text-gray-700 mb-4">
-              As an authorized distributor in Indonesia, BMM Parts offers complete HIKRobot and Hikvision industrial 
-              vision solutions with technical integration support, training, and local after-sales service.
-            </p>
-          </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Vision System Products</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Industrial Cameras</h3>
-              <p className="text-gray-600">High-resolution area scan and line scan cameras with GigE and USB3 interfaces</p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Smart Cameras</h3>
-              <p className="text-gray-600">All-in-one vision systems with integrated processing and I/O</p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">3D Vision Systems</h3>
-              <p className="text-gray-600">3D cameras for dimensional measurement and inspection</p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Barcode Readers</h3>
-              <p className="text-gray-600">Industrial code readers for 1D/2D barcodes and OCR</p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Vision Software</h3>
-              <p className="text-gray-600">MVS development kits and VisionMaster inspection software</p>
-            </div>
-            <div className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold mb-3">Lenses & Accessories</h3>
-              <p className="text-gray-600">Industrial lenses, lighting, and mounting accessories</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Applications</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Quality Control</h3>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Defect detection and inspection</li>
-                <li>Dimensional measurement</li>
-                <li>Color verification</li>
-                <li>Surface inspection</li>
-                <li>Assembly verification</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-3">Automation & Tracking</h3>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Robot guidance and positioning</li>
-                <li>Barcode and OCR reading</li>
-                <li>Package sorting</li>
-                <li>Traceability systems</li>
-                <li>Smart logistics</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-indigo-600 text-white rounded-lg p-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">Upgrade Your Quality Control</h2>
-          <p className="text-xl mb-6">Discover how machine vision can transform your manufacturing process</p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link 
-              href="/shop?brand=hikrobot" 
-              className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
-            >
-              Browse Vision Systems
-            </Link>
-            <Link 
-              href="/contact" 
-              className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
-            >
-              Request Consultation
-            </Link>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
+  return <BrandPageLayout {...brandData} />;
 }

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: "BMM Parts - Premium Industrial Spareparts | Norgren, SMC, HIKRobot, Continental",
     description: "Authorized distributor of Norgren, SMC, HIKRobot, Hikvision, Continental, Contitech, VIBCO and more. Genuine industrial spareparts for your manufacturing needs.",
     type: "website",
-    url: "https://bmm-parts.com",
+    url: "https://bmmparts.co.id",
     siteName: "BMM Parts",
     locale: "id_ID",
     images: [
@@ -49,14 +49,13 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://bmm-parts.com",
+    canonical: "https://bmmparts.co.id",
   },
   verification: {
     google: "your-google-verification-code",
   },
   other: {
-    'og:phone_number': '+62-xxx-xxxx-xxxx',
-    'og:email': 'info@bmm-parts.com',
+    'og:email': 'info@bmmparts.co.id',
     'og:country-name': 'Indonesia',
   },
 };
@@ -71,8 +70,8 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'BMM Parts',
-    url: 'https://bmm-parts.com',
-    logo: 'https://bmm-parts.com/images/logo.png',
+    url: 'https://bmmparts.co.id',
+    logo: 'https://bmmparts.co.id/images/logo.png',
     description: 'Leading distributor of premium industrial spareparts in Indonesia including Norgren, SMC, HIKRobot, Hikvision, Continental, Contitech, and VIBCO',
     address: {
       '@type': 'PostalAddress',

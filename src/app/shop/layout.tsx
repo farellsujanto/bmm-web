@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: "Shop Industrial Spareparts - Norgren, SMC, HIKRobot, Continental | BMM Parts",
     description: "Premium industrial components from Norgren, SMC, HIKRobot, Hikvision, Continental, Contitech, VIBCO. Authorized distributor in Indonesia.",
     type: "website",
-    url: "https://bmm-parts.com/shop",
+    url: "https://bmmparts.co.id/shop",
     siteName: "BMM Parts",
     images: [
       {
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://bmm-parts.com/shop",
+    canonical: "https://bmmparts.co.id/shop",
   },
 };
 
