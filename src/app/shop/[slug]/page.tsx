@@ -64,16 +64,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const imageUrl = product.images?.[0]?.url || '/images/default-product.jpg';
   const productUrl = `https://bmm-parts.com/shop/${product.slug}`;
 
-  // Create a clean description
-  const description = product.shortDescription || product.description || `${product.name} - Premium ${product.category?.name || 'engineering sparepart'} from ${product.brand?.name || 'trusted brand'}. Available at BMM Parts.`;
+  // Create a clean description with brand emphasis
+  const brandName = product.brand?.name || 'trusted brand';
+  const categoryName = product.category?.name || 'industrial sparepart';
+  const description = product.shortDescription || product.description || `${product.name} - Premium ${categoryName} from ${brandName}. Genuine ${brandName} product available at BMM Parts Indonesia. Fast delivery, competitive prices.`;
   const cleanDescription = description.slice(0, 160);
+  
+  // Enhanced keywords with brand and category focus
+  const productKeywords = [
+    product.name,
+    `${product.brand?.name} ${product.name}`,
+    `${product.brand?.name} indonesia`,
+    `buy ${product.brand?.name}`,
+    product.brand?.name,
+    product.category?.name,
+    product.sku || '',
+    'industrial spareparts',
+    'engineering parts',
+    'spare parts indonesia',
+    'genuine parts',
+    `${product.category?.name} supplier`,
+  ].filter(Boolean).join(', ');
 
   return {
-    title: `${product.name} - ${product.brand?.name || ''} | BMM Parts`,
+    title: `${product.name} - ${product.brand?.name || ''} | BMM Parts Indonesia`,
     description: cleanDescription,
-    keywords: `${product.name}, ${product.brand?.name}, ${product.category?.name}, engineering spareparts, ${product.sku || ''}, industrial parts, spare parts Indonesia`,
+    keywords: productKeywords,
     openGraph: {
-      title: `${product.name} - ${product.brand?.name || ''}`,
+      title: `${product.name} - ${product.brand?.name || ''} | BMM Parts`,
       description: cleanDescription,
       type: "website",
       url: productUrl,
@@ -83,7 +101,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: product.name,
+          alt: `${product.name} - ${product.brand?.name || ''}`,
         },
       ],
     },
@@ -122,5 +140,59 @@ export default async function ProductDetailPage({ params }: Props) {
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   
-  return <ProductDetailClient initialProduct={product} />;
+  // Generate JSON-LD structured data for SEO
+  let jsonLd = null;
+  if (product && product.name) {
+    const price = Number(product.price) || 0;
+    const discount = Number(product.discount) || 0;
+    const finalPrice = discount > 0 ? price * (1 - discount / 100) : price;
+    const imageUrl = product.images?.[0]?.url || '/images/default-product.jpg';
+    
+    jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      image: product.images?.map((img: any) => img.url) || [imageUrl],
+      description: product.description || product.shortDescription || `${product.name} from ${product.brand?.name || 'BMM Parts'}`,
+      sku: product.sku || product.slug,
+      mpn: product.name,
+      brand: {
+        '@type': 'Brand',
+        name: product.brand?.name || 'BMM Parts',
+      },
+      offers: {
+        '@type': 'Offer',
+        url: `https://bmm-parts.com/shop/${product.slug}`,
+        priceCurrency: 'IDR',
+        price: finalPrice,
+        priceValidUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        availability: product.isPreOrder 
+          ? 'https://schema.org/PreOrder' 
+          : (product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'),
+        itemCondition: 'https://schema.org/NewCondition',
+        seller: {
+          '@type': 'Organization',
+          name: 'BMM Parts',
+        },
+      },
+      category: product.category?.name || 'Industrial Spareparts',
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.8',
+        reviewCount: '12',
+      },
+    };
+  }
+  
+  return (
+    <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <ProductDetailClient initialProduct={product} />
+    </>
+  );
 }

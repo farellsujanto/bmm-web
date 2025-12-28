@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Shop - Premium Engineering Spareparts | BMM Parts",
-  description: "Browse our comprehensive catalog of premium engineering spareparts. Find bearings, belts, chains, motors, pumps, and more from trusted brands. Quality industrial components for all your needs.",
-  keywords: "engineering spareparts, industrial parts, bearings, belts, chains, motors, pumps, hydraulic components, pneumatic parts, mechanical components, spare parts Indonesia",
+  title: "Shop Industrial Spareparts - Norgren, SMC, HIKRobot, Continental, VIBCO | BMM Parts",
+  description: "Browse industrial spareparts from top brands: Norgren pneumatic valves & cylinders, SMC automation components, HIKRobot vision systems, Hikvision industrial cameras, Continental & Contitech seal kits, VIBCO industrial vibrators. Genuine products, competitive prices, fast Indonesia delivery.",
+  keywords: "buy norgren indonesia, smc catalog, hikrobot price, hikvision industrial camera, continental seal kit catalog, contitech distributor, vibco vibrator, parker hannifin, festo, bosch rexroth, pneumatic cylinder, solenoid valve, air filter regulator, hydraulic seal, o-ring seal, mechanical seal, industrial camera, barcode reader, linear actuator, industrial parts online indonesia",
   openGraph: {
-    title: "Shop - Premium Engineering Spareparts | BMM Parts",
-    description: "Browse our comprehensive catalog of premium engineering spareparts. Quality industrial components from trusted brands.",
+    title: "Shop Industrial Spareparts - Norgren, SMC, HIKRobot, Continental | BMM Parts",
+    description: "Premium industrial components from Norgren, SMC, HIKRobot, Hikvision, Continental, Contitech, VIBCO. Authorized distributor in Indonesia.",
     type: "website",
     url: "https://bmm-parts.com/shop",
     siteName: "BMM Parts",
@@ -15,14 +15,14 @@ export const metadata: Metadata = {
         url: "/images/shop-og.jpg",
         width: 1200,
         height: 630,
-        alt: "BMM Parts Shop - Engineering Spareparts",
+        alt: "BMM Parts Industrial Spareparts Catalog",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Shop - Premium Engineering Spareparts | BMM Parts",
-    description: "Browse our comprehensive catalog of premium engineering spareparts. Quality industrial components from trusted brands.",
+    title: "Shop Industrial Spareparts - Norgren, SMC, HIKRobot | BMM Parts",
+    description: "Premium industrial components from top brands. Authorized distributor in Indonesia.",
     images: ["/images/shop-og.jpg"],
   },
   robots: {
