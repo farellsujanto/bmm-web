@@ -80,10 +80,10 @@ export default function ContinentalContitechPage() {
       ],
     },
     cta: {
-      title: 'Butuh Solusi Seal?',
-      description: 'Dapatkan bantuan ahli dalam memilih seal kit yang tepat untuk aplikasi Anda',
+      title: 'Butuh Produk Continental & Contitech?',
+      description: 'Dapatkan bantuan ahli dalam memilih barang yang tepat untuk aplikasi Anda',
       searchQuery: 'continental',
-      primaryButtonText: 'Lihat Produk Seal',
+      primaryButtonText: 'Lihat Produk Continental & Contitech',
       secondaryButtonText: 'Dukungan Teknis',
       bgColor: 'bg-orange-600',
       buttonTextColor: 'text-orange-600',

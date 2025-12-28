@@ -15,7 +15,7 @@ export default function ProductCategories({ title, categories }: ProductCategori
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {categories.map((category, index) => (
           <div key={index} className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
-            <h3 className="text-xl font-semibold mb-3">{category.title}</h3>
+            <h3 className="text-xl font-semibold mb-3 text-gray-900">{category.title}</h3>
             <p className="text-gray-600">{category.description}</p>
           </div>
         ))}

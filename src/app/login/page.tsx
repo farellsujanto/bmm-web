@@ -277,8 +277,8 @@ export default function LoginPage() {
 
         {/* Back to Home */}
         <div className="text-center mt-6">
-          <Link href="/" className="text-gray-400 hover:text-white transition">
-            ← Kembali ke Beranda
+          <Link href="/shop" className="text-gray-400 hover:text-white transition">
+            ← Kembali ke List Produk
           </Link>
         </div>
       </div>

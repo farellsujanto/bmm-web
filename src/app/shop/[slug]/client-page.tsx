@@ -141,9 +141,6 @@ export default function ProductDetailPage({ initialProduct }: Props) {
         <div className="max-w-7xl mx-auto px-6">
           {/* Breadcrumb */}
           <nav className="mb-8 flex items-center gap-2 text-sm">
-            <Link href="/" className="text-gray-600 hover:text-red-600 transition-colors">
-              Beranda
-            </Link>
             <span className="text-gray-400">/</span>
             <Link href="/shop" className="text-gray-600 hover:text-red-600 transition-colors">
               Produk

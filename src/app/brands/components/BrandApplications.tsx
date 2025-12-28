@@ -15,7 +15,7 @@ export default function BrandApplications({ title, sections }: BrandApplications
       <div className="grid md:grid-cols-2 gap-6">
         {sections.map((section, index) => (
           <div key={index}>
-            <h3 className="text-lg font-semibold mb-3">{section.title}</h3>
+            <h3 className="text-lg font-semibold mb-3 text-gray-900">{section.title}</h3>
             <ul className="list-disc list-inside text-gray-700 space-y-2">
               {section.items.map((item, itemIndex) => (
                 <li key={itemIndex}>{item}</li>

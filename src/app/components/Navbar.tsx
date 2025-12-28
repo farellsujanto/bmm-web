@@ -36,12 +36,6 @@ export default function Navbar() {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
-              href="/"
-              className="text-white hover:text-red-500 transition-colors duration-300 font-medium"
-            >
-              Beranda
-            </Link>
-            <Link
               href="/shop"
               className="text-white hover:text-red-500 transition-colors duration-300 font-medium"
             >
@@ -110,13 +104,6 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden mt-4 pb-4 space-y-4 bg-black/95 backdrop-blur-md rounded-lg p-4 -mx-6">
-            <Link
-              href="/"
-              className="block text-white hover:text-red-500 transition-colors duration-300 font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Beranda
-            </Link>
             <Link
               href="/shop"
               className="block text-white hover:text-red-500 transition-colors duration-300 font-medium"
