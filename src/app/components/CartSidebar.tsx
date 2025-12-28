@@ -128,7 +128,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                           >
                             -
                           </button>
-                          <span className="w-10 text-center font-semibold">{item.quantity}</span>
+                          <span className="w-10 text-center font-semibold text-gray-900">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded flex items-center justify-center transition-colors font-bold"

@@ -30,14 +30,22 @@ export async function GET(request: NextRequest) {
         images: {
           orderBy: { sortOrder: 'asc' }
         }
-      },
-      orderBy: { sortOrder: 'asc' },
-      take: limit
+      }
     });
+
+    // Shuffle the products array using Fisher-Yates algorithm
+    const shuffled = [...relatedProducts];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    // Take only the requested limit after shuffling
+    const limitedProducts = shuffled.slice(0, limit);
 
     // Generate signed URLs for all product images
     const productsWithSignedUrls = await Promise.all(
-      relatedProducts.map(async (product) => {
+      limitedProducts.map(async (product) => {
         if (product.images && product.images.length > 0) {
           const paths = product.images.map(img => img.url);
 
