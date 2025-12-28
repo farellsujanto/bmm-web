@@ -439,7 +439,15 @@ export default function ProductsPage() {
                 label="Name"
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setFormData({ 
+                    ...formData, 
+                    name,
+                    sku: name, // Auto-generate SKU (same as name)
+                    slug: name.replace(/[\s\/]+/g, '-') // Auto-generate slug (replace spaces and / with -, avoid double -)
+                  });
+                }}
                 required
               />
 
@@ -449,6 +457,7 @@ export default function ProductsPage() {
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                 required
+                helperText="Auto-generated from name (/ replaced with -)"
               />
 
               <PrimaryInput
@@ -457,6 +466,7 @@ export default function ProductsPage() {
                 value={formData.sku}
                 onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                 required
+                helperText="Auto-generated from name"
               />
 
               <PrimaryTextArea
