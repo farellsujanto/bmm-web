@@ -12,7 +12,14 @@ export async function GET(request: NextRequest) {
     // If slug is provided, return single product
     if (slug) {
       const product = await prisma.product.findFirst({
-        where: { slug, enabled: true, isActive: true },
+        where: { 
+          slug: { 
+            equals: slug, 
+            mode: 'insensitive' 
+          }, 
+          enabled: true, 
+          isActive: true 
+        },
         include: {
           brand: true,
           category: true,
