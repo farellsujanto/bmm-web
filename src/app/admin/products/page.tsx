@@ -25,13 +25,23 @@ export default function ProductsPage() {
   const [brands, setBrands] = useState<BrandModel[]>([]);
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductWithRelations | null>(null);
+
+  // Format currency in IDR with commas
+  const formatIDR = (amount: number | string | null | undefined): string => {
+    if (amount === null || amount === undefined) return 'N/A';
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (isNaN(numAmount)) return 'N/A';
+    return `Rp ${numAmount.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  };
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const [images, setImages] = useState<ProductImage[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]); // Store actual files for new products
   const [draggedImageIndex, setDraggedImageIndex] = useState<number | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -77,6 +87,7 @@ export default function ProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
 
     try {
       const formDataToSend = new FormData();
@@ -117,6 +128,8 @@ export default function ProductsPage() {
       loadData();
     } catch (error: any) {
       showAlert({ message: error.message || 'Failed to save product' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -225,24 +238,69 @@ export default function ProductsPage() {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setUploadingImage(true);
     try {
-      // For both create and edit, store File object and blob URL for preview
-      const blobUrl = URL.createObjectURL(file);
-      setImages([...images, {
-        url: blobUrl,
-        alt: '',
-        sortOrder: images.length
-      }]);
-      setImageFiles([...imageFiles, file]);
+      const fileArray = Array.from(files);
+      for (const file of fileArray) {
+        const blobUrl = URL.createObjectURL(file);
+        setImages(prev => [...prev, {
+          url: blobUrl,
+          alt: '',
+          sortOrder: prev.length
+        }]);
+        setImageFiles(prev => [...prev, file]);
+      }
     } catch (error: any) {
-      showAlert({ message: error.message || 'Failed to handle image' });
+      showAlert({ message: error.message || 'Failed to handle images' });
     } finally {
       setUploadingImage(false);
     }
+  };
+
+  const handleFileDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+      showAlert({ message: 'Please drop image files only' });
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      for (const file of imageFiles) {
+        const blobUrl = URL.createObjectURL(file);
+        setImages(prev => [...prev, {
+          url: blobUrl,
+          alt: '',
+          sortOrder: prev.length
+        }]);
+        setImageFiles(prev => [...prev, file]);
+      }
+    } catch (error: any) {
+      showAlert({ message: error.message || 'Failed to handle images' });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleDragOverFile = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  };
+
+  const handleDragLeaveFile = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
   };
 
   const handleImageDragStart = (index: number) => {
@@ -333,14 +391,14 @@ export default function ProductsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
                   </svg>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">{product.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{product.sku}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{product.brand.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{product.category.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {product.price ? `$${product.price}` : 'N/A'}
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{product.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-600">{product.sku}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{product.brand.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{product.category.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-900">
+                  {formatIDR(product.price)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">{product.stock}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{product.stock.toLocaleString('id-ID')}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 py-1 rounded-full text-xs ${
@@ -535,21 +593,49 @@ export default function ProductsPage() {
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-gray-900">Product Images</label>
                 
-                {/* Image Upload */}
-                <div className="flex items-center space-x-4">
-                  <label className="px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700">
-                    {uploadingImage ? 'Uploading...' : 'Upload Image'}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      disabled={uploadingImage}
-                      className="hidden"
-                    />
-                  </label>
-                  <span className="text-sm text-gray-600">
-                    Images will be converted to WebP format
-                  </span>
+                {/* Image Upload & Drop Zone */}
+                <div
+                  onDrop={handleFileDrop}
+                  onDragOver={handleDragOverFile}
+                  onDragLeave={handleDragLeaveFile}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                    isDraggingOver 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 bg-gray-50'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <div className="flex items-center justify-center space-x-2">
+                      <label className="px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700">
+                        {uploadingImage ? 'Uploading...' : 'Choose files'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleImageUpload}
+                          disabled={uploadingImage}
+                          className="hidden"
+                        />
+                      </label>
+                      <span className="text-sm text-gray-600">or drag and drop</span>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      PNG, JPG, GIF up to 10MB (will be converted to WebP)
+                    </p>
+                  </div>
                 </div>
 
                 {/* Image List with Drag & Drop */}
@@ -605,11 +691,12 @@ export default function ProductsPage() {
                     setShowModal(false);
                     resetForm();
                   }}
+                  disabled={submitting}
                 >
                   Cancel
                 </TertiaryButton>
-                <PrimaryButton type="submit">
-                  {editingProduct ? 'Update' : 'Create'}
+                <PrimaryButton type="submit" disabled={submitting || uploadingImage}>
+                  {submitting ? 'Saving...' : editingProduct ? 'Update' : 'Create'}
                 </PrimaryButton>
               </div>
             </form>

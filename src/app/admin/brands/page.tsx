@@ -11,6 +11,7 @@ export default function BrandsPage() {
   const { showAlert, showConfirm } = useAlert();
   const [brands, setBrands] = useState<BrandModel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingBrand, setEditingBrand] = useState<BrandModel | null>(null);
 
@@ -38,6 +39,7 @@ export default function BrandsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
 
     try {
       if (editingBrand) {
@@ -53,6 +55,8 @@ export default function BrandsPage() {
       loadBrands();
     } catch (error: any) {
       showAlert({ message: error.message || 'Failed to save brand' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -131,7 +135,7 @@ export default function BrandsPage() {
                 key={brand.id}
                 className="hover:bg-gray-50"
               >
-                <td className="px-6 py-4 whitespace-nowrap">{brand.id}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{brand.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {brand.logoUrl && (
                     <Image
@@ -143,8 +147,8 @@ export default function BrandsPage() {
                     />
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap font-medium">{brand.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{brand.slug}</td>
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{brand.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-600">{brand.slug}</td>
                 <td className="px-6 py-4 whitespace-nowrap space-x-2">
                   <button
                     onClick={() => handleEdit(brand)}
@@ -165,7 +169,7 @@ export default function BrandsPage() {
         </table>
 
         {brands.length === 0 && (
-          <div className="text-center py-12 text-gray-700">
+          <div className="text-center py-12 text-gray-600">
             No brands found. Create your first brand!
           </div>
         )}
@@ -217,11 +221,12 @@ export default function BrandsPage() {
                     setShowModal(false);
                     resetForm();
                   }}
+                  disabled={submitting}
                 >
                   Cancel
                 </TertiaryButton>
-                <PrimaryButton type="submit">
-                  {editingBrand ? 'Update' : 'Create'}
+                <PrimaryButton type="submit" disabled={submitting}>
+                  {submitting ? 'Saving...' : editingBrand ? 'Update' : 'Create'}
                 </PrimaryButton>
               </div>
             </form>

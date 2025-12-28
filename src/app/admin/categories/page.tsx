@@ -10,6 +10,7 @@ export default function CategoriesPage() {
   const { showAlert, showConfirm } = useAlert();
   const [categories, setCategories] = useState<CategoryModel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryModel | null>(null);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
@@ -37,6 +38,7 @@ export default function CategoriesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
 
     try {
       if (editingCategory) {
@@ -52,6 +54,8 @@ export default function CategoriesPage() {
       loadCategories();
     } catch (error: any) {
       showAlert({ message: error.message || 'Failed to save category' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -174,9 +178,9 @@ export default function CategoriesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
                   </svg>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">{category.id}</td>
-                <td className="px-6 py-4 whitespace-nowrap font-medium">{category.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{category.slug}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-700">{category.id}</td>
+                <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{category.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-gray-600">{category.slug}</td>
                 <td className="px-6 py-4 whitespace-nowrap space-x-2">
                   <button
                     onClick={() => handleEdit(category)}
@@ -197,7 +201,7 @@ export default function CategoriesPage() {
         </table>
 
         {categories.length === 0 && (
-          <div className="text-center py-12 text-gray-700">
+          <div className="text-center py-12 text-gray-600">
             No categories found. Create your first category!
           </div>
         )}
@@ -241,11 +245,12 @@ export default function CategoriesPage() {
                     setShowModal(false);
                     resetForm();
                   }}
+                  disabled={submitting}
                 >
                   Cancel
                 </TertiaryButton>
-                <PrimaryButton type="submit">
-                  {editingCategory ? 'Update' : 'Create'}
+                <PrimaryButton type="submit" disabled={submitting}>
+                  {submitting ? 'Saving...' : editingCategory ? 'Update' : 'Create'}
                 </PrimaryButton>
               </div>
             </form>

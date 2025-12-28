@@ -11,6 +11,7 @@ export default function MissionsPage() {
   const { showAlert, showConfirm } = useAlert();
   const [missions, setMissions] = useState<MissionModel[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingMission, setEditingMission] = useState<MissionModel | null>(null);
 
@@ -54,6 +55,7 @@ export default function MissionsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
 
     try {
       if (editingMission) {
@@ -69,6 +71,8 @@ export default function MissionsPage() {
       loadMissions();
     } catch (error: any) {
       showAlert({ message: error.message || 'Failed to save mission' });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -156,7 +160,7 @@ export default function MissionsPage() {
                 <span className="text-4xl">{mission.icon}</span>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900">{mission.title}</h3>
-                  <p className="text-sm text-gray-500">{mission.description}</p>
+                  <p className="text-sm text-gray-600">{mission.description}</p>
                 </div>
               </div>
               <span
@@ -170,19 +174,19 @@ export default function MissionsPage() {
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <p className="text-xs text-gray-500">Type</p>
+                <p className="text-xs text-gray-600">Type</p>
                 <p className="font-semibold">{missionTypeLabels[mission.type]}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Target</p>
+                <p className="text-xs text-gray-600">Target</p>
                 <p className="font-semibold">{mission.targetValue.toString()}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Reward Type</p>
+                <p className="text-xs text-gray-600">Reward Type</p>
                 <p className="font-semibold">{rewardTypeLabels[mission.rewardType]}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Reward Value</p>
+                <p className="text-xs text-gray-600">Reward Value</p>
                 <p className="font-semibold">{mission.rewardValue.toString()}%</p>
               </div>
             </div>
@@ -206,7 +210,7 @@ export default function MissionsPage() {
       </div>
 
       {missions.length === 0 && (
-        <div className="text-center py-12 text-gray-500 bg-white rounded-lg shadow">
+        <div className="text-center py-12 text-gray-600 bg-white rounded-lg shadow">
           No missions found. Create your first mission!
         </div>
       )}
@@ -313,11 +317,12 @@ export default function MissionsPage() {
                     setShowModal(false);
                     resetForm();
                   }}
+                  disabled={submitting}
                 >
                   Cancel
                 </TertiaryButton>
-                <PrimaryButton type="submit">
-                  {editingMission ? 'Update' : 'Create'}
+                <PrimaryButton type="submit" disabled={submitting}>
+                  {submitting ? 'Saving...' : editingMission ? 'Update' : 'Create'}
                 </PrimaryButton>
               </div>
             </form>
