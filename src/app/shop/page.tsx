@@ -20,6 +20,14 @@ type ProductWithRelations = Product & {
 };
 
 const STORAGE_KEY = 'bmm_product_requests';
+const PRODUCTS_CACHE_KEY = 'bmm_products_cache';
+const CATEGORIES_CACHE_KEY = 'bmm_categories_cache';
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+type CacheData<T> = {
+  data: T;
+  timestamp: number;
+};
 
 export default function ShopPage() {
   const router = useRouter();
@@ -72,15 +80,59 @@ export default function ShopPage() {
     }
   };
 
+  const getCachedData = <T,>(key: string): T | null => {
+    try {
+      const cached = localStorage.getItem(key);
+      if (!cached) return null;
+
+      const cacheData: CacheData<T> = JSON.parse(cached);
+      const isExpired = Date.now() - cacheData.timestamp > CACHE_DURATION;
+      
+      // Return cached data even if expired (we'll refresh in background)
+      return cacheData.data;
+    } catch (error) {
+      console.error('Failed to get cached data:', error);
+      return null;
+    }
+  };
+
+  const setCachedData = <T,>(key: string, data: T) => {
+    try {
+      const cacheData: CacheData<T> = {
+        data,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(key, JSON.stringify(cacheData));
+    } catch (error) {
+      console.error('Failed to cache data:', error);
+    }
+  };
+
   const loadData = async () => {
     try {
+      // Load from cache first for instant display
+      const cachedProducts = getCachedData<ProductWithRelations[]>(PRODUCTS_CACHE_KEY);
+      const cachedCategories = getCachedData<Category[]>(CATEGORIES_CACHE_KEY);
+
+      if (cachedProducts && cachedCategories) {
+        setProducts(cachedProducts);
+        setCategories(cachedCategories);
+        setLoading(false);
+      }
+
+      // Fetch fresh data in background
       const [categoriesRes, productsRes] = await Promise.all([
         apiRequest.get<Category[]>('/v1/categories'),
         apiRequest.get<ProductWithRelations[]>('/v1/products'),
       ]);
 
+      // Update state with fresh data
       setCategories(categoriesRes.data);
       setProducts(productsRes.data);
+
+      // Update cache
+      setCachedData(CATEGORIES_CACHE_KEY, categoriesRes.data);
+      setCachedData(PRODUCTS_CACHE_KEY, productsRes.data);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {

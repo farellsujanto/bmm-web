@@ -20,6 +20,15 @@ type Props = {
   initialProduct: ProductWithRelations | null;
 };
 
+const PRODUCT_CACHE_PREFIX = 'bmm_product_detail_';
+const RELATED_CACHE_PREFIX = 'bmm_related_products_';
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+type CacheData<T> = {
+  data: T;
+  timestamp: number;
+};
+
 export default function ProductDetailPage({ initialProduct }: Props) {
   const params = useParams();
   const router = useRouter();
@@ -37,6 +46,32 @@ export default function ProductDetailPage({ initialProduct }: Props) {
     loadProductData();
   }, [slug]);
 
+  const getCachedData = <T,>(key: string): T | null => {
+    try {
+      const cached = localStorage.getItem(key);
+      if (!cached) return null;
+
+      const cacheData: CacheData<T> = JSON.parse(cached);
+      // Return cached data even if expired (we'll refresh in background)
+      return cacheData.data;
+    } catch (error) {
+      console.error('Failed to get cached data:', error);
+      return null;
+    }
+  };
+
+  const setCachedData = <T,>(key: string, data: T) => {
+    try {
+      const cacheData: CacheData<T> = {
+        data,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(key, JSON.stringify(cacheData));
+    } catch (error) {
+      console.error('Failed to cache data:', error);
+    }
+  };
+
   const loadProductData = async () => {
     try {
       setLoading(true);
@@ -46,12 +81,26 @@ export default function ProductDetailPage({ initialProduct }: Props) {
         router.push('/shop');
         return;
       }
+
+      // Try to load related products from cache first
+      const relatedCacheKey = `${RELATED_CACHE_PREFIX}${initialProduct.id}`;
+      const cachedRelated = getCachedData<ProductWithRelations[]>(relatedCacheKey);
       
-      // Load related products from same category using dedicated API
+      if (cachedRelated) {
+        setRelatedProducts(cachedRelated);
+        setLoading(false);
+      }
+      
+      // Fetch fresh related products in background
       const relatedRes = await apiRequest.get<ProductWithRelations[]>(
         `/v1/products/related?categoryId=${initialProduct.categoryId}&productId=${initialProduct.id}&limit=4`
       );
+      
+      // Update state with fresh data
       setRelatedProducts(relatedRes.data);
+      
+      // Update cache
+      setCachedData(relatedCacheKey, relatedRes.data);
       
     } catch (error) {
       console.error('Failed to load related products:', error);
