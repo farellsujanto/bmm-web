@@ -7,7 +7,7 @@ import prisma from '@/src/utils/database/prismaOrm.util';
 async function updateOrderHandler(
   request: NextRequest,
   user: JwtData,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (user.role !== 'ADMIN') {
     return NextResponse.json(
@@ -18,7 +18,8 @@ async function updateOrderHandler(
 
   try {
     const { status } = await request.json();
-    const id = parseInt(params.id);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId);
 
     const updatedOrder = await prisma.order.update({
       where: { id },

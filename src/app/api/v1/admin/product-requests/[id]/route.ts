@@ -7,7 +7,7 @@ import prisma from '@/src/utils/database/prismaOrm.util';
 async function updateProductRequestHandler(
   request: NextRequest,
   user: JwtData,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (user.role !== 'ADMIN') {
     return NextResponse.json(
@@ -18,7 +18,8 @@ async function updateProductRequestHandler(
 
   try {
     const { status, adminNotes, quotedPrice } = await request.json();
-    const id = parseInt(params.id);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId);
 
     const updatedRequest = await prisma.productRequest.update({
       where: { id },
