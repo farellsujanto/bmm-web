@@ -1,6 +1,7 @@
 'use client';
 
 import { useAlert } from '@/src/contexts/AlertContext';
+import { formatRupiah } from '@/src/utils/formatter/currency';
 
 interface AffiliateSectionProps {
   affiliateData?: any;
@@ -44,11 +45,11 @@ export default function AffiliateSection({ affiliateData, userData }: AffiliateS
           </div>
           <div className="bg-black/40 rounded-2xl p-3 sm:p-4 backdrop-blur-sm">
             <p className="text-red-300 text-xs sm:text-sm mb-1">Komisi Yang Bisa Ditarik</p>
-            <p className="text-2xl sm:text-3xl font-bold text-white">Rp {(withdrawableIncome / 1000).toFixed(1)}K</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white">Rp {formatRupiah(withdrawableIncome)}</p>
           </div>
           <div className="bg-black/40 rounded-2xl p-3 sm:p-4 backdrop-blur-sm">
             <p className="text-red-300 text-xs sm:text-sm mb-1">Total Earnings</p>
-            <p className="text-2xl sm:text-3xl font-bold text-white">Rp {(totalEarnings / 1000).toFixed(1)}K</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white">Rp {formatRupiah(totalEarnings)}</p>
           </div>
         </div>
 

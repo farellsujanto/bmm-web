@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { formatRupiah } from '@/src/utils/formatter/currency';
 
 interface ProfileSectionProps {
   userData?: any;
@@ -18,7 +19,7 @@ export default function ProfileSection({
     : 'November 2025';
   const totalOrders = userData?.statistics?.totalOrders || 0;
   const totalSpent = userData?.statistics?.totalSpent 
-    ? `Rp ${(parseFloat(userData.statistics.totalSpent) / 1000).toFixed(1)}K`
+    ? `Rp ${formatRupiah(parseFloat(userData.statistics.totalSpent))}`
     : 'Rp 0';
   const totalReferrals = userData?.statistics?.totalReferrals || 0;
 

@@ -17,7 +17,8 @@ async function getAffiliateHandler(request: NextRequest, user: JwtData) {
         statistics: {
           select: {
             totalReferrals: true,
-            totalReferralEarnings: true
+            totalReferralEarnings: true,
+            availableBalance: true
           }
         }
       }
@@ -66,6 +67,7 @@ async function getAffiliateHandler(request: NextRequest, user: JwtData) {
           commissionRate: userData.maxReferralPercentage.toString(),
           totalReferrals: userData.statistics?.totalReferrals || 0,
           totalEarnings: userData.statistics?.totalReferralEarnings.toString() || '0',
+          withdrawableIncome: userData.statistics?.availableBalance.toString() || '0',
           affiliatedOrders: affiliatedOrders.map(order => ({
             id: order.id,
             orderNumber: order.orderNumber,

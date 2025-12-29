@@ -10,6 +10,7 @@ import OrderSection from './OrderSection';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { SecondaryButton } from '@/src/components/ui';
+import { formatRupiah } from '@/src/utils/formatter/currency';
 
 export default function ActivityContent() {
   const router = useRouter();
@@ -196,7 +197,7 @@ export default function ActivityContent() {
                   </svg>
                 </div>
                 <p className="text-3xl font-bold text-white">
-                  Rp {userData?.statistics?.totalSpent ? (parseFloat(userData.statistics.totalSpent) / 1000).toFixed(1) : '0'}K
+                  Rp {formatRupiah(userData?.statistics?.totalSpent ? parseFloat(userData.statistics.totalSpent) : 0)}
                 </p>
               </div>
               
@@ -228,7 +229,7 @@ export default function ActivityContent() {
                   </svg>
                 </div>
                 <p className="text-3xl font-bold text-white">
-                  Rp {userData?.statistics?.totalReferralEarnings ? (parseFloat(userData.statistics.totalReferralEarnings) / 1000).toFixed(1) : '0'}K
+                  Rp {formatRupiah(userData?.statistics?.totalReferralEarnings ? parseFloat(userData.statistics.totalReferralEarnings) : 0)}
                 </p>
               </div>
             </div>
