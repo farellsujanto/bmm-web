@@ -30,8 +30,30 @@ async function getAffiliateHandler(request: NextRequest, user: JwtData) {
       );
     }
 
-    // TODO: Get referred users and their orders when Order model is implemented
-    // For now, just return the basic stats
+    // Get orders where this user is the referrer
+    const affiliatedOrders = await prisma.order.findMany({
+      where: {
+        referrerId: user.id,
+        enabled: true
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            phoneNumber: true
+          }
+        },
+        orderProducts: {
+          select: {
+            name: true,
+            quantity: true,
+            subtotal: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
     const referralLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://bmmparts.co.id.com'}/ref/${userData.referralCode}`;
 
     return NextResponse.json(
@@ -44,35 +66,25 @@ async function getAffiliateHandler(request: NextRequest, user: JwtData) {
           commissionRate: userData.maxReferralPercentage.toString(),
           totalReferrals: userData.statistics?.totalReferrals || 0,
           totalEarnings: userData.statistics?.totalReferralEarnings.toString() || '0',
-          affiliatedOrders: [] // TODO: Implement when Order model exists
+          affiliatedOrders: affiliatedOrders.map(order => ({
+            id: order.id,
+            orderNumber: order.orderNumber,
+            status: order.status,
+            total: order.total.toString(),
+            affiliateCommission: order.affiliateCommission.toString(),
+            customerName: order.user.name,
+            customerPhone: order.user.phoneNumber,
+            products: order.orderProducts.map(p => ({
+              name: p.name,
+              quantity: p.quantity,
+              subtotal: p.subtotal.toString()
+            })),
+            createdAt: order.createdAt.toISOString()
+          }))
         }
       },
       { status: 200 }
     );
-
-    /* TODO: When Order model is implemented, fetch affiliated orders
-    const referredUsers = await prisma.user.findMany({
-      where: { referredBy: user.referralCode }
-    });
-
-    const referredUserIds = referredUsers.map(u => u.id);
-
-    const affiliatedOrders = await prisma.order.findMany({
-      where: {
-        userId: { in: referredUserIds },
-        enabled: true
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            phoneNumber: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-    */
   } catch (error: any) {
     console.error('Get affiliate data error:', error);
     return NextResponse.json(

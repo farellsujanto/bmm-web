@@ -90,12 +90,12 @@ export default function AffiliateSection({ affiliateData, userData }: AffiliateS
                 <div key={index} className="bg-gray-900/50 rounded-lg p-3 sm:p-4 border border-gray-800">
                   <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
                     <div>
-                      <p className="text-white font-semibold text-sm sm:text-base">{order.userName || 'Customer'}</p>
-                      <p className="text-gray-300 text-xs">Order #{order.id}</p>
+                      <p className="text-white font-semibold text-sm sm:text-base">{order.customerName || 'Customer'}</p>
+                      <p className="text-gray-300 text-xs">Order #{order.orderNumber}</p>
                     </div>
                     <div className="text-left sm:text-right">
                       <p className="text-white font-semibold text-sm sm:text-base">Rp {parseFloat(order.total).toLocaleString('id-ID')}</p>
-                      <p className="text-green-400 text-xs">Komisi: Rp {parseFloat(order.commission).toLocaleString('id-ID')}</p>
+                      <p className="text-green-400 text-xs">Komisi: Rp {parseFloat(order.affiliateCommission || '0').toLocaleString('id-ID')}</p>
                     </div>
                   </div>
                 </div>
