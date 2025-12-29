@@ -90,3 +90,12 @@ body {
   background: #b91c1c;
 }
 
+/* Hide scrollbar for horizontal scroll (mobile category filter) */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}

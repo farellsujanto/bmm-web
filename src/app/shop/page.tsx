@@ -275,30 +275,36 @@ function ShopContent() {
         </div>
 
         {/* Category Filter */}
-        <div className="flex flex-wrap justify-center gap-4 mb-12">
-          <button
-            onClick={() => setSelectedCategory('Semua')}
-            className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-              selectedCategory === 'Semua'
-                ? 'bg-red-600 text-white shadow-lg'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            Semua
-          </button>
-          {categories.map((category) => (
+        <div className="mb-12 relative -mx-6 md:mx-0">
+          {/* Gradient indicators for scroll */}
+          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-gray-200 to-transparent z-10 pointer-events-none md:hidden"></div>
+          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-200 to-transparent z-10 pointer-events-none md:hidden"></div>
+          
+          <div className="flex md:flex-wrap md:justify-center gap-3 md:gap-4 overflow-x-auto pb-2 scrollbar-hide px-6 md:px-0">
             <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.name)}
-              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
-                selectedCategory === category.name
+              onClick={() => setSelectedCategory('Semua')}
+              className={`px-4 py-2 md:px-6 md:py-3 rounded-full font-semibold transition-all duration-300 whitespace-nowrap flex-shrink-0 text-sm md:text-base ${
+                selectedCategory === 'Semua'
                   ? 'bg-red-600 text-white shadow-lg'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
             >
-              {category.name}
+              Semua
             </button>
-          ))}
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.name)}
+                className={`px-4 py-2 md:px-6 md:py-3 rounded-full font-semibold transition-all duration-300 whitespace-nowrap flex-shrink-0 text-sm md:text-base ${
+                  selectedCategory === category.name
+                    ? 'bg-red-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Products Grid */}
