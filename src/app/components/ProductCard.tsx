@@ -77,9 +77,9 @@ export default function ProductCard({
   };
   
   return (
-    <div className={`group relative bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${!inCart ? 'transform hover:-translate-y-1' : ''}`}>
+    <div className={`group relative bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full ${!inCart ? 'transform hover:-translate-y-1' : ''}`}>
       {/* Product Image */}
-      <div className="relative h-48 sm:h-52 bg-gray-200 overflow-hidden">
+      <div className="relative h-48 sm:h-52 bg-gray-200 overflow-hidden flex-shrink-0">
         {image ? (
           <Image
             src={image}
@@ -112,7 +112,7 @@ export default function ProductCard({
       </div>
 
       {/* Product Info */}
-      <div className="p-3 sm:p-4">
+      <div className="p-3 sm:p-4 flex flex-col flex-1">
         <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 line-clamp-2 group-hover:text-red-600 transition-colors break-words">
           {name}
         </h3>
@@ -136,7 +136,7 @@ export default function ProductCard({
             Rp {price.toLocaleString('id-ID')}
           </p>
         )}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 mt-auto">
           <Link
             href={`/shop/${slug}`}
             className="block text-center py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-300 bg-black text-white hover:bg-red-600"
