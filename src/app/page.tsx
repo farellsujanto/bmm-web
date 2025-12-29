@@ -73,8 +73,8 @@ export default function Home() {
       <div className="min-h-screen bg-black">
         {/* Hero Section */}
         <Hero
-          title="Keunggulan Teknik"
-          subtitle="Solusi Lengkap untuk Suku Cadang Premium"
+          title="Indonesia Market Leader"
+          subtitle="Solusi Lengkap untuk Suku Cadang Premium dengan Harga Terjangkau"
           ctaText="Jelajahi Produk"
           ctaLink="/shop"
         />
