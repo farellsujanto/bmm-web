@@ -9,6 +9,7 @@ import { Product, ProductImage, Category, Brand } from '@/generated/prisma/brows
 import { useCart } from '@/src/contexts/CartContext';
 import CartSidebar from '@/src/app/components/CartSidebar';
 import ProductStructuredData from './components/ProductStructuredData';
+import { trackProductViewed } from '@/src/utils/analytics/posthog.util';
 
 type ProductWithRelations = Product & {
   category: Category;
@@ -44,6 +45,17 @@ export default function ProductDetailPage({ initialProduct }: Props) {
 
   useEffect(() => {
     loadProductData();
+    
+    // Track product view
+    if (initialProduct) {
+      trackProductViewed({
+        id: initialProduct.id.toString(),
+        name: initialProduct.name,
+        price: Number(initialProduct.price),
+        category: initialProduct.category.name,
+        brand: initialProduct.brand.name,
+      });
+    }
   }, [slug]);
 
   const getCachedData = <T,>(key: string): T | null => {

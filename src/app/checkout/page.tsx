@@ -9,6 +9,7 @@ import { useAlert } from '@/src/contexts/AlertContext';
 import { PrimaryButton, SecondaryButton, PrimaryInput, PrimaryTextArea, Loader } from '@/src/components/ui';
 import type { User, Company } from '@/generated/prisma/browser';
 import { apiRequest } from '@/src/utils/api/apiRequest';
+import { trackCheckoutStarted, trackOrderCompleted } from '@/src/utils/analytics/posthog.util';
 
 export default function CheckoutPage() {
     const router = useRouter();
@@ -90,6 +91,20 @@ export default function CheckoutPage() {
         };
         
         fetchUserData();
+        
+        // Track checkout started
+        if (items.length > 0) {
+            trackCheckoutStarted({
+                total: finalPrice,
+                itemCount: totalItems,
+                products: items.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                })),
+            });
+        }
     }, [user]);
 
     const handlePayment = async () => {
@@ -138,6 +153,19 @@ export default function CheckoutPage() {
             const response = await apiRequest.post('/v1/orders', orderData);
 
             if (response.success) {
+                // Track order completed
+                trackOrderCompleted({
+                    orderId: (response.data as any).orderNumber,
+                    total: finalPrice,
+                    itemCount: totalItems,
+                    products: items.map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity,
+                    })),
+                });
+                
                 // Set order completed flag to prevent redirect to shop
                 setOrderCompleted(true);
                 // Clear the cart

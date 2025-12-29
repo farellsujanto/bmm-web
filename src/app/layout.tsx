@@ -5,6 +5,7 @@ import ConditionalLayout from "./components/ConditionalLayout";
 import { AuthProvider } from "@/src/contexts/AuthContext";
 import { CartProvider } from "@/src/contexts/CartContext";
 import { AlertProvider } from "@/src/contexts/AlertContext";
+import { PostHogProvider } from "@/src/contexts/PostHogContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -108,13 +109,15 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <AuthProvider>
-          <CartProvider>
-            <AlertProvider>
-              <ConditionalLayout>{children}</ConditionalLayout>
-            </AlertProvider>
-          </CartProvider>
-        </AuthProvider>
+        <PostHogProvider>
+          <AuthProvider>
+            <CartProvider>
+              <AlertProvider>
+                <ConditionalLayout>{children}</ConditionalLayout>
+              </AlertProvider>
+            </CartProvider>
+          </AuthProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

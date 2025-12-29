@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { trackProductAddedToCart, trackProductRemovedFromCart } from '@/src/utils/analytics/posthog.util';
 
 export interface CartItem {
   id: string;
@@ -66,18 +67,46 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       if (existingItem) {
         // Increase quantity if item already exists
-        return prevItems.map((i) =>
+        const newItems = prevItems.map((i) =>
           i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
         );
+        
+        // Track the add to cart event
+        trackProductAddedToCart({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: 1,
+          brand: item.brand,
+        });
+        
+        return newItems;
       } else {
         // Add new item with quantity 1
+        trackProductAddedToCart({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: 1,
+          brand: item.brand,
+        });
+        
         return [...prevItems, { ...item, quantity: 1 }];
       }
     });
   };
 
   const removeFromCart = (id: string) => {
-    setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    setItems((prevItems) => {
+      const itemToRemove = prevItems.find((item) => item.id === id);
+      if (itemToRemove) {
+        trackProductRemovedFromCart({
+          id: itemToRemove.id,
+          name: itemToRemove.name,
+        });
+      }
+      return prevItems.filter((item) => item.id !== id);
+    });
   };
 
   const updateQuantity = (id: string, quantity: number) => {

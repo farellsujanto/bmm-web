@@ -9,6 +9,7 @@ import { getAuthHeaders } from './utils/authHelpers';
 import { maskPhoneNumber } from '@/src/utils/formatter/stringFormatter.util';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { apiRequest } from '@/src/utils/api/apiRequest';
+import { trackEvent } from '@/src/utils/analytics/posthog.util';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -103,8 +104,12 @@ export default function LoginPage() {
       // Show OTP screen and start timer
       setShowOTP(true);
       setTimer(60);
+      
+      // Track OTP request
+      trackEvent('otp_requested', { phone_masked: maskedPhone });
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan. Silakan coba lagi.');
+      trackEvent('otp_request_failed', { error: err.message });
     } finally {
       setLoading(false);
     }
@@ -145,17 +150,25 @@ export default function LoginPage() {
         throw new Error(data.message || 'Verifikasi OTP gagal');
       }
 
-      // Remove referral code from localStorage after successful registration
-      if (referralCode) {
-        localStorage.removeItem('referralCode');
-      }
-
       // Store access token in memory and context
       if (data.data?.accessToken && data.data?.user) {
         // Set token in apiRequest utility
         apiRequest.setToken(data.data.accessToken);
         // Update auth context
         login(data.data.accessToken, data.data.user);
+        
+        // Remove referral code from localStorage after successful registration
+        if (referralCode) {
+          localStorage.removeItem('referralCode');
+          trackEvent('signup_with_referral', { referral_code: referralCode });
+        }
+        
+        // Track successful login
+        trackEvent('login_successful', { 
+          method: 'otp',
+          is_new_user: !!referralCode 
+        });
+        
         // Redirect based on user role
         if (data.data.user.role === 'ADMIN') {
           router.push('/admin');

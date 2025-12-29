@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { setInMemoryToken } from '@/src/utils/api/apiRequest';
+import { identifyUser, resetUser, setUserProperties } from '@/src/utils/analytics/posthog.util';
 
 interface User {
   id: number;
@@ -60,6 +61,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(token);
     setUser(userData);
     setIsLoading(false);
+    
+    // Identify user in PostHog
+    identifyUser(userData.id.toString(), {
+      name: userData.name,
+      phone_number: userData.phoneNumber,
+      role: userData.role,
+      referral_code: userData.referralCode,
+      max_referral_percentage: userData.maxReferralPercentage,
+      global_discount_percentage: userData.globalDiscountPercentage,
+    });
   }, [setAccessToken]);
 
   const logout = useCallback(async () => {
@@ -73,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
         credentials: 'include',
       });
+      resetUser();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -105,6 +117,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (data.success && data.data?.accessToken) {
         setAccessToken(data.data.accessToken);
+          // Identify user in PostHog after token refresh
+          identifyUser(data.data.user.id.toString(), {
+            name: data.data.user.name,
+            phone_number: data.data.user.phoneNumber,
+            role: data.data.user.role,
+            referral_code: data.data.user.referralCode,
+            max_referral_percentage: data.data.user.maxReferralPercentage,
+            global_discount_percentage: data.data.user.globalDiscountPercentage,
+          });
         // Set user data if available
         if (data.data.user) {
           setUser(data.data.user);

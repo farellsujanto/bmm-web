@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { useAlert } from '@/src/contexts/AlertContext';
 import { PrimaryInput, PrimaryTextArea } from '@/src/components/ui/Input';
+import { trackFormSubmitted } from '@/src/utils/analytics/posthog.util';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -23,6 +24,9 @@ export default function ContactPage() {
     try {
       await apiRequest.post('/v1/contact', formData);
       
+      // Track successful form submission
+      trackFormSubmitted('contact_form', true);
+      
       showAlert({
         message: 'Pesan Anda telah dikirim! Kami akan segera menghubungi Anda.',
       });
@@ -37,6 +41,10 @@ export default function ContactPage() {
       });
     } catch (error: any) {
       console.error('Failed to submit contact message:', error);
+      
+      // Track failed form submission
+      trackFormSubmitted('contact_form', false);
+      
       showAlert({
         message: error.message || 'Gagal mengirim pesan. Silakan coba lagi.',
       });

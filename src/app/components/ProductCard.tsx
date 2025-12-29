@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/src/contexts/CartContext';
+import { trackButtonClick } from '@/src/utils/analytics/posthog.util';
 
 interface ProductCardProps {
   id: number;
@@ -139,6 +140,7 @@ export default function ProductCard({
         <div className="space-y-1.5 mt-auto">
           <Link
             href={`/shop/${slug}`}
+            onClick={() => trackButtonClick('view_product_detail', 'product_card')}
             className="block text-center py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-colors duration-300 bg-black text-white hover:bg-red-600"
           >
             Lihat Detail

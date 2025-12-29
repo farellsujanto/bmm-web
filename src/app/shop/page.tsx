@@ -10,6 +10,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useAlert } from '@/src/contexts/AlertContext';
 import { PrimaryInput } from '@/src/components/ui/Input';
 import ShopStructuredData from './components/ShopStructuredData';
+import { trackSearchPerformed, trackFilterApplied } from '@/src/utils/analytics/posthog.util';
 
 type ProductWithRelations = Product & {
   category: Category;
@@ -259,6 +260,11 @@ function ShopContent() {
                 setSelectedCategory('Semua');
               }
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchQuery) {
+                trackSearchPerformed(searchQuery, filteredProducts.length);
+              }
+            }}
             className="rounded-full px-6 py-4 text-lg pr-12"
           />
           {searchQuery && (
@@ -282,7 +288,10 @@ function ShopContent() {
           
           <div className="flex md:flex-wrap md:justify-center gap-3 md:gap-4 overflow-x-auto pb-2 scrollbar-hide px-6 md:px-0">
             <button
-              onClick={() => setSelectedCategory('Semua')}
+              onClick={() => {
+                setSelectedCategory('Semua');
+                trackFilterApplied('category', 'Semua');
+              }}
               className={`px-4 py-2 md:px-6 md:py-3 rounded-full font-semibold transition-all duration-300 whitespace-nowrap flex-shrink-0 text-sm md:text-base ${
                 selectedCategory === 'Semua'
                   ? 'bg-red-600 text-white shadow-lg'
@@ -294,7 +303,10 @@ function ShopContent() {
             {categories.map((category) => (
               <button
                 key={category.id}
-                onClick={() => setSelectedCategory(category.name)}
+                onClick={() => {
+                  setSelectedCategory(category.name);
+                  trackFilterApplied('category', category.name);
+                }}
                 className={`px-4 py-2 md:px-6 md:py-3 rounded-full font-semibold transition-all duration-300 whitespace-nowrap flex-shrink-0 text-sm md:text-base ${
                   selectedCategory === category.name
                     ? 'bg-red-600 text-white shadow-lg'
