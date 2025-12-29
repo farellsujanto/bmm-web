@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useCart } from '@/src/contexts/CartContext';
 import { useAlert } from '@/src/contexts/AlertContext';
-import { PrimaryButton, SecondaryButton, PrimaryInput, PrimaryTextArea } from '@/src/components/ui';
+import { PrimaryButton, SecondaryButton, PrimaryInput, PrimaryTextArea, Loader } from '@/src/components/ui';
 import type { User, Company } from '@/generated/prisma/browser';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 
@@ -158,10 +158,7 @@ export default function CheckoutPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-red-600 mx-auto mb-4"></div>
-                    <p className="text-xl text-gray-600">Memuat...</p>
-                </div>
+                <Loader />
             </div>
         );
     }

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useAlert } from '@/src/contexts/AlertContext';
 import { apiRequest } from '@/src/utils/api/apiRequest';
-import { PrimaryButton, SecondaryButton } from '@/src/components/ui';
+import { PrimaryButton, SecondaryButton, Loader } from '@/src/components/ui';
 import Script from 'next/script';
 import type { Order, OrderProduct } from '@/generated/prisma/browser';
 
@@ -265,10 +265,7 @@ export default function OrderDetailsPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-red-600 mx-auto mb-4"></div>
-          <p className="text-xl text-gray-300">Memuat detail pesanan...</p>
-        </div>
+        <Loader />
       </div>
     );
   }

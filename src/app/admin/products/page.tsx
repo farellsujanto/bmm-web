@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { useAlert } from '@/src/contexts/AlertContext';
 import type { ProductModel, BrandModel, CategoryModel, ProductImageModel } from '@/generated/prisma/models';
-import { PrimaryButton, SecondaryButton, TertiaryButton, DangerButton, PrimaryInput, PrimarySelect, PrimaryTextArea } from '@/src/components/ui';
+import { PrimaryButton, TertiaryButton, Loader, PrimaryInput, PrimarySelect, PrimaryTextArea } from '@/src/components/ui';
 
 type ProductImage = {
   url: string;
@@ -343,7 +343,7 @@ export default function ProductsPage() {
   };
 
   if (loading) {
-    return <div className="text-center py-12">Loading...</div>;
+    return <Loader />;
   }
 
   return (

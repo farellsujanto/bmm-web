@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { useAlert } from '@/src/contexts/AlertContext';
 import type { BrandModel } from '@/generated/prisma/models';
-import { PrimaryButton, TertiaryButton, PrimaryInput } from '@/src/components/ui';
+import { PrimaryButton, TertiaryButton, PrimaryInput, Loader } from '@/src/components/ui';
 
 export default function BrandsPage() {
   const { showAlert, showConfirm } = useAlert();
@@ -100,7 +100,7 @@ export default function BrandsPage() {
   };
 
   if (loading) {
-    return <div className="text-center py-12">Loading...</div>;
+    return <Loader />;
   }
 
   return (

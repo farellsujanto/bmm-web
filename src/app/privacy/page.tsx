@@ -273,7 +273,7 @@ export default function PrivacyPage() {
               </p>
               <div className="space-y-2 text-gray-600">
                 <p><strong>BMM Parts</strong></p>
-                <p><strong>Email:</strong> support@bmmparts.co.id</p>
+                {/* <p><strong>Email:</strong> support@bmmparts.co.id</p> */}
               </div>
               <p className="text-gray-600 leading-relaxed mt-4">
                 Kami akan merespons permintaan Anda dalam waktu 30 hari kerja.

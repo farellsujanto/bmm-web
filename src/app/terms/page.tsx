@@ -222,7 +222,7 @@ export default function TermsPage() {
                 <li>Penghapusan akun memerlukan persetujuan dan verifikasi</li>
               </ul>
               <p className="text-gray-600 leading-relaxed mt-4">
-                Untuk resolusi kasus di atas, silakan hubungi tim dukungan kami di support@bmmparts.co.id
+                Untuk resolusi kasus di atas, silakan hubungi tim dukungan kami
               </p>
             </div>
 
@@ -259,11 +259,11 @@ export default function TermsPage() {
             <div className="mt-16 p-8 bg-gray-50 rounded-lg">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Hubungi Kami</h2>
               <p className="text-gray-600 leading-relaxed mb-4">
-                Jika Anda memiliki pertanyaan tentang Syarat dan Ketentuan ini, silakan hubungi kami:
+                Jika Anda memiliki pertanyaan tentang Syarat dan Ketentuan ini, silakan hubungi kami
               </p>
-              <div className="space-y-2 text-gray-600">
+              {/* <div className="space-y-2 text-gray-600">
                 <p><strong>Email:</strong> support@bmmparts.co.id</p>
-              </div>
+              </div> */}
             </div>
 
           </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiRequest } from '@/src/utils/api/apiRequest';
+import { Loader } from '@/src/components/ui';
 
 interface DashboardStats {
   totalOrders: number;
@@ -67,9 +68,7 @@ export default function AdminDashboard() {
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
 
       {loading ? (
-        <div className="text-center py-12">
-          <div className="text-lg text-gray-600">Loading...</div>
-        </div>
+        <Loader />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {statCards.map((stat) => (
