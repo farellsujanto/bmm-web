@@ -234,7 +234,7 @@ export default function AdminContactMessagesPage() {
             <div className="p-6 space-y-6">
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Contact Information</h3>
-                <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-gray-900">
                   <p className="text-sm">
                     <span className="font-medium">Name:</span> {selectedMessage.name}
                   </p>
