@@ -46,6 +46,7 @@ model User {
   referredOrders Order[] @relation("UserReferredOrders")
   withdrawals Withdrawal[] @relation("UserWithdrawals")
   productRequests ProductRequest[] @relation("UserProductRequests")
+  contactMessages ContactMessage[] @relation("UserContactMessages")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -493,4 +494,39 @@ model ProductRequestItem {
   enabled Boolean @default(true)
   
   @@index([productRequestId])
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+model ContactMessage {
+  id            Int      @id @default(autoincrement())
+  
+  // Optional user relation (if logged in)
+  userId        Int?
+  user          User?    @relation("UserContactMessages", fields: [userId], references: [id])
+  
+  // Contact form fields
+  name          String
+  email         String
+  phone         String?
+  subject       String
+  message       String   @db.Text
+  
+  // Admin fields
+  status        ContactMessageStatus @default(NEW)
+  adminNotes    String?  @db.Text
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  enabled Boolean @default(true)
+  
+  @@index([userId])
+  @@index([status])
+  @@index([email])
+  @@index([createdAt])
 }

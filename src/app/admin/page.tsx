@@ -7,6 +7,7 @@ import { Loader } from '@/src/components/ui';
 interface DashboardStats {
   totalOrders: number;
   totalProductRequests: number;
+  totalContactMessages: number;
   totalProducts: number;
   totalCategories: number;
   totalBrands: number;
@@ -17,6 +18,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalOrders: 0,
     totalProductRequests: 0,
+    totalContactMessages: 0,
     totalProducts: 0,
     totalCategories: 0,
     totalBrands: 0,
@@ -30,9 +32,10 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      const [orders, productRequests, products, categories, brands, missions] = await Promise.all([
+      const [orders, productRequests, contactMessages, products, categories, brands, missions] = await Promise.all([
         apiRequest.get('/v1/admin/orders/count'),
         apiRequest.get('/v1/admin/product-requests/count'),
+        apiRequest.get('/v1/admin/contact-messages/count'),
         apiRequest.get('/v1/admin/products/count'),
         apiRequest.get('/v1/admin/categories/count'),
         apiRequest.get('/v1/admin/brands/count'),
@@ -42,6 +45,7 @@ export default function AdminDashboard() {
       setStats({
         totalOrders: (orders.data as number) || 0,
         totalProductRequests: (productRequests.data as number) || 0,
+        totalContactMessages: (contactMessages.data as number) || 0,
         totalProducts: (products.data as number) || 0,
         totalCategories: (categories.data as number) || 0,
         totalBrands: (brands.data as number) || 0,
@@ -57,6 +61,7 @@ export default function AdminDashboard() {
   const statCards = [
     { label: 'Total Orders', value: stats.totalOrders, icon: '🛒', color: 'bg-cyan-500' },
     { label: 'Product Requests', value: stats.totalProductRequests, icon: '📝', color: 'bg-amber-500' },
+    { label: 'Contact Messages', value: stats.totalContactMessages, icon: '📧', color: 'bg-pink-500' },
     { label: 'Total Products', value: stats.totalProducts, icon: '📦', color: 'bg-blue-500' },
     { label: 'Categories', value: stats.totalCategories, icon: '🏷️', color: 'bg-green-500' },
     { label: 'Brands', value: stats.totalBrands, icon: '🏢', color: 'bg-purple-500' },
@@ -104,6 +109,12 @@ export default function AdminDashboard() {
             className="px-6 py-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors text-center"
           >
             View Product Requests
+          </a>
+          <a
+            href="/admin/contact-messages"
+            className="px-6 py-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors text-center"
+          >
+            View Contact Messages
           </a>
           <a
             href="/admin/products"
