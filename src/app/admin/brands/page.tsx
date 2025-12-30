@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+// Use native <img> to avoid Next.js image optimization limits
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { useAlert } from '@/src/contexts/AlertContext';
 import type { BrandModel } from '@/generated/prisma/models';
@@ -138,7 +138,7 @@ export default function BrandsPage() {
                 <td className="px-6 py-4 whitespace-nowrap text-gray-700">{brand.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {brand.logoUrl && (
-                    <Image
+                    <img
                       src={brand.logoUrl}
                       alt={brand.name}
                       width={100}

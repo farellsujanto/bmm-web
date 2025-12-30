@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { useCart } from '@/src/contexts/CartContext';
 import { trackButtonClick } from '@/src/utils/analytics/posthog.util';
 
@@ -82,11 +81,10 @@ export default function ProductCard({
       {/* Product Image */}
       <div className="relative h-48 sm:h-52 bg-gray-200 overflow-hidden flex-shrink-0">
         {image ? (
-          <Image
+          <img
             src={image}
             alt={name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (

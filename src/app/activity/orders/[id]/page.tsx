@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import Image from 'next/image';
+// Use native <img> to avoid Next.js image optimization limits
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useAlert } from '@/src/contexts/AlertContext';
 import { apiRequest } from '@/src/utils/api/apiRequest';
@@ -460,11 +460,10 @@ export default function OrderDetailsPage() {
                     <div className="flex gap-4">
                       <div className="relative w-24 h-24 bg-gray-800 rounded-lg overflow-hidden shrink-0">
                         {orderProduct.product.images?.[0] && (
-                          <Image
+                          <img
                             src={orderProduct.product.images[0].url}
                             alt={orderProduct.name}
-                            fill
-                            className="object-cover"
+                            className="absolute inset-0 w-full h-full object-cover"
                             sizes="96px"
                           />
                         )}

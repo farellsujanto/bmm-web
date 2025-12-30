@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
+// Use native <img> to avoid Next.js image optimization limits
 import Link from 'next/link';
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { Product, ProductImage, Category, Brand } from '@/generated/prisma/browser';
@@ -225,13 +225,11 @@ export default function ProductDetailPage({ initialProduct }: Props) {
                 {/* Main Image */}
                 <div className="relative aspect-square bg-gray-200 rounded-lg overflow-hidden">
                   {currentImage ? (
-                    <Image
+                    <img
                       src={currentImage.url}
                       alt={currentImage.alt || product.name}
-                      fill
-                      className="object-cover"
+                      className="absolute inset-0 w-full h-full object-cover"
                       sizes="(max-width: 1024px) 100vw, 50vw"
-                      priority
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -269,11 +267,10 @@ export default function ProductDetailPage({ initialProduct }: Props) {
                             : 'hover:ring-2 hover:ring-gray-300'
                         }`}
                       >
-                        <Image
+                        <img
                           src={image.url}
                           alt={image.alt || `${product.name} - ${index + 1}`}
-                          fill
-                          className="object-cover"
+                          className="absolute inset-0 w-full h-full object-cover"
                           sizes="(max-width: 1024px) 25vw, 12.5vw"
                         />
                       </button>
@@ -451,11 +448,10 @@ export default function ProductDetailPage({ initialProduct }: Props) {
                   >
                     <div className="relative h-48 bg-gray-200">
                       {relatedProduct.images[0] ? (
-                        <Image
+                        <img
                           src={relatedProduct.images[0].url}
                           alt={relatedProduct.name}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                         />
                       ) : (

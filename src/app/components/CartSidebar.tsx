@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+// Use native <img> to avoid Next.js image optimization
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/src/contexts/CartContext';
 import { useAuth } from '@/src/contexts/AuthContext';
@@ -87,11 +87,10 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                       <div className="flex gap-4">
                         <div className="relative w-20 h-20 bg-gray-200 rounded overflow-hidden shrink-0">
                           {item.image && (
-                            <Image
+                            <img
                               src={item.image}
                               alt={item.name}
-                              fill
-                              className="object-cover"
+                              className="absolute inset-0 w-full h-full object-cover"
                               sizes="80px"
                             />
                           )}

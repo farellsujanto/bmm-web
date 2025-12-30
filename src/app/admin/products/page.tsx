@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+// Use native <img> to avoid Next.js image optimization limits
 import { apiRequest } from '@/src/utils/api/apiRequest';
 import { useAlert } from '@/src/contexts/AlertContext';
 import type { ProductModel, BrandModel, CategoryModel, ProductImageModel } from '@/generated/prisma/models';
@@ -663,7 +663,7 @@ export default function ProductsPage() {
                         }`}
                       >
                         <span className="text-gray-500 font-mono text-sm">☰</span>
-                        <Image
+                        <img
                           src={image.url}
                           alt={image.alt || `Product image ${index + 1}`}
                           width={64}

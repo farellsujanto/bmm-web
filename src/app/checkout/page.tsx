@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+// Use native <img> to avoid Next.js image optimization limits
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useCart } from '@/src/contexts/CartContext';
 import { useAlert } from '@/src/contexts/AlertContext';
@@ -221,11 +221,10 @@ export default function CheckoutPage() {
                                         <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
                                             <div className="relative w-24 h-24 bg-gray-200 rounded-lg overflow-hidden shrink-0">
                                                 {item.image && (
-                                                    <Image
+                                                    <img
                                                         src={item.image}
                                                         alt={item.name}
-                                                        fill
-                                                        className="object-cover"
+                                                        className="absolute inset-0 w-full h-full object-cover"
                                                         sizes="96px"
                                                     />
                                                 )}
