@@ -99,15 +99,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check resend limit (maximum 2 resends = 3 total requests)
+    // Check resend limit (maximum 2 resends = 3 total requests per 24 hours)
     if (existingOtp && existingOtp.resendCount >= 2) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          message: 'Batas pengiriman ulang OTP telah tercapai. Silakan coba lagi nanti'
-        },
-        { status: 429 }
-      );
+      const now = new Date();
+      const lastRequestTime = existingOtp.updatedAt;
+      const hoursSinceLastRequest = (now.getTime() - lastRequestTime.getTime()) / (1000 * 60 * 60);
+      
+      // Reset resend count after 24 hours
+      if (hoursSinceLastRequest >= 24) {
+        // Will be reset in the upsert below
+      } else {
+        const hoursRemaining = Math.ceil(24 - hoursSinceLastRequest);
+        return NextResponse.json(
+          { 
+            success: false, 
+            message: `Batas pengiriman ulang OTP telah tercapai. Silakan coba lagi dalam ${hoursRemaining} jam`
+          },
+          { status: 429 }
+        );
+      }
     }
 
     // Generate OTP
@@ -117,8 +127,15 @@ export async function POST(request: NextRequest) {
     const expiresAt = createOtpExpiry(1); // 1 minute
 
     // Store or update OTP in database
-    // Reset resend count if previous OTP was used (XXXXXX), otherwise increment
-    const resendCount = existingOtp && existingOtp.otp !== 'XXXXXX' ? existingOtp.resendCount + 1 : 0;
+    // Reset resend count if:
+    // 1. Previous OTP was used (XXXXXX), OR
+    // 2. 24 hours have passed since last request
+    const now = new Date();
+    const hoursSinceLastRequest = existingOtp 
+      ? (now.getTime() - existingOtp.updatedAt.getTime()) / (1000 * 60 * 60)
+      : 0;
+    const shouldResetResendCount = !existingOtp || existingOtp.otp === 'XXXXXX' || hoursSinceLastRequest >= 24;
+    const resendCount = shouldResetResendCount ? 0 : existingOtp.resendCount + 1;
     await prisma.phoneOtp.upsert({
       where: { phoneNumber: validatedPhoneNumber },
       update: {
@@ -141,9 +158,9 @@ export async function POST(request: NextRequest) {
 
     // Send OTP via WhatsApp
     try {
-      if (process.env.NODE_ENV !== 'development') {
+      // if (process.env.NODE_ENV !== 'development') {
         await sendWhatsAppOtp(otp, validatedPhoneNumber);
-      }
+      // }
     } catch (error) {
       console.error('Failed to send WhatsApp OTP:', error);
       // Continue anyway - OTP is stored in DB
