@@ -132,10 +132,11 @@ export default function ActivityContent() {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex space-x-2 bg-gray-900/50 p-2 rounded-2xl backdrop-blur-sm border border-gray-800">
-            <button
+          <div className="relative">
+            <div className="flex space-x-2 bg-gray-900/50 p-2 rounded-2xl backdrop-blur-sm border border-gray-800 overflow-x-auto scrollbar-hide">
+              <button
               onClick={() => setActiveTab('overview')}
-              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              className={`flex-1 md:flex-auto min-w-[120px] px-6 py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap ${
                 activeTab === 'overview'
                   ? 'bg-red-600 text-white shadow-lg shadow-red-900/50'
                   : 'text-gray-300 hover:text-white hover:bg-gray-800'
@@ -145,7 +146,7 @@ export default function ActivityContent() {
             </button>
             <button
               onClick={() => setActiveTab('orders')}
-              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              className={`flex-1 md:flex-auto min-w-[120px] px-6 py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap ${
                 activeTab === 'orders'
                   ? 'bg-red-600 text-white shadow-lg shadow-red-900/50'
                   : 'text-gray-300 hover:text-white hover:bg-gray-800'
@@ -155,7 +156,7 @@ export default function ActivityContent() {
             </button>
             <button
               onClick={() => setActiveTab('affiliate')}
-              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              className={`flex-1 md:flex-auto min-w-[120px] px-6 py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap ${
                 activeTab === 'affiliate'
                   ? 'bg-red-600 text-white shadow-lg shadow-red-900/50'
                   : 'text-gray-300 hover:text-white hover:bg-gray-800'
@@ -165,7 +166,7 @@ export default function ActivityContent() {
             </button>
             <button
               onClick={() => setActiveTab('achievements')}
-              className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+              className={`flex-1 md:flex-auto min-w-[120px] px-6 py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap ${
                 activeTab === 'achievements'
                   ? 'bg-red-600 text-white shadow-lg shadow-red-900/50'
                   : 'text-gray-300 hover:text-white hover:bg-gray-800'
@@ -173,6 +174,9 @@ export default function ActivityContent() {
             >
               Misi
             </button>
+            </div>
+            {/* Scroll indicator - visible on mobile */}
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-black/60 to-transparent pointer-events-none rounded-r-2xl md:hidden"></div>
           </div>
         </div>
       </div>
