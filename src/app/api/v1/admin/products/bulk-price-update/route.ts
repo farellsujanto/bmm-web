@@ -51,26 +51,39 @@ async function bulkPriceUpdateHandler(request: NextRequest, user: JwtData) {
       );
     }
 
-    // Calculate new prices and update in a transaction
-    const updatePromises = products
-      .filter(product => product.price !== null)
-      .map(product => {
-        const currentPrice = product.price!;
+    // Update products individually and track failures
+    const failures: { id: number; name: string; error: string }[] = [];
+    let successCount = 0;
+
+    for (const product of products) {
+      if (product.price === null) continue;
+
+      try {
+        const currentPrice = product.price;
         const increase = currentPrice * (percentageValue / 100);
         const newPrice = Math.round(currentPrice + increase); // Round to nearest integer
 
-        return prisma.product.update({
+        await prisma.product.update({
           where: { id: product.id },
           data: { price: newPrice }
         });
-      });
 
-    await prisma.$transaction(updatePromises);
+        successCount++;
+      } catch (error: any) {
+        failures.push({
+          id: product.id,
+          name: product.name,
+          error: error.message || 'Unknown error'
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      message: `Successfully updated ${products.length} product prices by ${percentageValue}%`,
-      updatedCount: products.length
+      message: `Updated ${successCount} of ${products.length} products by ${percentageValue}%`,
+      updatedCount: successCount,
+      totalProducts: products.length,
+      failures: failures.length > 0 ? failures : undefined
     });
   } catch (error: any) {
     console.error('Bulk price update error:', error);

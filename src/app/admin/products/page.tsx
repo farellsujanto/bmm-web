@@ -30,6 +30,7 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<ProductWithRelations | null>(null);
   const [showPriceUpdateModal, setShowPriceUpdateModal] = useState(false);
   const [priceUpdatePercentage, setPriceUpdatePercentage] = useState('');
+  const [priceUpdateFailures, setPriceUpdateFailures] = useState<Array<{ id: number; name: string; error: string }>>([]);
 
   // Format currency in IDR with commas
   const formatIDR = (amount: number | string | null | undefined): string => {
@@ -359,14 +360,24 @@ export default function ProductsPage() {
     if (!confirmed) return;
 
     setSubmitting(true);
+    setPriceUpdateFailures([]);
     try {
-      const response = await apiRequest.post<{ message: string; updatedCount: number }>('/v1/admin/products/bulk-price-update', {
+      const response = await apiRequest.post<{ 
+        message: string; 
+        updatedCount: number;
+        failures?: Array<{ id: number; name: string; error: string }>
+      }>('/v1/admin/products/bulk-price-update', {
         percentage
       });
 
-      showAlert({ message: response.data.message || 'Prices updated successfully' });
-      setShowPriceUpdateModal(false);
-      setPriceUpdatePercentage('');
+      if (response.data.failures && response.data.failures.length > 0) {
+        setPriceUpdateFailures(response.data.failures);
+        showAlert({ message: `${response.data.message}. ${response.data.failures.length} products failed to update.` });
+      } else {
+        showAlert({ message: response.data.message || 'Prices updated successfully' });
+        setShowPriceUpdateModal(false);
+        setPriceUpdatePercentage('');
+      }
       loadData();
     } catch (error: any) {
       showAlert({ message: error.message || 'Failed to update prices' });
@@ -786,12 +797,28 @@ export default function ProductsPage() {
                 </p>
               </div>
 
+              {priceUpdateFailures.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-h-60 overflow-y-auto">
+                  <h3 className="text-sm font-semibold text-red-900 mb-2">
+                    Failed to update {priceUpdateFailures.length} product{priceUpdateFailures.length > 1 ? 's' : ''}:
+                  </h3>
+                  <ul className="space-y-1">
+                    {priceUpdateFailures.map((failure) => (
+                      <li key={failure.id} className="text-sm text-red-800">
+                        <strong>{failure.name}</strong> (ID: {failure.id}): {failure.error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div className="flex justify-end space-x-4 pt-4">
                 <TertiaryButton
                   type="button"
                   onClick={() => {
                     setShowPriceUpdateModal(false);
                     setPriceUpdatePercentage('');
+                    setPriceUpdateFailures([]);
                   }}
                   disabled={submitting}
                 >
