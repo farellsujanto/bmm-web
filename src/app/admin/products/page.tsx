@@ -28,6 +28,8 @@ export default function ProductsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ProductWithRelations | null>(null);
+  const [showPriceUpdateModal, setShowPriceUpdateModal] = useState(false);
+  const [priceUpdatePercentage, setPriceUpdatePercentage] = useState('');
 
   // Format currency in IDR with commas
   const formatIDR = (amount: number | string | null | undefined): string => {
@@ -342,23 +344,62 @@ export default function ProductsPage() {
     }
   };
 
+  const handleBulkPriceUpdate = async () => {
+    if (!priceUpdatePercentage || isNaN(parseFloat(priceUpdatePercentage))) {
+      showAlert({ message: 'Please enter a valid percentage' });
+      return;
+    }
+
+    const percentage = parseFloat(priceUpdatePercentage);
+    
+    const confirmed = await showConfirm({ 
+      message: `Are you sure you want to ${percentage >= 0 ? 'increase' : 'decrease'} all product prices by ${Math.abs(percentage)}%? This will affect ${products.length} products.` 
+    });
+    
+    if (!confirmed) return;
+
+    setSubmitting(true);
+    try {
+      const response = await apiRequest.post<{ message: string; updatedCount: number }>('/v1/admin/products/bulk-price-update', {
+        percentage
+      });
+
+      showAlert({ message: response.data.message || 'Prices updated successfully' });
+      setShowPriceUpdateModal(false);
+      setPriceUpdatePercentage('');
+      loadData();
+    } catch (error: any) {
+      showAlert({ message: error.message || 'Failed to update prices' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return <Loader />;
   }
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-        <button
-          onClick={() => {
-            resetForm();
-            setShowModal(true);
-          }}
-          className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700"
-        >
-          Add Product
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => setShowPriceUpdateModal(true)}
+            className="px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 whitespace-nowrap"
+          >
+            Bulk Price Update
+          </button>
+          <button
+            onClick={() => {
+              resetForm();
+              setShowModal(true);
+            }}
+            className="px-4 sm:px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 whitespace-nowrap"
+          >
+            Add Product
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -710,6 +751,60 @@ export default function ProductsPage() {
                 </PrimaryButton>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Price Update Modal */}
+      {showPriceUpdateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Bulk Price Update
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <PrimaryInput
+                  label="Percentage Change"
+                  type="number"
+                  step="0.01"
+                  value={priceUpdatePercentage}
+                  onChange={(e) => setPriceUpdatePercentage(e.target.value)}
+                  placeholder="e.g., 10 for +10%, -5 for -5%"
+                  helperText="Enter a positive number to increase prices or negative to decrease"
+                />
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800">
+                  <strong>Warning:</strong> This will update all {products.length} product prices. 
+                  {priceUpdatePercentage && !isNaN(parseFloat(priceUpdatePercentage)) && (
+                    <span className="block mt-2">
+                      Prices will be {parseFloat(priceUpdatePercentage) >= 0 ? 'increased' : 'decreased'} by {Math.abs(parseFloat(priceUpdatePercentage))}%
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4">
+                <TertiaryButton
+                  type="button"
+                  onClick={() => {
+                    setShowPriceUpdateModal(false);
+                    setPriceUpdatePercentage('');
+                  }}
+                  disabled={submitting}
+                >
+                  Cancel
+                </TertiaryButton>
+                <PrimaryButton
+                  onClick={handleBulkPriceUpdate}
+                  disabled={submitting || !priceUpdatePercentage}
+                >
+                  {submitting ? 'Updating...' : 'Update Prices'}
+                </PrimaryButton>
+              </div>
+            </div>
           </div>
         </div>
       )}
