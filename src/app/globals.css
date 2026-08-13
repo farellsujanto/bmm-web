@@ -72,6 +72,74 @@ body {
   animation: scaleIn 0.2s ease-out;
 }
 
+/* ---------- 3D parallax hero ---------- */
+.hero3d {
+  isolation: isolate;
+  --tx: 0;
+  --ty: 0;
+  background:
+    radial-gradient(140% 120% at 50% 0%, #0d0d0f 0%, #000000 60%);
+}
+
+/* far backdrop drifts opposite to the near layers to deepen the parallax */
+.hero3d-far {
+  transform: translate3d(calc(var(--tx) * 12px), calc(var(--ty) * 7px), 0);
+  will-change: transform;
+}
+
+/* perspective floor grid */
+.hero3d-grid {
+  background-image:
+    repeating-linear-gradient(90deg, rgba(220, 38, 38, 0.30) 0 1px, transparent 1px 130px),
+    repeating-linear-gradient(0deg, rgba(220, 38, 38, 0.22) 0 1px, transparent 1px 90px);
+  transform: perspective(340px) rotateX(62deg);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent 72%);
+  mask-image: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent 72%);
+  pointer-events: none;
+}
+
+/* faint horizontal scanlines for a technical, machine-vision feel */
+.hero3d-scan {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.028) 0 1px,
+    transparent 1px 4px
+  );
+  pointer-events: none;
+}
+
+.hero3d-layer {
+  will-change: transform;
+  pointer-events: none;
+}
+
+.hero3d-float {
+  animation-name: hero3dFloat;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes hero3dFloat {
+  0%,
+  100% {
+    transform: translateY(-1.2%) rotate(-0.35deg);
+  }
+  50% {
+    transform: translateY(1.2%) rotate(0.35deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero3d-float {
+    animation: none;
+  }
+  .hero3d-layer,
+  .hero3d-far {
+    transition: none;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
